@@ -13,6 +13,11 @@ export class QualityRepository {
     return this.prisma.qCRecord.findUniqueOrThrow({ where: { id } }) as Promise<QCRecordDto>;
   }
 
+
+
+  findBatch(batchId: string) {
+    return this.prisma.batch.findUnique({ where: { id: batchId }, select: { id: true, status: true } });
+  }
   findBatchFamily(batchId: string) {
     return this.prisma.batch
       .findUnique({

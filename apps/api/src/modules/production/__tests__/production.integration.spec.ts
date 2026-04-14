@@ -31,21 +31,23 @@ describe("production integration", () => {
 
     expect(order.status).toBe("planned");
     expect(repositoryStub.calculateTheoreticalMaterials).toHaveBeenCalledWith("op-1");
+    expect(order.event).toBe("production.order.created");
   });
 
   it("bloquea cierre de lote sin responsable o sin output", async () => {
-    const service = new ProductionService({ closeBatch: async () => ({}) } as never);
+    const service = new ProductionService({ findBatch: async () => ({ id: "batch-1", status: "in_process" }) } as never);
 
     await expect(
       service.close("batch-1", { responsible: "", consumptions: [], wastes: [], outputs: [{ itemId: "itm-1", qty: 10 }] }),
     ).rejects.toBeInstanceOf(BadRequestException);
-    await expect(
-      service.close("batch-1", { responsible: "usr-1", consumptions: [], wastes: [], outputs: [] }),
-    ).rejects.toBeInstanceOf(ConflictException);
+    await expect(service.close("batch-1", { responsible: "usr-1", consumptions: [], wastes: [], outputs: [] })).rejects.toBeInstanceOf(
+      ConflictException,
+    );
   });
 
   it("cierra lote y devuelve evento de trazabilidad", async () => {
     const repositoryStub = {
+      findBatch: vi.fn(async () => ({ id: "batch-1", status: "in_process", responsibleUserId: null, outputQty: null })),
       recordBatchExecution: vi.fn(async () => undefined),
     };
     const service = new ProductionService(repositoryStub as never);
@@ -58,6 +60,7 @@ describe("production integration", () => {
     });
 
     expect(result.event).toBe("production.batch.closed");
+    expect(result.status).toBe("qc_pending");
     expect(repositoryStub.recordBatchExecution).toHaveBeenCalledWith(
       "batch-1",
       "usr-1",
