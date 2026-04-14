@@ -18,7 +18,7 @@ describe("payables treasury transactional integrity", () => {
     };
 
     const repository = new PayablesTreasuryRepository(prisma as never);
-    await repository.runAction("ap-1", { code: "P-1", cashAccountId: "cash-1", amount: 30 });
+    await repository.runAction({ code: "P-1", cashAccountId: "cash-1", amount: 30, allocations: [{ payableId: "ap-1", amount: 30 }] });
 
     expect(prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(tx.payment.create).toHaveBeenCalledTimes(1);
@@ -34,8 +34,8 @@ describe("payables treasury transactional integrity", () => {
         update: vi.fn(async () => ({ id: "ap-1", status: "partial", balance: 70 })),
       },
       payment: { create: vi.fn(async () => ({ id: "pay-1", code: "P-1" })) },
-      paymentAllocation: { create: vi.fn(async () => ({ id: "pa-1" })) },
-      treasuryMovement: { create: vi.fn(async () => { throw new Error("outflow error"); }) },
+      paymentAllocation: { create: vi.fn(async () => { throw new Error("allocation error"); }) },
+      treasuryMovement: { create: vi.fn(async () => ({ id: "tm-1" })) },
     };
 
     const prisma = {
@@ -44,7 +44,7 @@ describe("payables treasury transactional integrity", () => {
 
     const repository = new PayablesTreasuryRepository(prisma as never);
 
-    await expect(repository.runAction("ap-1", { code: "P-1", cashAccountId: "cash-1", amount: 30 })).rejects.toThrow("outflow error");
+    await expect(repository.runAction({ code: "P-1", cashAccountId: "cash-1", amount: 30, allocations: [{ payableId: "ap-1", amount: 30 }] })).rejects.toThrow("allocation error");
     expect(tx.accountsPayable.update).not.toHaveBeenCalled();
   });
 });
