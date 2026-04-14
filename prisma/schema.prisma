@@ -1,102 +1,1096 @@
-generator client { provider = "prisma-client-js" }
-datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+generator client {
+  provider = "prisma-client-js"
+}
 
-enum EntityStatus { draft active inactive pending_homologation archived }
-enum FormulaStatus { draft in_review approved obsolete }
-enum ProductionStatus { draft planned reserved in_process qc_pending released retained closed cancelled }
-enum SalesStatus { draft confirmed reserved picking dispatched delivered closed cancelled }
-enum AccountStatus { open partial paid overdue cancelled }
-enum ImportStatus { uploaded mapping validating ready_to_import imported imported_with_warnings failed }
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
-model User { id String @id @default(cuid()) email String @unique name String passwordHash String status EntityStatus @default(active) roles UserRole[] audits AuditLog[] createdAt DateTime @default(now()) }
-model Role { id String @id @default(cuid()) name String @unique permissions RolePermission[] users UserRole[] }
-model Permission { id String @id @default(cuid()) key String @unique roles RolePermission[] }
-model UserRole { userId String roleId String user User @relation(fields:[userId], references:[id]) role Role @relation(fields:[roleId], references:[id]) @@id([userId, roleId]) }
-model RolePermission { roleId String permissionId String role Role @relation(fields:[roleId], references:[id]) permission Permission @relation(fields:[permissionId], references:[id]) @@id([roleId, permissionId]) }
-model AuditLog { id String @id @default(cuid()) userId String? entity String entityId String action String origin String? before Json? after Json? createdAt DateTime @default(now()) user User? @relation(fields:[userId], references:[id]) }
+enum EntityStatus {
+  draft
+  active
+  inactive
+  pending_homologation
+  archived
+}
 
-model Unit { id String @id @default(cuid()) code String @unique name String status EntityStatus @default(active) }
-model Family { id String @id @default(cuid()) name String @unique status EntityStatus @default(active) }
-model Line { id String @id @default(cuid()) name String @unique status EntityStatus @default(active) }
-model Variant { id String @id @default(cuid()) name String @unique status EntityStatus @default(active) }
-model PaymentMethod { id String @id @default(cuid()) name String @unique status EntityStatus @default(active) }
-model CashAccount { id String @id @default(cuid()) name String type String status EntityStatus @default(active) }
-model Warehouse { id String @id @default(cuid()) name String status EntityStatus @default(active) }
-model WarehouseLocation { id String @id @default(cuid()) warehouseId String name String status EntityStatus @default(active) warehouse Warehouse @relation(fields:[warehouseId], references:[id]) }
-model CostCenter { id String @id @default(cuid()) name String status EntityStatus @default(active) }
-model NumberSequence { id String @id @default(cuid()) key String @unique next Int @default(1) }
-model EntityAlias { id String @id @default(cuid()) entityType String canonicalId String? alias String canonicalName String? status EntityStatus @default(active) originalValue String? }
+enum FormulaStatus {
+  draft
+  in_review
+  approved
+  obsolete
+}
 
-model Item { id String @id @default(cuid()) code String @unique name String status EntityStatus @default(active) }
-model ProductBase { id String @id @default(cuid()) code String @unique name String familyId String? variantId String? lineId String? status EntityStatus @default(active) }
-model Presentation { id String @id @default(cuid()) name String unitId String? factor Decimal @default(1) status EntityStatus @default(active) }
-model SKU { id String @id @default(cuid()) code String @unique productBaseId String presentationId String barcode String? status EntityStatus @default(active) }
-model PackagingSpec { id String @id @default(cuid()) skuId String componentType String itemId String qty Decimal }
-model ComboPack { id String @id @default(cuid()) code String @unique name String status EntityStatus @default(active) }
-model ComboPackItem { id String @id @default(cuid()) comboId String skuId String qty Decimal }
+enum ProductionStatus {
+  draft
+  planned
+  reserved
+  in_process
+  qc_pending
+  released
+  retained
+  closed
+  cancelled
+}
 
-model FormulaTemplate { id String @id @default(cuid()) code String @unique name String familyId String? status FormulaStatus @default(draft) }
-model FormulaVersion { id String @id @default(cuid()) templateId String version Int status FormulaStatus @default(draft) warning String? }
-model FormulaComponent { id String @id @default(cuid()) formulaVersionId String itemId String qty Decimal unitId String }
-model FormulaStep { id String @id @default(cuid()) formulaVersionId String stepNo Int instruction String }
-model FormulaApproval { id String @id @default(cuid()) formulaVersionId String approvedBy String approvedAt DateTime @default(now()) }
+enum SalesStatus {
+  draft
+  confirmed
+  reserved
+  picking
+  dispatched
+  delivered
+  closed
+  cancelled
+}
 
-model ProductionOrder { id String @id @default(cuid()) code String @unique productBaseId String formulaVersionId String plannedQty Decimal status ProductionStatus @default(planned) }
-model ProductionOrderMaterialPlan { id String @id @default(cuid()) productionOrderId String itemId String qty Decimal reservedQty Decimal @default(0) }
-model Batch { id String @id @default(cuid()) code String @unique productionOrderId String? status ProductionStatus @default(in_process) responsibleUserId String? outputQty Decimal? }
-model BatchMaterialConsumption { id String @id @default(cuid()) batchId String itemId String plannedQty Decimal actualQty Decimal }
-model BatchOutput { id String @id @default(cuid()) batchId String itemId String qty Decimal }
-model BatchWaste { id String @id @default(cuid()) batchId String reason String qty Decimal }
+enum AccountStatus {
+  open
+  partial
+  paid
+  overdue
+  cancelled
+}
 
-model PackagingOrder { id String @id @default(cuid()) code String @unique parentBatchId String skuId String qty Decimal status ProductionStatus @default(planned) }
-model PackagingMaterialConsumption { id String @id @default(cuid()) packagingOrderId String itemId String qty Decimal }
-model ChildBatch { id String @id @default(cuid()) packagingOrderId String lotCode String qty Decimal }
+enum ImportStatus {
+  uploaded
+  mapping
+  validating
+  ready_to_import
+  imported
+  imported_with_warnings
+  failed
+}
 
-model QCChecklist { id String @id @default(cuid()) name String active Boolean @default(true) }
-model QCRecord { id String @id @default(cuid()) batchId String decision String notes String? createdAt DateTime @default(now()) }
-model QCRecordItem { id String @id @default(cuid()) qcRecordId String checklistItem String passed Boolean note String? }
-model QCNonConformity { id String @id @default(cuid()) qcRecordId String severity String action String }
+model User {
+  id              String            @id @default(cuid())
+  email           String            @unique
+  name            String
+  passwordHash    String
+  status          EntityStatus      @default(active)
+  deletedAt       DateTime?
+  roles           UserRole[]
+  audits          AuditLog[]
+  createdAt       DateTime          @default(now())
+  FormulaApproval FormulaApproval[]
+  Batch           Batch[]
 
-model StockLot { id String @id @default(cuid()) itemId String lotCode String warehouseId String status EntityStatus @default(active) }
-model StockBalance { id String @id @default(cuid()) itemId String warehouseId String locationId String? qty Decimal reservedQty Decimal @default(0) }
-model StockMovement { id String @id @default(cuid()) itemId String lotId String? type String qty Decimal reason String? createdAt DateTime @default(now()) }
-model StockReservation { id String @id @default(cuid()) itemId String referenceType String referenceId String qty Decimal }
-model CycleCount { id String @id @default(cuid()) warehouseId String date DateTime @default(now()) status String }
-model InventoryAdjustment { id String @id @default(cuid()) itemId String qty Decimal reason String createdAt DateTime @default(now()) }
+  @@index([status])
+  @@index([createdAt])
+}
 
-model Supplier { id String @id @default(cuid()) code String @unique name String status EntityStatus @default(active) }
-model PurchaseRequest { id String @id @default(cuid()) code String @unique status String }
-model PurchaseRequestItem { id String @id @default(cuid()) requestId String itemId String qty Decimal }
-model PurchaseOrder { id String @id @default(cuid()) code String @unique supplierId String status String }
-model PurchaseOrderItem { id String @id @default(cuid()) purchaseOrderId String itemId String qty Decimal unitCost Decimal }
-model GoodsReceipt { id String @id @default(cuid()) code String @unique purchaseOrderId String status String }
-model GoodsReceiptItem { id String @id @default(cuid()) goodsReceiptId String itemId String qty Decimal acceptedQty Decimal }
-model ExpenseCategory { id String @id @default(cuid()) name String }
-model ExpenseSubcategory { id String @id @default(cuid()) categoryId String name String }
-model Expense { id String @id @default(cuid()) date DateTime @default(now()) supplierId String? categoryId String amount Decimal status AccountStatus @default(open) }
+model Role {
+  id          String           @id @default(cuid())
+  name        String           @unique
+  status      EntityStatus     @default(active)
+  deletedAt   DateTime?
+  permissions RolePermission[]
+  users       UserRole[]
 
-model Customer { id String @id @default(cuid()) code String @unique name String status EntityStatus @default(active) }
-model CustomerAddress { id String @id @default(cuid()) customerId String label String address String city String }
-model CustomerContact { id String @id @default(cuid()) customerId String name String phone String? email String? }
-model CustomerPriceList { id String @id @default(cuid()) customerId String priceListId String }
-model PriceList { id String @id @default(cuid()) code String @unique name String startsAt DateTime status EntityStatus @default(active) }
-model PriceListItem { id String @id @default(cuid()) priceListId String skuId String price Decimal }
-model SalesOrder { id String @id @default(cuid()) code String @unique customerId String priceListId String status SalesStatus @default(draft) total Decimal @default(0) }
-model SalesOrderItem { id String @id @default(cuid()) salesOrderId String skuId String qty Decimal unitPrice Decimal }
-model DispatchOrder { id String @id @default(cuid()) code String @unique salesOrderId String status SalesStatus @default(confirmed) }
-model DispatchItem { id String @id @default(cuid()) dispatchOrderId String skuId String qty Decimal }
-model SalesReturn { id String @id @default(cuid()) code String @unique salesOrderId String reason String }
+  @@index([status])
+}
 
-model AccountsReceivable { id String @id @default(cuid()) customerId String salesOrderId String dueDate DateTime amount Decimal balance Decimal status AccountStatus @default(open) }
-model Receipt { id String @id @default(cuid()) code String @unique customerId String amount Decimal cashAccountId String createdAt DateTime @default(now()) }
-model ReceiptAllocation { id String @id @default(cuid()) receiptId String receivableId String amount Decimal }
-model AccountsPayable { id String @id @default(cuid()) supplierId String sourceType String sourceId String dueDate DateTime amount Decimal balance Decimal status AccountStatus @default(open) }
-model Payment { id String @id @default(cuid()) code String @unique supplierId String amount Decimal cashAccountId String createdAt DateTime @default(now()) }
-model PaymentAllocation { id String @id @default(cuid()) paymentId String payableId String amount Decimal }
-model TreasuryMovement { id String @id @default(cuid()) cashAccountId String type String amount Decimal date DateTime @default(now()) reference String? }
-model BankReconciliation { id String @id @default(cuid()) cashAccountId String period String status String }
+model Permission {
+  id    String           @id @default(cuid())
+  key   String           @unique
+  roles RolePermission[]
+}
 
-model CostSnapshot { id String @id @default(cuid()) key String date DateTime @default(now()) payload Json }
-model MarginSnapshot { id String @id @default(cuid()) key String date DateTime @default(now()) payload Json }
-model MonthlyClose { id String @id @default(cuid()) month String @unique status String closedAt DateTime? }
-model ImportJob { id String @id @default(cuid()) type String status ImportStatus @default(uploaded) sourceName String mapping Json? summary Json? warnings Json? originals Json? createdAt DateTime @default(now()) updatedAt DateTime @updatedAt }
+model UserRole {
+  userId String
+  roleId String
+  user   User   @relation(fields: [userId], references: [id])
+  role   Role   @relation(fields: [roleId], references: [id])
+
+  @@id([userId, roleId])
+  @@index([roleId])
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  entity    String
+  entityId  String
+  action    String
+  origin    String?
+  before    Json?
+  after     Json?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
+
+model Unit {
+  id               String             @id @default(cuid())
+  code             String             @unique
+  name             String
+  status           EntityStatus       @default(active)
+  Presentation     Presentation[]
+  FormulaComponent FormulaComponent[]
+
+  @@index([status])
+}
+
+model Family {
+  id              String            @id @default(cuid())
+  name            String            @unique
+  status          EntityStatus      @default(active)
+  ProductBase     ProductBase[]
+  FormulaTemplate FormulaTemplate[]
+
+  @@index([status])
+}
+
+model Line {
+  id          String        @id @default(cuid())
+  name        String        @unique
+  status      EntityStatus  @default(active)
+  ProductBase ProductBase[]
+
+  @@index([status])
+}
+
+model Variant {
+  id          String        @id @default(cuid())
+  name        String        @unique
+  status      EntityStatus  @default(active)
+  ProductBase ProductBase[]
+
+  @@index([status])
+}
+
+model PaymentMethod {
+  id     String       @id @default(cuid())
+  name   String       @unique
+  status EntityStatus @default(active)
+
+  @@index([status])
+}
+
+model CashAccount {
+  id                 String               @id @default(cuid())
+  name               String
+  type               String
+  status             EntityStatus         @default(active)
+  deletedAt          DateTime?
+  Receipt            Receipt[]
+  Payment            Payment[]
+  TreasuryMovement   TreasuryMovement[]
+  BankReconciliation BankReconciliation[]
+
+  @@index([status])
+}
+
+model Warehouse {
+  id                String              @id @default(cuid())
+  name              String
+  status            EntityStatus        @default(active)
+  WarehouseLocation WarehouseLocation[]
+  StockLot          StockLot[]
+  StockBalance      StockBalance[]
+  CycleCount        CycleCount[]
+
+  @@index([status])
+}
+
+model WarehouseLocation {
+  id           String         @id @default(cuid())
+  warehouseId  String
+  name         String
+  status       EntityStatus   @default(active)
+  warehouse    Warehouse      @relation(fields: [warehouseId], references: [id])
+  StockBalance StockBalance[]
+
+  @@unique([warehouseId, name])
+  @@index([warehouseId, status])
+}
+
+model CostCenter {
+  id     String       @id @default(cuid())
+  name   String
+  status EntityStatus @default(active)
+
+  @@index([status])
+}
+
+model NumberSequence {
+  id   String @id @default(cuid())
+  key  String @unique
+  next Int    @default(1)
+}
+
+model EntityAlias {
+  id            String       @id @default(cuid())
+  entityType    String
+  canonicalId   String?
+  alias         String
+  canonicalName String?
+  status        EntityStatus @default(active)
+  originalValue String?
+
+  @@unique([entityType, alias])
+  @@index([entityType, status])
+}
+
+model Item {
+  id                           String                         @id @default(cuid())
+  code                         String                         @unique
+  name                         String
+  status                       EntityStatus                   @default(active)
+  deletedAt                    DateTime?
+  PackagingSpec                PackagingSpec[]
+  FormulaComponent             FormulaComponent[]
+  ProductionOrderMaterialPlan  ProductionOrderMaterialPlan[]
+  BatchMaterialConsumption     BatchMaterialConsumption[]
+  BatchOutput                  BatchOutput[]
+  PackagingMaterialConsumption PackagingMaterialConsumption[]
+  StockLot                     StockLot[]
+  StockBalance                 StockBalance[]
+  StockMovement                StockMovement[]
+  StockReservation             StockReservation[]
+  InventoryAdjustment          InventoryAdjustment[]
+  PurchaseRequestItem          PurchaseRequestItem[]
+  PurchaseOrderItem            PurchaseOrderItem[]
+  GoodsReceiptItem             GoodsReceiptItem[]
+
+  @@index([status])
+}
+
+model ProductBase {
+  id              String            @id @default(cuid())
+  code            String            @unique
+  name            String
+  familyId        String?
+  variantId       String?
+  lineId          String?
+  status          EntityStatus      @default(active)
+  family          Family?           @relation(fields: [familyId], references: [id])
+  variant         Variant?          @relation(fields: [variantId], references: [id])
+  line            Line?             @relation(fields: [lineId], references: [id])
+  SKU             SKU[]
+  ProductionOrder ProductionOrder[]
+
+  @@index([familyId])
+  @@index([lineId])
+  @@index([variantId])
+  @@index([status])
+}
+
+model Presentation {
+  id     String       @id @default(cuid())
+  name   String
+  unitId String?
+  factor Decimal      @default(1)
+  status EntityStatus @default(active)
+  unit   Unit?        @relation(fields: [unitId], references: [id])
+  SKU    SKU[]
+
+  @@index([unitId])
+  @@index([status])
+}
+
+model SKU {
+  id             String           @id @default(cuid())
+  code           String           @unique
+  productBaseId  String
+  presentationId String
+  barcode        String?
+  status         EntityStatus     @default(active)
+  deletedAt      DateTime?
+  productBase    ProductBase      @relation(fields: [productBaseId], references: [id])
+  presentation   Presentation     @relation(fields: [presentationId], references: [id])
+  PackagingSpec  PackagingSpec[]
+  ComboPackItem  ComboPackItem[]
+  PackagingOrder PackagingOrder[]
+  PriceListItem  PriceListItem[]
+  SalesOrderItem SalesOrderItem[]
+  DispatchItem   DispatchItem[]
+
+  @@index([status])
+  @@index([productBaseId])
+  @@index([presentationId])
+}
+
+model PackagingSpec {
+  id            String  @id @default(cuid())
+  skuId         String
+  componentType String
+  itemId        String
+  qty           Decimal
+  sku           SKU     @relation(fields: [skuId], references: [id])
+  item          Item    @relation(fields: [itemId], references: [id])
+
+  @@unique([skuId, componentType, itemId])
+  @@index([skuId])
+  @@index([itemId])
+}
+
+model ComboPack {
+  id            String          @id @default(cuid())
+  code          String          @unique
+  name          String
+  status        EntityStatus    @default(active)
+  ComboPackItem ComboPackItem[]
+
+  @@index([status])
+}
+
+model ComboPackItem {
+  id      String    @id @default(cuid())
+  comboId String
+  skuId   String
+  qty     Decimal
+  combo   ComboPack @relation(fields: [comboId], references: [id])
+  sku     SKU       @relation(fields: [skuId], references: [id])
+
+  @@unique([comboId, skuId])
+  @@index([comboId])
+  @@index([skuId])
+}
+
+model FormulaTemplate {
+  id             String           @id @default(cuid())
+  code           String           @unique
+  name           String
+  familyId       String?
+  status         FormulaStatus    @default(draft)
+  family         Family?          @relation(fields: [familyId], references: [id])
+  FormulaVersion FormulaVersion[]
+
+  @@index([familyId])
+  @@index([status])
+}
+
+model FormulaVersion {
+  id               String             @id @default(cuid())
+  templateId       String
+  version          Int
+  status           FormulaStatus      @default(draft)
+  warning          String?
+  template         FormulaTemplate    @relation(fields: [templateId], references: [id])
+  FormulaComponent FormulaComponent[]
+  FormulaStep      FormulaStep[]
+  FormulaApproval  FormulaApproval[]
+  ProductionOrder  ProductionOrder[]
+
+  @@unique([templateId, version])
+  @@index([templateId, status])
+}
+
+model FormulaComponent {
+  id               String         @id @default(cuid())
+  formulaVersionId String
+  itemId           String
+  qty              Decimal
+  unitId           String
+  formulaVersion   FormulaVersion @relation(fields: [formulaVersionId], references: [id])
+  item             Item           @relation(fields: [itemId], references: [id])
+  unit             Unit           @relation(fields: [unitId], references: [id])
+
+  @@unique([formulaVersionId, itemId])
+  @@index([formulaVersionId])
+}
+
+model FormulaStep {
+  id               String         @id @default(cuid())
+  formulaVersionId String
+  stepNo           Int
+  instruction      String
+  formulaVersion   FormulaVersion @relation(fields: [formulaVersionId], references: [id])
+
+  @@unique([formulaVersionId, stepNo])
+  @@index([formulaVersionId])
+}
+
+model FormulaApproval {
+  id               String         @id @default(cuid())
+  formulaVersionId String
+  approvedBy       String
+  approvedAt       DateTime       @default(now())
+  formulaVersion   FormulaVersion @relation(fields: [formulaVersionId], references: [id])
+  approver         User           @relation(fields: [approvedBy], references: [id])
+
+  @@index([formulaVersionId])
+  @@index([approvedAt])
+}
+
+model ProductionOrder {
+  id                          String                        @id @default(cuid())
+  code                        String                        @unique
+  productBaseId               String
+  formulaVersionId            String
+  plannedQty                  Decimal
+  status                      ProductionStatus              @default(planned)
+  productBase                 ProductBase                   @relation(fields: [productBaseId], references: [id])
+  formulaVersion              FormulaVersion                @relation(fields: [formulaVersionId], references: [id])
+  ProductionOrderMaterialPlan ProductionOrderMaterialPlan[]
+  Batch                       Batch[]
+
+  @@index([status])
+  @@index([productBaseId])
+}
+
+model ProductionOrderMaterialPlan {
+  id                String          @id @default(cuid())
+  productionOrderId String
+  itemId            String
+  qty               Decimal
+  reservedQty       Decimal         @default(0)
+  productionOrder   ProductionOrder @relation(fields: [productionOrderId], references: [id])
+  item              Item            @relation(fields: [itemId], references: [id])
+
+  @@unique([productionOrderId, itemId])
+  @@index([productionOrderId])
+}
+
+model Batch {
+  id                       String                     @id @default(cuid())
+  code                     String                     @unique
+  productionOrderId        String?
+  status                   ProductionStatus           @default(in_process)
+  responsibleUserId        String?
+  outputQty                Decimal?
+  productionOrder          ProductionOrder?           @relation(fields: [productionOrderId], references: [id])
+  responsibleUser          User?                      @relation(fields: [responsibleUserId], references: [id])
+  BatchMaterialConsumption BatchMaterialConsumption[]
+  BatchOutput              BatchOutput[]
+  BatchWaste               BatchWaste[]
+  PackagingOrder           PackagingOrder[]
+  QCRecord                 QCRecord[]
+
+  @@index([status])
+  @@index([productionOrderId])
+}
+
+model BatchMaterialConsumption {
+  id         String  @id @default(cuid())
+  batchId    String
+  itemId     String
+  plannedQty Decimal
+  actualQty  Decimal
+  batch      Batch   @relation(fields: [batchId], references: [id])
+  item       Item    @relation(fields: [itemId], references: [id])
+
+  @@unique([batchId, itemId])
+  @@index([batchId])
+}
+
+model BatchOutput {
+  id      String  @id @default(cuid())
+  batchId String
+  itemId  String
+  qty     Decimal
+  batch   Batch   @relation(fields: [batchId], references: [id])
+  item    Item    @relation(fields: [itemId], references: [id])
+
+  @@unique([batchId, itemId])
+  @@index([batchId])
+}
+
+model BatchWaste {
+  id      String  @id @default(cuid())
+  batchId String
+  reason  String
+  qty     Decimal
+  batch   Batch   @relation(fields: [batchId], references: [id])
+
+  @@index([batchId])
+}
+
+model PackagingOrder {
+  id                           String                         @id @default(cuid())
+  code                         String                         @unique
+  parentBatchId                String
+  skuId                        String
+  qty                          Decimal
+  status                       ProductionStatus               @default(planned)
+  parentBatch                  Batch                          @relation(fields: [parentBatchId], references: [id])
+  sku                          SKU                            @relation(fields: [skuId], references: [id])
+  PackagingMaterialConsumption PackagingMaterialConsumption[]
+  ChildBatch                   ChildBatch[]
+
+  @@index([status])
+  @@index([parentBatchId])
+}
+
+model PackagingMaterialConsumption {
+  id               String         @id @default(cuid())
+  packagingOrderId String
+  itemId           String
+  qty              Decimal
+  packagingOrder   PackagingOrder @relation(fields: [packagingOrderId], references: [id])
+  item             Item           @relation(fields: [itemId], references: [id])
+
+  @@unique([packagingOrderId, itemId])
+  @@index([packagingOrderId])
+}
+
+model ChildBatch {
+  id               String         @id @default(cuid())
+  packagingOrderId String
+  lotCode          String
+  qty              Decimal
+  packagingOrder   PackagingOrder @relation(fields: [packagingOrderId], references: [id])
+
+  @@unique([packagingOrderId, lotCode])
+  @@index([packagingOrderId])
+}
+
+model QCChecklist {
+  id     String  @id @default(cuid())
+  name   String
+  active Boolean @default(true)
+
+  @@index([active])
+}
+
+model QCRecord {
+  id              String            @id @default(cuid())
+  batchId         String
+  decision        String
+  notes           String?
+  createdAt       DateTime          @default(now())
+  batch           Batch             @relation(fields: [batchId], references: [id])
+  QCRecordItem    QCRecordItem[]
+  QCNonConformity QCNonConformity[]
+
+  @@index([batchId])
+  @@index([createdAt])
+}
+
+model QCRecordItem {
+  id            String   @id @default(cuid())
+  qcRecordId    String
+  checklistItem String
+  passed        Boolean
+  note          String?
+  qcRecord      QCRecord @relation(fields: [qcRecordId], references: [id])
+
+  @@index([qcRecordId])
+}
+
+model QCNonConformity {
+  id         String   @id @default(cuid())
+  qcRecordId String
+  severity   String
+  action     String
+  qcRecord   QCRecord @relation(fields: [qcRecordId], references: [id])
+
+  @@index([qcRecordId])
+}
+
+model StockLot {
+  id            String          @id @default(cuid())
+  itemId        String
+  lotCode       String
+  warehouseId   String
+  status        EntityStatus    @default(active)
+  item          Item            @relation(fields: [itemId], references: [id])
+  warehouse     Warehouse       @relation(fields: [warehouseId], references: [id])
+  StockMovement StockMovement[]
+
+  @@unique([itemId, warehouseId, lotCode])
+  @@index([status])
+}
+
+model StockBalance {
+  id          String             @id @default(cuid())
+  itemId      String
+  warehouseId String
+  locationId  String?
+  qty         Decimal
+  reservedQty Decimal            @default(0)
+  item        Item               @relation(fields: [itemId], references: [id])
+  warehouse   Warehouse          @relation(fields: [warehouseId], references: [id])
+  location    WarehouseLocation? @relation(fields: [locationId], references: [id])
+
+  @@unique([itemId, warehouseId, locationId])
+  @@index([warehouseId])
+  @@index([locationId])
+}
+
+model StockMovement {
+  id        String    @id @default(cuid())
+  itemId    String
+  lotId     String?
+  type      String
+  qty       Decimal
+  reason    String?
+  createdAt DateTime  @default(now())
+  item      Item      @relation(fields: [itemId], references: [id])
+  lot       StockLot? @relation(fields: [lotId], references: [id])
+
+  @@index([type])
+  @@index([createdAt])
+  @@index([itemId])
+}
+
+model StockReservation {
+  id            String  @id @default(cuid())
+  itemId        String
+  referenceType String
+  referenceId   String
+  qty           Decimal
+  item          Item    @relation(fields: [itemId], references: [id])
+
+  @@index([itemId])
+  @@index([referenceType, referenceId])
+}
+
+model CycleCount {
+  id          String    @id @default(cuid())
+  warehouseId String
+  date        DateTime  @default(now())
+  status      String
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+
+  @@index([warehouseId])
+  @@index([status])
+  @@index([date])
+}
+
+model InventoryAdjustment {
+  id        String   @id @default(cuid())
+  itemId    String
+  qty       Decimal
+  reason    String
+  createdAt DateTime @default(now())
+  item      Item     @relation(fields: [itemId], references: [id])
+
+  @@index([itemId])
+  @@index([createdAt])
+}
+
+model Supplier {
+  id              String            @id @default(cuid())
+  code            String            @unique
+  name            String
+  status          EntityStatus      @default(active)
+  deletedAt       DateTime?
+  PurchaseOrder   PurchaseOrder[]
+  Expense         Expense[]
+  AccountsPayable AccountsPayable[]
+  Payment         Payment[]
+
+  @@index([status])
+}
+
+model PurchaseRequest {
+  id                  String                @id @default(cuid())
+  code                String                @unique
+  status              String
+  PurchaseRequestItem PurchaseRequestItem[]
+
+  @@index([status])
+}
+
+model PurchaseRequestItem {
+  id        String          @id @default(cuid())
+  requestId String
+  itemId    String
+  qty       Decimal
+  request   PurchaseRequest @relation(fields: [requestId], references: [id])
+  item      Item            @relation(fields: [itemId], references: [id])
+
+  @@unique([requestId, itemId])
+  @@index([requestId])
+}
+
+model PurchaseOrder {
+  id                String              @id @default(cuid())
+  code              String              @unique
+  supplierId        String
+  status            String
+  supplier          Supplier            @relation(fields: [supplierId], references: [id])
+  PurchaseOrderItem PurchaseOrderItem[]
+  GoodsReceipt      GoodsReceipt[]
+
+  @@index([status])
+  @@index([supplierId])
+}
+
+model PurchaseOrderItem {
+  id              String        @id @default(cuid())
+  purchaseOrderId String
+  itemId          String
+  qty             Decimal
+  unitCost        Decimal
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  item            Item          @relation(fields: [itemId], references: [id])
+
+  @@unique([purchaseOrderId, itemId])
+  @@index([purchaseOrderId])
+}
+
+model GoodsReceipt {
+  id               String             @id @default(cuid())
+  code             String             @unique
+  purchaseOrderId  String
+  status           String
+  purchaseOrder    PurchaseOrder      @relation(fields: [purchaseOrderId], references: [id])
+  GoodsReceiptItem GoodsReceiptItem[]
+
+  @@index([status])
+  @@index([purchaseOrderId])
+}
+
+model GoodsReceiptItem {
+  id             String       @id @default(cuid())
+  goodsReceiptId String
+  itemId         String
+  qty            Decimal
+  acceptedQty    Decimal
+  goodsReceipt   GoodsReceipt @relation(fields: [goodsReceiptId], references: [id])
+  item           Item         @relation(fields: [itemId], references: [id])
+
+  @@unique([goodsReceiptId, itemId])
+  @@index([goodsReceiptId])
+}
+
+model ExpenseCategory {
+  id                 String               @id @default(cuid())
+  name               String
+  ExpenseSubcategory ExpenseSubcategory[]
+  Expense            Expense[]
+}
+
+model ExpenseSubcategory {
+  id         String          @id @default(cuid())
+  categoryId String
+  name       String
+  category   ExpenseCategory @relation(fields: [categoryId], references: [id])
+
+  @@unique([categoryId, name])
+  @@index([categoryId])
+}
+
+model Expense {
+  id         String          @id @default(cuid())
+  date       DateTime        @default(now())
+  supplierId String?
+  categoryId String
+  amount     Decimal
+  status     AccountStatus   @default(open)
+  supplier   Supplier?       @relation(fields: [supplierId], references: [id])
+  category   ExpenseCategory @relation(fields: [categoryId], references: [id])
+
+  @@index([status])
+  @@index([date])
+  @@index([supplierId])
+}
+
+model Customer {
+  id                 String               @id @default(cuid())
+  code               String               @unique
+  name               String
+  status             EntityStatus         @default(active)
+  deletedAt          DateTime?
+  CustomerAddress    CustomerAddress[]
+  CustomerContact    CustomerContact[]
+  CustomerPriceList  CustomerPriceList[]
+  SalesOrder         SalesOrder[]
+  AccountsReceivable AccountsReceivable[]
+  Receipt            Receipt[]
+
+  @@index([status])
+}
+
+model CustomerAddress {
+  id         String   @id @default(cuid())
+  customerId String
+  label      String
+  address    String
+  city       String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  @@unique([customerId, label])
+  @@index([customerId])
+}
+
+model CustomerContact {
+  id         String   @id @default(cuid())
+  customerId String
+  name       String
+  phone      String?
+  email      String?
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  @@index([customerId])
+}
+
+model CustomerPriceList {
+  id          String    @id @default(cuid())
+  customerId  String
+  priceListId String
+  customer    Customer  @relation(fields: [customerId], references: [id])
+  priceList   PriceList @relation(fields: [priceListId], references: [id])
+
+  @@unique([customerId, priceListId])
+  @@index([customerId])
+  @@index([priceListId])
+}
+
+model PriceList {
+  id                String              @id @default(cuid())
+  code              String              @unique
+  name              String
+  startsAt          DateTime
+  status            EntityStatus        @default(active)
+  CustomerPriceList CustomerPriceList[]
+  PriceListItem     PriceListItem[]
+  SalesOrder        SalesOrder[]
+
+  @@index([startsAt])
+  @@index([status])
+}
+
+model PriceListItem {
+  id          String    @id @default(cuid())
+  priceListId String
+  skuId       String
+  price       Decimal
+  priceList   PriceList @relation(fields: [priceListId], references: [id])
+  sku         SKU       @relation(fields: [skuId], references: [id])
+
+  @@unique([priceListId, skuId])
+  @@index([priceListId])
+  @@index([skuId])
+}
+
+model SalesOrder {
+  id                 String               @id @default(cuid())
+  code               String               @unique
+  customerId         String
+  priceListId        String
+  status             SalesStatus          @default(draft)
+  total              Decimal              @default(0)
+  customer           Customer             @relation(fields: [customerId], references: [id])
+  priceList          PriceList            @relation(fields: [priceListId], references: [id])
+  SalesOrderItem     SalesOrderItem[]
+  DispatchOrder      DispatchOrder[]
+  SalesReturn        SalesReturn[]
+  AccountsReceivable AccountsReceivable[]
+
+  @@index([status])
+  @@index([customerId])
+}
+
+model SalesOrderItem {
+  id           String     @id @default(cuid())
+  salesOrderId String
+  skuId        String
+  qty          Decimal
+  unitPrice    Decimal
+  salesOrder   SalesOrder @relation(fields: [salesOrderId], references: [id])
+  sku          SKU        @relation(fields: [skuId], references: [id])
+
+  @@unique([salesOrderId, skuId])
+  @@index([salesOrderId])
+}
+
+model DispatchOrder {
+  id           String         @id @default(cuid())
+  code         String         @unique
+  salesOrderId String
+  status       SalesStatus    @default(confirmed)
+  salesOrder   SalesOrder     @relation(fields: [salesOrderId], references: [id])
+  DispatchItem DispatchItem[]
+
+  @@index([status])
+  @@index([salesOrderId])
+}
+
+model DispatchItem {
+  id              String        @id @default(cuid())
+  dispatchOrderId String
+  skuId           String
+  qty             Decimal
+  dispatchOrder   DispatchOrder @relation(fields: [dispatchOrderId], references: [id])
+  sku             SKU           @relation(fields: [skuId], references: [id])
+
+  @@unique([dispatchOrderId, skuId])
+  @@index([dispatchOrderId])
+}
+
+model SalesReturn {
+  id           String     @id @default(cuid())
+  code         String     @unique
+  salesOrderId String
+  reason       String
+  salesOrder   SalesOrder @relation(fields: [salesOrderId], references: [id])
+
+  @@index([salesOrderId])
+}
+
+model AccountsReceivable {
+  id                String              @id @default(cuid())
+  customerId        String
+  salesOrderId      String
+  dueDate           DateTime
+  amount            Decimal
+  balance           Decimal
+  status            AccountStatus       @default(open)
+  customer          Customer            @relation(fields: [customerId], references: [id])
+  salesOrder        SalesOrder          @relation(fields: [salesOrderId], references: [id])
+  ReceiptAllocation ReceiptAllocation[]
+
+  @@index([status])
+  @@index([dueDate])
+  @@index([customerId])
+}
+
+model Receipt {
+  id                String              @id @default(cuid())
+  code              String              @unique
+  customerId        String
+  amount            Decimal
+  cashAccountId     String
+  createdAt         DateTime            @default(now())
+  customer          Customer            @relation(fields: [customerId], references: [id])
+  cashAccount       CashAccount         @relation(fields: [cashAccountId], references: [id])
+  ReceiptAllocation ReceiptAllocation[]
+
+  @@index([createdAt])
+  @@index([customerId])
+}
+
+model ReceiptAllocation {
+  id           String             @id @default(cuid())
+  receiptId    String
+  receivableId String
+  amount       Decimal
+  receipt      Receipt            @relation(fields: [receiptId], references: [id])
+  receivable   AccountsReceivable @relation(fields: [receivableId], references: [id])
+
+  @@unique([receiptId, receivableId])
+  @@index([receiptId])
+}
+
+model AccountsPayable {
+  id                String              @id @default(cuid())
+  supplierId        String
+  sourceType        String
+  sourceId          String
+  dueDate           DateTime
+  amount            Decimal
+  balance           Decimal
+  status            AccountStatus       @default(open)
+  supplier          Supplier            @relation(fields: [supplierId], references: [id])
+  PaymentAllocation PaymentAllocation[]
+
+  @@index([status])
+  @@index([dueDate])
+  @@index([supplierId])
+  @@index([sourceType, sourceId])
+}
+
+model Payment {
+  id                String              @id @default(cuid())
+  code              String              @unique
+  supplierId        String
+  amount            Decimal
+  cashAccountId     String
+  createdAt         DateTime            @default(now())
+  supplier          Supplier            @relation(fields: [supplierId], references: [id])
+  cashAccount       CashAccount         @relation(fields: [cashAccountId], references: [id])
+  PaymentAllocation PaymentAllocation[]
+
+  @@index([createdAt])
+  @@index([supplierId])
+}
+
+model PaymentAllocation {
+  id        String          @id @default(cuid())
+  paymentId String
+  payableId String
+  amount    Decimal
+  payment   Payment         @relation(fields: [paymentId], references: [id])
+  payable   AccountsPayable @relation(fields: [payableId], references: [id])
+
+  @@unique([paymentId, payableId])
+  @@index([paymentId])
+}
+
+model TreasuryMovement {
+  id            String      @id @default(cuid())
+  cashAccountId String
+  type          String
+  amount        Decimal
+  date          DateTime    @default(now())
+  reference     String?
+  cashAccount   CashAccount @relation(fields: [cashAccountId], references: [id])
+
+  @@index([type])
+  @@index([date])
+  @@index([cashAccountId])
+}
+
+model BankReconciliation {
+  id            String      @id @default(cuid())
+  cashAccountId String
+  period        String
+  status        String
+  cashAccount   CashAccount @relation(fields: [cashAccountId], references: [id])
+
+  @@unique([cashAccountId, period])
+  @@index([status])
+  @@index([cashAccountId])
+}
+
+model CostSnapshot {
+  id      String   @id @default(cuid())
+  key     String
+  date    DateTime @default(now())
+  payload Json
+
+  @@index([key])
+  @@index([date])
+}
+
+model MarginSnapshot {
+  id      String   @id @default(cuid())
+  key     String
+  date    DateTime @default(now())
+  payload Json
+
+  @@index([key])
+  @@index([date])
+}
+
+model MonthlyClose {
+  id       String    @id @default(cuid())
+  month    String    @unique
+  status   String
+  closedAt DateTime?
+
+  @@index([status])
+}
+
+model ImportJob {
+  id         String       @id @default(cuid())
+  type       String
+  status     ImportStatus @default(uploaded)
+  sourceName String
+  mapping    Json?
+  summary    Json?
+  warnings   Json?
+  originals  Json?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
