@@ -109,6 +109,41 @@ Incluye soporte nativo de **alias/homologación/merge/pending_homologation** par
 
 ---
 
+
+## Despliegue completo en GitHub
+
+El repo ya incluye dos pipelines para publicar desde GitHub Actions:
+
+1. **Web en GitHub Pages** (`.github/workflows/deploy-pages.yml`)
+2. **Bundle full app (API + Web + Prisma + scripts) en Releases** (`.github/workflows/deploy-full-app.yml`)
+
+### 1) Publicar frontend en GitHub Pages
+
+1. Subí el código a la rama `main`, `master` o `work`.
+2. En tu repo de GitHub: **Settings → Pages → Source = GitHub Actions**.
+3. El workflow `Deploy Pages` compila `apps/web` y publica `apps/web/out`.
+
+### 2) Publicar bundle completo de la app en GitHub Releases
+
+Cada push a `main`/`master`/`work` (o ejecución manual) genera:
+- build completo de workspaces (`pnpm build`)
+- artefacto `.tar.gz` con API, web, prisma, scripts y archivos raíz
+- release automática con tag `deploy-<run_number>`
+
+### 3) Desplegar en servidor desde el release
+
+```bash
+tar -xzf jm-adm-full-app-<sha>.tar.gz
+cp .env.example .env
+pnpm install --frozen-lockfile
+pnpm db:migrate
+pnpm db:seed
+pnpm start
+```
+
+> Recomendación: usar `docker compose up --build -d` en producción si querés levantar servicios dependientes (PostgreSQL/Redis/MinIO) en el mismo host.
+
+---
 ## Variables de entorno
 
 Crear `.env` desde `.env.example`:
