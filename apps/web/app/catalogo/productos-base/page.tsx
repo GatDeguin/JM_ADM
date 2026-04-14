@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { CriticalDomainCrudView } from "@/components/ui/CriticalDomainCrudView";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Catalogo · Productos Base"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="catalogo-productos-base"
-    />
-  );
+  return <CriticalDomainCrudView domain="producto-base" />;
 }

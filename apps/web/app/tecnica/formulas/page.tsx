@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { CriticalDomainCrudView } from "@/components/ui/CriticalDomainCrudView";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Tecnica · Formulas"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="tecnica-formulas"
-    />
-  );
+  return <CriticalDomainCrudView domain="formula" />;
 }
