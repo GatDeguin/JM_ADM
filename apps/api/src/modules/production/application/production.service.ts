@@ -1,10 +1,11 @@
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import {
   assertBatchCanBeFractionated,
-  assertFormulaCanBeUsed,
   assertPositiveNumber,
   assertRequiredText,
 } from "../../../common/domain-rules/shared-domain-rules";
+import { DomainEventsService } from "../../../common/events/domain-events.service";
+import { AuditTrailService } from "../../audit/application/audit-trail.service";
 import { ProductionRepository } from "../infrastructure/production.repository";
 
 type BatchExecutionInput = {
@@ -16,7 +17,11 @@ type BatchExecutionInput = {
 
 @Injectable()
 export class ProductionService {
-  constructor(private readonly productionRepository: ProductionRepository) {}
+  constructor(
+    private readonly productionRepository: ProductionRepository,
+    private readonly auditTrail: Pick<AuditTrailService, "logTransactionalAction"> = { logTransactionalAction: async () => undefined },
+    private readonly domainEvents: Pick<DomainEventsService, "emit"> = { emit: () => undefined },
+  ) {}
 
   list() {
     return this.productionRepository.listOrders();
@@ -25,11 +30,35 @@ export class ProductionService {
   async create(code: string, productBaseId: string, formulaVersionId: string, plannedQty: number) {
     assertPositiveNumber(plannedQty, "La cantidad planificada");
     const formulaVersion = await this.productionRepository.findFormulaVersion(formulaVersionId);
-    assertFormulaCanBeUsed(formulaVersion?.status);
+    if (!formulaVersion || formulaVersion.status !== "approved") {
+      throw new ConflictException("La OP sólo puede crearse con una fórmula vigente y aprobada.");
+    }
+
     try {
       const order = await this.productionRepository.createOrder(code, productBaseId, formulaVersionId, plannedQty);
       await this.productionRepository.calculateTheoreticalMaterials(order.id);
-      return order;
+
+      await this.auditTrail.logTransactionalAction({
+        entity: "production_order",
+        entityId: order.id,
+        origin: "production.create",
+        after: { code: order.code, status: order.status, formulaVersionId, plannedQty },
+      });
+      this.domainEvents.emit({
+        name: "production.order.created",
+        entity: "production_order",
+        entityId: order.id,
+        occurredAt: new Date().toISOString(),
+        metadata: { code: order.code, plannedQty },
+      });
+      this.domainEvents.emit({
+        name: "production.materials.theoretical_calculated",
+        entity: "production_order",
+        entityId: order.id,
+        occurredAt: new Date().toISOString(),
+      });
+
+      return { ...order, event: "production.order.created" };
     } catch (error) {
       if (typeof error === "object" && error && "code" in error && error.code === "P2002") {
         throw new ConflictException("El código de orden de producción ya existe");
@@ -44,6 +73,21 @@ export class ProductionService {
       throw new NotFoundException("Orden de producción no encontrada");
     }
     await this.productionRepository.reserveMaterials(id);
+
+    await this.auditTrail.logTransactionalAction({
+      entity: "production_order",
+      entityId: id,
+      origin: "production.reserveMaterials",
+      before: { status: order.status },
+      after: { status: "reserved" },
+    });
+    this.domainEvents.emit({
+      name: "production.materials.reserved",
+      entity: "production_order",
+      entityId: id,
+      occurredAt: new Date().toISOString(),
+    });
+
     return { event: "production.materials.reserved", id };
   }
 
@@ -53,6 +97,21 @@ export class ProductionService {
       throw new NotFoundException("Orden de producción no encontrada");
     }
     const batch = await this.productionRepository.startBatch(id);
+
+    await this.auditTrail.logTransactionalAction({
+      entity: "batch",
+      entityId: batch.id,
+      origin: "production.startBatch",
+      after: { code: batch.code, status: "in_process", productionOrderId: id },
+    });
+    this.domainEvents.emit({
+      name: "production.batch.started",
+      entity: "batch",
+      entityId: batch.id,
+      occurredAt: new Date().toISOString(),
+      metadata: { productionOrderId: id },
+    });
+
     return { event: "production.order.started", id, batchId: batch.id, batchCode: batch.code };
   }
 
@@ -74,8 +133,30 @@ export class ProductionService {
       assertPositiveNumber(output.qty, "La cantidad de salida");
     }
 
+    const before = await this.productionRepository.findBatch(id);
+    if (!before) {
+      throw new NotFoundException("Batch no encontrado");
+    }
+
+    const outputQty = payload.outputs.reduce((acc, output) => acc + output.qty, 0);
     await this.productionRepository.recordBatchExecution(id, responsible, payload);
-    return { event: "production.batch.closed", id };
+
+    await this.auditTrail.logTransactionalAction({
+      entity: "batch",
+      entityId: id,
+      origin: "production.closeBatch",
+      before: { status: before.status, responsibleUserId: before.responsibleUserId, outputQty: before.outputQty },
+      after: { status: "qc_pending", responsibleUserId: responsible, outputQty },
+    });
+    this.domainEvents.emit({
+      name: "production.batch.closed",
+      entity: "batch",
+      entityId: id,
+      occurredAt: new Date().toISOString(),
+      metadata: { status: "qc_pending", outputQty, consumptions: payload.consumptions.length, wastes: payload.wastes.length },
+    });
+
+    return { event: "production.batch.closed", id, status: "qc_pending" };
   }
 
   async releaseBatch(id: string) {

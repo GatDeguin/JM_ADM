@@ -10,9 +10,26 @@ describe("quality integration", () => {
   });
 
   it("falla si se intenta crear QC sin checklist", async () => {
-    const repo = { createWithChecklist: vi.fn(), list: vi.fn(), get: vi.fn(), update: vi.fn(), remove: vi.fn(), runAction: vi.fn() };
+    const repo = { findBatch: vi.fn(), createWithChecklist: vi.fn(), list: vi.fn(), get: vi.fn(), update: vi.fn(), remove: vi.fn(), runAction: vi.fn() };
     const service = new QualityService(repo as never);
 
     await expect(service.create({ batchId: "b-1", decision: "approved", checklistItems: [] })).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it("exige lote en qc_pending para decidir calidad", async () => {
+    const repo = {
+      findBatch: vi.fn(async () => ({ id: "b-1", status: "in_process" })),
+      createWithChecklist: vi.fn(),
+      list: vi.fn(),
+      get: vi.fn(),
+      update: vi.fn(),
+      remove: vi.fn(),
+      runAction: vi.fn(),
+    };
+    const service = new QualityService(repo as never);
+
+    await expect(
+      service.create({ batchId: "b-1", decision: "approved", checklistItems: [{ checklistItem: "ph", passed: true }] }),
+    ).rejects.toBeInstanceOf(ConflictException);
   });
 });
