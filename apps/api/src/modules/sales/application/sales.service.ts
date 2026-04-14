@@ -1,4 +1,9 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable } from "@nestjs/common";
+import { ConflictException, Injectable } from "@nestjs/common";
+import {
+  assertOrderHasItems,
+  assertRequiredText,
+  assertSalesTotalAllowed,
+} from "../../../common/domain-rules/shared-domain-rules";
 import { SalesRepository } from "../infrastructure/sales.repository";
 
 @Injectable()
@@ -10,17 +15,10 @@ export class SalesService {
   }
 
   async create(code: string, customerId: string, priceListId: string, total: number, items: Array<{ skuId: string; qty: number }>) {
-    if (!customerId) {
-      throw new BadRequestException("customer required");
-    }
-
-    if (!items?.length) {
-      throw new BadRequestException("sku required");
-    }
-
-    if (total <= 0) {
-      throw new ForbiddenException("No se permiten pedidos con total <= 0");
-    }
+    assertRequiredText(customerId, "el cliente");
+    assertRequiredText(priceListId, "la lista de precios");
+    assertOrderHasItems(items);
+    assertSalesTotalAllowed(total);
 
     try {
       const order = await this.salesRepository.createOrder(code, customerId, priceListId, total);

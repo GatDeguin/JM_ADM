@@ -1,17 +1,12 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import { assertNonZeroNumber, assertRequiredText } from "../../../common/domain-rules/shared-domain-rules";
 
 @Injectable()
 export class FinanceService {
   registerInventoryAdjustment(itemId: string, qty: number, reason: string) {
-    if (!itemId) {
-      throw new BadRequestException("item required");
-    }
-    if (qty === 0) {
-      throw new BadRequestException("qty must be different from zero");
-    }
-    if (!reason?.trim()) {
-      throw new BadRequestException("reason required");
-    }
+    assertRequiredText(itemId, "el item de stock");
+    assertNonZeroNumber(qty, "La cantidad de ajuste");
+    assertRequiredText(reason, "el motivo del ajuste");
 
     return {
       event: "finance.inventory.adjustment.registered",

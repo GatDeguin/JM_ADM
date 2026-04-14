@@ -32,6 +32,68 @@ type DomainRecord = {
   updatedAt: string;
 };
 
+type DomainRuleConfig = {
+  disabledStatuses: DomainRecord["status"][];
+  warnings: string[];
+  blockReason?: string;
+};
+
+const domainRuleMap: Record<string, DomainRuleConfig> = {
+  "operacion-produccion": {
+    disabledStatuses: ["blocked"],
+    warnings: ["Solo podés crear órdenes con fórmulas vigentes y cantidad planificada > 0."]
+  },
+  "operacion-produccion-nueva": {
+    disabledStatuses: ["blocked"],
+    warnings: ["Antes de guardar, verificá fórmula aprobada y stock de insumos suficiente."]
+  },
+  "operacion-fraccionamiento": {
+    disabledStatuses: ["blocked"],
+    warnings: ["No se permite fraccionar lotes retenidos ni cantidades menores o iguales a 0."]
+  },
+  "stock-movimientos": {
+    disabledStatuses: [],
+    warnings: ["Los ajustes de stock requieren motivo y no aceptan cantidad 0."]
+  },
+  "stock-balance": {
+    disabledStatuses: [],
+    warnings: ["No se permiten saldos de stock inicial negativos."]
+  },
+  "stock-inventarios": {
+    disabledStatuses: [],
+    warnings: ["Cada conteo debe tener justificación cuando exista diferencia de inventario."]
+  },
+  "comercial-pedidos": {
+    disabledStatuses: ["blocked"],
+    warnings: ["Un pedido de venta requiere cliente, lista de precios y total mayor a 0."]
+  },
+  "finanzas-cobranzas": {
+    disabledStatuses: ["blocked"],
+    warnings: ["Las cobranzas no se confirman sin documento de respaldo ni importe válido."]
+  },
+  "finanzas-pagos": {
+    disabledStatuses: ["blocked"],
+    warnings: ["Los pagos se bloquean cuando faltan aprobaciones o el importe es inválido."]
+  },
+  "comercial-listas": {
+    disabledStatuses: ["blocked"],
+    warnings: ["Las listas de precio activas deben tener código único y precio positivo."]
+  },
+  "comercial-clientes-homologacion": {
+    disabledStatuses: ["blocked"],
+    warnings: ["No se puede homologar un cliente en estado bloqueado."]
+  },
+  "sistema-importaciones": {
+    disabledStatuses: ["blocked"],
+    warnings: ["La importación se bloquea si hay pendientes de homologación o mapping vacío."]
+  }
+};
+
+const defaultRuleConfig: DomainRuleConfig = {
+  disabledStatuses: [],
+  warnings: []
+};
+
 export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps) {
   const [records, setRecords] = useState<DomainRecord[]>([
     { id: `${domain}-1`, name: `${domain} principal`, code: "A-001", status: "active", updatedAt: "2026-04-14" },
@@ -52,12 +114,25 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
     [records]
   );
 
+  const currentRules = domainRuleMap[domain] ?? defaultRuleConfig;
+  const selectedStatus = form.watch("status");
+  const currentWarning = currentRules.disabledStatuses.includes(selectedStatus)
+    ? `Estado bloqueado para ${domain}: corregí el registro para poder guardar.`
+    : currentRules.blockReason;
+  const saveBlocked = Boolean(currentWarning);
+
   const onSubmit = form.handleSubmit((values) => {
     const parsed = formSchema.safeParse(values);
     if (!parsed.success) {
       form.setError("name", { message: parsed.error.issues[0]?.message ?? "Validación" });
       return;
     }
+
+    if (currentRules.disabledStatuses.includes(parsed.data.status)) {
+      form.setError("status", { message: `El estado ${parsed.data.status} está bloqueado para este dominio.` });
+      return;
+    }
+
     const newRecord: DomainRecord = {
       id: `${domain}-${Date.now()}`,
       name: parsed.data.name,
@@ -104,6 +179,13 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
 
         <form className="rounded-xl border bg-white p-4" onSubmit={onSubmit}>
           <h3 className="mb-3 font-semibold">Crear / Editar</h3>
+          {currentRules.warnings.length ? (
+            <div className="mb-3 rounded border border-amber-200 bg-amber-50 p-2 text-xs text-amber-700">
+              {currentRules.warnings.map((warning) => (
+                <p key={warning}>⚠ {warning}</p>
+              ))}
+            </div>
+          ) : null}
           <div className="grid gap-3 md:grid-cols-2">
             <label>
               <span className="mb-1 block text-sm">Nombre</span>
@@ -123,7 +205,11 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
             </label>
           </div>
           {form.formState.errors.name ? <p className="mt-2 text-sm text-red-600">{form.formState.errors.name.message}</p> : null}
-          <button className="mt-3 rounded bg-zinc-900 px-3 py-2 text-sm text-white" type="submit">Guardar</button>
+          {form.formState.errors.status ? <p className="mt-2 text-sm text-red-600">{form.formState.errors.status.message}</p> : null}
+          {currentWarning ? <p className="mt-2 text-sm text-amber-700">⛔ {currentWarning}</p> : null}
+          <button className="mt-3 rounded bg-zinc-900 px-3 py-2 text-sm text-white disabled:cursor-not-allowed disabled:bg-zinc-400" type="submit" disabled={saveBlocked}>
+            Guardar
+          </button>
         </form>
       </div>
 
