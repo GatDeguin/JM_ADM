@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { CriticalDomainCrudView } from "@/components/ui/CriticalDomainCrudView";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Stock · Lotes"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="stock-lotes"
-    />
-  );
+  return <CriticalDomainCrudView domain="lote" />;
 }

@@ -95,15 +95,12 @@ const defaultRuleConfig: DomainRuleConfig = {
 };
 
 export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps) {
-  const [records, setRecords] = useState<DomainRecord[]>([
-    { id: `${domain}-1`, name: `${domain} principal`, code: "A-001", status: "active", updatedAt: "2026-04-14" },
-    { id: `${domain}-2`, name: `${domain} alterno`, code: "B-002", status: "draft", updatedAt: "2026-04-13" }
-  ]);
+  const [records, setRecords] = useState<DomainRecord[]>([]);
   const [loading] = useState(false);
   const [error] = useState<string | null>(null);
-  const [selected, setSelected] = useState<string>(records[0]?.id ?? "");
-  const [leftId, setLeftId] = useState<string>(records[0]?.id ?? "");
-  const [rightId, setRightId] = useState<string>(records[1]?.id ?? "");
+  const [selected, setSelected] = useState<string>("");
+  const [leftId, setLeftId] = useState<string>("");
+  const [rightId, setRightId] = useState<string>("");
 
   const form = useForm<FormValues>({
     defaultValues: { name: "", code: "", status: "draft" }
