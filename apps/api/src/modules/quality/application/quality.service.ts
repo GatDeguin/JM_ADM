@@ -1,7 +1,7 @@
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { DomainEventsService } from "../../../common/events/domain-events.service";
 import { AuditTrailService } from "../../audit/application/audit-trail.service";
-import { ActionQCRecordInput, CreateQCRecordInput, QCRecordDto, UpdateQCRecordInput } from "../domain/quality.types";
+import { ActionQCRecordInput, CreateQCRecordInput, QCProcess, QCRecordDto, UpdateQCRecordInput } from "../domain/quality.types";
 import { QualityRepository } from "../infrastructure/quality.repository";
 
 @Injectable()
@@ -20,15 +20,15 @@ export class QualityService {
     return this.repository.get(id);
   }
 
-  async getChecklistForBatch(batchId: string) {
-    const family = await this.repository.findBatchFamily(batchId);
-    if (!family) {
+  async getChecklistForBatch(batchId: string, process: QCProcess = "production", skuId?: string) {
+    const context = await this.repository.findBatchQualityContext(batchId);
+    if (!context) {
       throw new NotFoundException("No se pudo identificar la familia del lote.");
     }
-    return this.repository.listChecklistByFamily(family.id, family.name);
+    return this.repository.listChecklistByContext({ ...context, skuId: skuId ?? null, process });
   }
 
-  async create(data: CreateQCRecordInput): Promise<QCRecordDto> {
+  async create(data: CreateQCRecordInput): Promise<QCRecordDto & { summary: { approvedItems: number; rejectedItems: number } }> {
     if (!data.checklistItems.length) {
       throw new ConflictException("Debes completar checklist de QC.");
     }
@@ -41,23 +41,29 @@ export class QualityService {
       throw new ConflictException("El lote debe estar en qc_pending para registrar una decisión de calidad.");
     }
 
+    const rejectedItems = data.checklistItems.filter((item) => !item.passed).length;
+    if (data.decision === "approved" && rejectedItems > 0) {
+      throw new ConflictException("No se puede aprobar QC con ítems rechazados.");
+    }
+
     const qc = await this.repository.createWithChecklist(data);
+    const approvedItems = data.checklistItems.length - rejectedItems;
 
     await this.auditTrail.logTransactionalAction({
       entity: "qc_record",
       entityId: qc.id,
       origin: "quality.createQCRecord",
-      after: { batchId: data.batchId, decision: data.decision },
+      after: { batchId: data.batchId, decision: data.decision, approvedItems, rejectedItems },
     });
     this.domainEvents.emit({
       name: "quality.qc.decision_recorded",
       entity: "batch",
       entityId: data.batchId,
       occurredAt: new Date().toISOString(),
-      metadata: { qcRecordId: qc.id, decision: data.decision },
+      metadata: { qcRecordId: qc.id, decision: data.decision, approvedItems, rejectedItems },
     });
 
-    return qc;
+    return { ...qc, summary: { approvedItems, rejectedItems } };
   }
 
   update(id: string, data: UpdateQCRecordInput): Promise<QCRecordDto> {
