@@ -6,16 +6,17 @@ export type QuickCreateSheetProps<T extends Record<string, unknown>> = {
   title: string;
   loading?: boolean;
   error?: string | null;
-  onCreate: (payload: T) => Promise<void> | void;
+  originFlow?: string;
+  onCreate: (payload: T & { originFlow?: string }) => Promise<void> | void;
   fields: Array<{ key: keyof T; label: string; placeholder?: string }>;
 };
 
-export function QuickCreateSheet<T extends Record<string, unknown>>({ title, loading, error, onCreate, fields }: QuickCreateSheetProps<T>) {
+export function QuickCreateSheet<T extends Record<string, unknown>>({ title, loading, error, originFlow, onCreate, fields }: QuickCreateSheetProps<T>) {
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState<Partial<T>>({});
 
   const submit = async () => {
-    await onCreate(values as T);
+    await onCreate({ ...(values as T), originFlow });
     setValues({});
     setOpen(false);
   };
