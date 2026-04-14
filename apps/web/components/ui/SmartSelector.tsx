@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { QuickCreateSheet } from "@/components/ui/QuickCreateSheet";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Skeletons } from "@/components/ui/Skeletons";
 
 export type SmartSelectorOption = { id: string; label: string; meta?: string };
 export type ContextualEntityType = "presentacion" | "unidad" | "sku" | "alias" | "proveedor" | "cliente" | "lista" | "cuenta";
@@ -23,17 +25,7 @@ type SmartSelectorProps = {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
-export function SmartSelector({
-  label,
-  options,
-  value,
-  loading,
-  error,
-  emptyMessage = "Sin opciones disponibles.",
-  onChange,
-  onCreateOption,
-  contextualConfig
-}: SmartSelectorProps) {
+export function SmartSelector({ label, options, value, loading, error, emptyMessage = "Sin opciones disponibles.", onChange, onCreateOption, contextualConfig }: SmartSelectorProps) {
   const [query, setQuery] = useState("");
   const [contextualOptions, setContextualOptions] = useState<SmartSelectorOption[]>([]);
 
@@ -63,28 +55,30 @@ export function SmartSelector({
 
   const sourceOptions = contextualConfig ? [...contextualOptions, ...options.filter((option) => !contextualOptions.some((ctx) => ctx.id === option.id))] : options;
 
-  const filtered = useMemo(
-    () => sourceOptions.filter((o) => o.label.toLowerCase().includes(query.toLowerCase())),
-    [sourceOptions, query]
-  );
+  const filtered = useMemo(() => sourceOptions.filter((o) => o.label.toLowerCase().includes(query.toLowerCase())), [sourceOptions, query]);
 
   return (
-    <div className="rounded-xl border bg-white p-3">
-      <label className="mb-2 block text-sm font-medium">{label}</label>
+    <div className="card-base">
+      <label className="mb-2 block text-sm font-semibold" htmlFor={`${label}-search`}>
+        {label}
+      </label>
       <input
-        className="mb-2 w-full rounded border px-3 py-2 text-sm"
+        id={`${label}-search`}
+        className="input-base mb-2 w-full"
         placeholder="Buscar opción"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
-      {loading ? <p className="text-xs text-zinc-500">Cargando opciones...</p> : null}
-      {error ? <p className="text-xs text-red-600">{error}</p> : null}
-      {!loading && !error && filtered.length === 0 ? <p className="text-xs text-zinc-500">{emptyMessage}</p> : null}
-      <div className="space-y-1">
+      {loading ? <Skeletons rows={3} /> : null}
+      {error ? <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p> : null}
+      {!loading && !error && filtered.length === 0 ? <EmptyState title="Sin coincidencias" description={emptyMessage} /> : null}
+      <div className="space-y-1" role="listbox" aria-label={label}>
         {filtered.map((option) => (
           <button
             key={option.id}
-            className={`block w-full rounded px-2 py-1.5 text-left text-sm ${value === option.id ? "bg-zinc-900 text-white" : "bg-zinc-100"}`}
+            role="option"
+            aria-selected={value === option.id}
+            className={`block w-full rounded-lg px-2 py-1.5 text-left text-sm transition ${value === option.id ? "bg-zinc-900 text-white" : "bg-zinc-100 text-zinc-800 hover:bg-zinc-200"}`}
             onClick={() => onChange(option.id)}
           >
             <div>{option.label}</div>
