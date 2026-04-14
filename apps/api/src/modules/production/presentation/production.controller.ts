@@ -12,6 +12,7 @@ const createOrderSchema = z.object({
 
 const closeBatchSchema = z.object({
   responsible: z.string().min(1),
+  outputQty: z.number().positive(),
 });
 
 @Controller("production")
@@ -37,6 +38,6 @@ export class ProductionController {
   @Post(":id/close-batch")
   @UsePipes(new ZodValidationPipe(closeBatchSchema))
   close(@Param("id") id: string, @Body() body: z.infer<typeof closeBatchSchema>) {
-    return this.productionService.close(id, body.responsible);
+    return this.productionService.close(id, body.responsible, body.outputQty);
   }
 }

@@ -25,7 +25,15 @@ export class ProductionRepository {
     return this.prisma.productionOrder.findUnique({ where: { id } });
   }
 
-  closeBatch(id: string, responsibleUserId: string) {
-    return this.prisma.batch.update({ where: { id }, data: { responsibleUserId, status: "closed" } });
+  findFormulaVersion(id: string) {
+    return this.prisma.formulaVersion.findUnique({ where: { id }, select: { id: true, status: true } });
+  }
+
+  findBatch(id: string) {
+    return this.prisma.batch.findUnique({ where: { id } });
+  }
+
+  closeBatch(id: string, responsibleUserId: string, outputQty: number) {
+    return this.prisma.batch.update({ where: { id }, data: { responsibleUserId, outputQty, status: "closed" } });
   }
 }

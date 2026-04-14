@@ -13,6 +13,10 @@ export class ProductionService {
     if (plannedQty <= 0) {
       throw new BadRequestException("plannedQty debe ser mayor que cero");
     }
+    const formulaVersion = await this.productionRepository.findFormulaVersion(formulaVersionId);
+    if (formulaVersion?.status === "obsolete") {
+      throw new BadRequestException("formula obsolete");
+    }
     try {
       return await this.productionRepository.createOrder(code, productBaseId, formulaVersionId, plannedQty);
     } catch (error) {
@@ -31,10 +35,28 @@ export class ProductionService {
     return { event: "production.order.started", id };
   }
 
-  async close(id: string, responsible: string) {
+  async close(id: string, responsible: string, outputQty: number) {
     if (!responsible) {
       throw new BadRequestException("responsible required");
     }
-    return { event: "production.batch.closed", id };
+    if (outputQty <= 0) {
+      throw new BadRequestException("output required");
+    }
+    await this.productionRepository.closeBatch(id, responsible, outputQty);
+    return { event: "production.batch.closed", id, outputQty };
+  }
+
+  async fractionate(batchId: string, qty: number) {
+    if (qty <= 0) {
+      throw new BadRequestException("qty must be > 0");
+    }
+    const batch = await this.productionRepository.findBatch(batchId);
+    if (!batch) {
+      throw new NotFoundException("Batch no encontrado");
+    }
+    if (batch.status === "retained") {
+      throw new ConflictException("retained batch cannot be fractionated");
+    }
+    return { event: "production.batch.fractionated", batchId, qty };
   }
 }
