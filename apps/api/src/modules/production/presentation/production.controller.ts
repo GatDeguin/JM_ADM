@@ -12,7 +12,15 @@ const createOrderSchema = z.object({
 
 const closeBatchSchema = z.object({
   responsible: z.string().min(1),
-  outputQty: z.number().positive(),
+  consumptions: z.array(z.object({ itemId: z.string().min(1), plannedQty: z.number().positive(), actualQty: z.number().positive() })).default([]),
+  wastes: z.array(z.object({ reason: z.string().min(1), qty: z.number().positive() })).default([]),
+  outputs: z.array(z.object({ itemId: z.string().min(1), qty: z.number().positive() })).min(1),
+});
+
+const fractionateSchema = z.object({
+  skuId: z.string().min(1),
+  qty: z.number().positive(),
+  childLots: z.array(z.object({ lotCode: z.string().min(2), qty: z.number().positive() })).min(1),
 });
 
 @Controller("production")
@@ -30,6 +38,11 @@ export class ProductionController {
     return this.productionService.create(body.code, body.productBaseId, body.formulaVersionId, body.plannedQty);
   }
 
+  @Post(":id/reserve-materials")
+  reserve(@Param("id") id: string) {
+    return this.productionService.reserveMaterials(id);
+  }
+
   @Post(":id/start-batch")
   start(@Param("id") id: string) {
     return this.productionService.start(id);
@@ -38,6 +51,22 @@ export class ProductionController {
   @Post(":id/close-batch")
   @UsePipes(new ZodValidationPipe(closeBatchSchema))
   close(@Param("id") id: string, @Body() body: z.infer<typeof closeBatchSchema>) {
-    return this.productionService.close(id, body.responsible, body.outputQty);
+    return this.productionService.close(id, body);
+  }
+
+  @Post(":id/release-batch")
+  release(@Param("id") id: string) {
+    return this.productionService.releaseBatch(id);
+  }
+
+  @Post(":id/fractionate")
+  @UsePipes(new ZodValidationPipe(fractionateSchema))
+  fractionate(@Param("id") id: string, @Body() body: z.infer<typeof fractionateSchema>) {
+    return this.productionService.fractionate(id, body.qty, body.skuId, body.childLots);
+  }
+
+  @Get("batches/:id/timeline")
+  timeline(@Param("id") id: string) {
+    return this.productionService.traceTimeline(id);
   }
 }

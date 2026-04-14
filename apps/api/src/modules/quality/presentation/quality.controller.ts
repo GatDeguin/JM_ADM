@@ -3,13 +3,25 @@ import { z } from "zod";
 import { ZodValidationPipe } from "../../../common/validation/zod-validation.pipe";
 import { QualityService } from "../application/quality.service";
 
-const createSchema = z.object({ batchId: z.string().min(1), decision: z.string().min(1), notes: z.string().optional() });
-const updateSchema = z.object({ decision: z.string().optional(), notes: z.string().optional() });
+const decisionEnum = z.enum(["approved", "rejected", "reprocess"]);
+
+const createSchema = z.object({
+  batchId: z.string().min(1),
+  decision: decisionEnum,
+  notes: z.string().optional(),
+  checklistItems: z.array(z.object({ checklistItem: z.string().min(1), passed: z.boolean(), note: z.string().optional() })).min(1),
+});
+const updateSchema = z.object({ decision: decisionEnum.optional(), notes: z.string().optional() });
 const actionSchema = z.object({ severity: z.string().min(1), action: z.string().min(1) });
 
 @Controller("quality")
 export class QualityController {
   constructor(private readonly service: QualityService) {}
+
+  @Get("checklists/by-batch/:batchId")
+  getChecklist(@Param("batchId") batchId: string) {
+    return this.service.getChecklistForBatch(batchId);
+  }
 
   @Get("qc-records")
   list() {
