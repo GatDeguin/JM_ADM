@@ -1,38 +1,163 @@
-# JM ADM Hair Cosmetics Platform
+# JM ADM — Plataforma Operativa Integral (Cosmética Capilar)
 
-Monorepo full-stack (pnpm workspaces) for an integrated operations platform for a hair cosmetics company.
+Plataforma full‑stack **mobile‑first** para operación integral de una empresa de cosmética capilar: catálogo, fórmulas, producción por lote, fraccionamiento, stock trazable, compras, ventas, cobranzas/pagos, tesorería, costos, reportes, auditoría e importaciones.
 
-## Stack
-- Frontend: Next.js (App Router), TypeScript, Tailwind, TanStack Query, React Hook Form, Zod
-- Backend: NestJS + TypeScript (modular monolith)
-- DB: PostgreSQL + Prisma
-- Jobs: Redis + BullMQ
-- Storage: MinIO (S3 compatible)
-- Tests: Vitest + Playwright
-- Infra: Docker Compose
+## Objetivo de producto
 
-## Quick start
+Modelar y ejecutar de punta a punta la cadena:
+
+**Insumo → Fórmula → Producto base → Presentación → SKU → Orden de producción → Lote madre → Fraccionamiento → Stock → Venta → Cobranza/Pago → Costo → Reporte**
+
+Incluye soporte nativo de **alias/homologación/merge/pending_homologation** para conservar histórico sin perder el valor original importado.
+
+---
+
+## Stack tecnológico
+
+### Monorepo
+- `pnpm` workspaces
+
+### Frontend (apps/web)
+- Next.js 15 (App Router)
+- TypeScript
+- Tailwind CSS
+- TanStack Query
+- React Hook Form
+- Zod
+- Componentes UI reutilizables internos
+
+### Backend (apps/api)
+- NestJS (modular monolith)
+- TypeScript
+- Arquitectura por capas (presentation/application/domain/infrastructure)
+- DTO/validaciones consistentes
+
+### Datos e infraestructura
+- PostgreSQL + Prisma
+- Redis + BullMQ (colas de importación)
+- MinIO (S3 compatible para adjuntos)
+- Docker Compose
+
+### Calidad
+- Vitest (unit/integration)
+- Playwright (E2E web)
+- ESLint + Prettier
+
+---
+
+## Arquitectura
+
+### Módulos backend
+- `auth`
+- `users`
+- `roles_permissions`
+- `masters`
+- `catalog`
+- `formulas`
+- `production`
+- `packaging`
+- `quality`
+- `inventory`
+- `purchasing`
+- `expenses`
+- `customers`
+- `pricing`
+- `sales`
+- `receivables`
+- `payables_treasury`
+- `costing`
+- `reporting`
+- `imports`
+- `audit`
+
+### Eventos de dominio implementados
+- `formula.approved`
+- `product.sku.created`
+- `purchase.received`
+- `production.order.started`
+- `production.batch.closed`
+- `quality.batch.released`
+- `packaging.order.completed`
+- `stock.adjusted`
+- `sales.order.confirmed`
+- `dispatch.completed`
+- `receipt.recorded`
+- `payment.recorded`
+- `month.closed`
+- `import.finished`
+
+---
+
+## Estructura del repositorio
+
+```text
+.
+├─ apps/
+│  ├─ api/                  # NestJS API
+│  └─ web/                  # Next.js App Router (PWA-ready)
+├─ packages/
+│  └─ shared/               # tipos y utilidades compartidas
+├─ prisma/
+│  ├─ schema.prisma         # modelo de datos
+│  └─ seed.ts               # datos semilla completos
+├─ scripts/
+│  └─ import-demo.ts        # importador demo
+├─ docker-compose.yml
+├─ package.json
+└─ README.md
+```
+
+---
+
+## Variables de entorno
+
+Crear `.env` desde `.env.example`:
+
 ```bash
 cp .env.example .env
+```
+
+Variables típicas:
+- `DATABASE_URL`
+- `REDIS_URL`
+- `JWT_SECRET`
+- `JWT_REFRESH_SECRET`
+- `MINIO_ENDPOINT`
+- `MINIO_ACCESS_KEY`
+- `MINIO_SECRET_KEY`
+- `MINIO_BUCKET`
+- `NEXT_PUBLIC_API_URL`
+
+> Para local con Docker Compose, los defaults de `.env.example` ya están alineados con los servicios del compose.
+
+---
+
+## Levantar entorno local
+
+### Opción 1 — Docker Compose (recomendada)
+
+```bash
+docker compose up --build
+```
+
+### Opción 2 — Desarrollo local
+
+```bash
 pnpm install
 pnpm db:migrate
 pnpm db:seed
 pnpm dev
 ```
 
-## Docker
-```bash
-docker compose up --build
-```
+- Web: `http://localhost:3000`
+- API: `http://localhost:4000`
 
-## Demo users
-- admin@demo.local / demo1234
-- direccion@demo.local / demo1234
-- produccion@demo.local / demo1234
-- comercial@demo.local / demo1234
-- finanzas@demo.local / demo1234
+---
 
-## Scripts
+## Scripts disponibles
+
+Desde raíz del monorepo:
+
 - `pnpm dev`
 - `pnpm build`
 - `pnpm start`
@@ -44,50 +169,164 @@ docker compose up --build
 - `pnpm db:reset`
 - `pnpm import:demo`
 
-## Modules
-auth, users, roles_permissions, masters, catalog, formulas, production, packaging, quality, inventory, purchasing, expenses, customers, pricing, sales, receivables, payables_treasury, costing, reporting, imports, audit.
+---
 
-## Deploy a GitHub Pages
+## Base de datos y seeds
 
-### Prerequisites
-- In GitHub, go to **Settings → Pages** and set **Source = GitHub Actions**.
-- Use a workflow that builds the `apps/web` app and publishes the generated static output.
-- Ensure `GITHUB_PAGES=true` is present in the deploy job when publishing a **project page**.
+### Prisma
+- Esquema relacional completo con entidades de seguridad, maestros, catálogo, fórmulas, producción, calidad, inventario, compras, comercial, finanzas, analítica e importaciones.
 
-### Target branch
-- Recommended target branch for published artifacts: `gh-pages` (created/managed by the GitHub Pages action).
-- Keep your source code in your normal development branch (`main`, `master`, etc.) and let the workflow publish only static files to `gh-pages`.
+### Seed inteligente
+Incluye:
+- usuarios demo por rol
+- familias, líneas, variantes, unidades y presentaciones
+- productos base, SKUs y packaging
+- alias/homologaciones (canónico + valor original)
+- fórmulas y matrices
+- proveedores/clientes/listas
+- ventas/compras/lotes/movimientos
+- casos `pending_homologation`
 
-### `basePath` and `assetPrefix` behavior
-`apps/web/next.config.js` configures static export (`output: "export"`) and computes routing based on CI env vars:
+---
 
-- **Project page** (`https://<owner>.github.io/<repo>`):
-  - Condition: `GITHUB_PAGES=true` and `GITHUB_REPOSITORY=<owner>/<repo>`.
-  - `basePath` becomes `/<repo>`.
-  - `assetPrefix` becomes `/<repo>/`.
-- **User/organization page** (`https://<owner>.github.io`):
-  - Without `GITHUB_PAGES=true` (or without repo name), `basePath=""` and `assetPrefix=""`.
-  - The app is served from root (`/`).
+## Usuarios demo
 
-### Expected final URL
-- **Project page**: `https://<owner>.github.io/<repo>/`
-- **User page**: `https://<owner>.github.io/`
+- `admin@demo.local` / `demo1234`
+- `direccion@demo.local` / `demo1234`
+- `produccion@demo.local` / `demo1234`
+- `comercial@demo.local` / `demo1234`
+- `finanzas@demo.local` / `demo1234`
 
-### Switch between project page and user page
-- **To deploy as project page**:
-  1. Keep repository name as target path segment.
-  2. In CI deploy job, set `GITHUB_PAGES=true`.
-  3. Ensure `GITHUB_REPOSITORY` is available (GitHub Actions provides it automatically).
-- **To deploy as user/organization page**:
-  1. Use the special repository name (`<owner>.github.io`) in your account/org.
-  2. Do **not** set `GITHUB_PAGES=true` in deploy job.
-  3. Publish from root path with empty prefix/path.
+---
 
-### Troubleshooting
-- **404 on routes after deploy**:
-  - Usually caused by incorrect `basePath` for the selected mode.
-  - Confirm whether you are deploying to `/<repo>` (project page) or `/` (user page), then verify `GITHUB_PAGES` and repository name in CI.
-- **Broken CSS/JS/images (assets not loading)**:
-  - Usually caused by wrong `assetPrefix`.
-  - For project pages, verify generated asset URLs include `/<repo>/...`.
-  - For user pages, verify URLs are root-based (`/...`) and not prefixed with repo name.
+## UX/UI implementada
+
+Principios:
+- estética premium, limpia, Apple-like
+- mobile-first
+- sidebar desktop + bottom tabs mobile
+- componentes reutilizables para flujos transaccionales
+
+### Biblioteca UI interna
+Incluye, entre otros:
+- `AppShell`, `Sidebar`, `Topbar`, `BottomTabs`
+- `PageHeader`, `KPIStatCard`, `StatusBadge`, `EntityChip`
+- `SmartSelector` (búsqueda por canónico/alias/código + alta contextual)
+- `QuickCreateSheet`, `InlineCollectionEditor`, `WizardLayout`
+- `DataTable`, `DataCards`, `KanbanBoard`
+- `MergeComparePanel`, `ImportStudio`
+- `AuditTimeline`, `TraceTimeline`
+- `AttachmentUploader`, `ConfirmDialog`, `Toasts`, `Skeletons`
+
+---
+
+## Rutas funcionales
+
+Se encuentran implementadas en `apps/web/app`:
+
+- Inicio: `/inicio`, `/inicio/alertas`, `/buscar`
+- Catálogo: familias, productos base, presentaciones, SKUs, alias, packaging
+- Técnica: matrices, fórmulas, fórmula detalle, insumos, aprobaciones
+- Operación: producción, wizard OP, lotes, fraccionamiento, calidad, historial
+- Stock: balance, movimientos, lotes, inventarios
+- Abastecimiento: proveedores, solicitudes, OCs, recepciones, costos proveedor, gastos
+- Comercial: clientes, homologación, listas, pedidos, combos, despachos
+- Finanzas: CxC, cobranzas, CxP, pagos, tesorería, conciliación
+- Analítica: costos, márgenes, reportes, calidad de dato
+- Sistema: usuarios, maestros, importaciones, auditoría
+
+---
+
+## API (resumen)
+
+Controladores por módulo para:
+- Auth (`login`, `refresh`, `logout`, `me`)
+- Catálogo (`families`, `product-bases`, `presentations`, `skus`, `aliases`, `packaging`)
+- Fórmulas (`list`, `detail`, `create`, `version`, `approve`, `obsolete`, `compare`)
+- Producción / Fraccionamiento / Stock
+- Compras / Gastos
+- Comercial / Precios / Ventas / Despachos / Combos
+- Cobranzas / Pagos / Tesorería / Conciliación
+- Reporting
+- Sistema (`users`, `roles`, `masters`, `imports`, `audit`)
+
+---
+
+## Importaciones
+
+Flujo completo:
+1. upload/source
+2. mapping editable
+3. validación
+4. preview
+5. importación
+6. warnings + log detallado
+
+Importadores incluidos:
+- fórmulas
+- diarios de producción
+- clientes
+- proveedores
+- listas de precios
+- ventas históricas
+- gastos
+- stock inicial
+
+---
+
+## Testing
+
+### Unit + integración
+```bash
+pnpm test
+```
+
+### E2E web
+```bash
+pnpm test:e2e
+```
+
+### Build/Lint
+```bash
+pnpm lint
+pnpm build
+```
+
+---
+
+## Pantallas y demo
+
+La app entrega navegación real en todas las rutas de operación clave, con estados, tablas, formularios, acciones y auditoría visible. Para documentación visual:
+- correr `pnpm dev`
+- navegar rutas críticas (dashboard, catálogo, fórmulas, producción, stock, comercial, finanzas)
+- opcionalmente capturar screenshots del flujo en entorno local/CI.
+
+---
+
+## Decisiones de diseño importantes
+
+1. **Modular monolith** para acelerar entrega sin complejidad de microservicios.
+2. **Alias + homologación first-class** para absorber históricos inconsistentes.
+3. **Creación contextual embebida** (alta en flujo + retorno al origen + auditoría).
+4. **Eventos de dominio** para desacoplar acciones críticas (producción, ventas, import).
+5. **Prisma** como capa de datos única para trazabilidad y consistencia.
+
+---
+
+## Roadmap sugerido
+
+1. endurecer permisos granulares por acción/campo
+2. tablero avanzado de planificación MRP
+3. forecasting comercial y reposición
+4. reglas promocionales por motor declarativo
+5. observabilidad (traces/métricas) y alertas productivas
+
+---
+
+## GitHub Pages (frontend estático)
+
+`apps/web/next.config.js` soporta static export y ajuste automático de `basePath/assetPrefix` para:
+- project pages (`/<repo>`)
+- user/org pages (`/`)
+
+Si desplegás en project page, exportá con `GITHUB_PAGES=true`.
