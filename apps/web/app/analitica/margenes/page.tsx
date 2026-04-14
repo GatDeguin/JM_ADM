@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { ReportingWorkspace } from "@/components/ui/ReportingWorkspace";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Analitica · Margenes"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="analitica-margenes"
-    />
-  );
+  return <ReportingWorkspace title="Analítica · Márgenes" subtitle="Márgenes con filtros por fecha/canal/línea/cliente" mode="margenes" />;
 }

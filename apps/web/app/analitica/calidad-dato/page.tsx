@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { ReportingWorkspace } from "@/components/ui/ReportingWorkspace";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Analitica · Calidad Dato"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="analitica-calidad-dato"
-    />
-  );
+  return <ReportingWorkspace title="Analítica · Calidad de dato" subtitle="Listas accionables para remediación" mode="calidad" />;
 }
