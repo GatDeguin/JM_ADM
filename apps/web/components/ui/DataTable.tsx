@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Skeletons } from "@/components/ui/Skeletons";
 
 export type DataTableColumn<T extends Record<string, unknown>> = {
   key: keyof T;
@@ -16,6 +18,7 @@ type DataTableProps<T extends Record<string, unknown>> = {
   loading?: boolean;
   error?: string | null;
   emptyMessage?: string;
+  successMessage?: string | null;
   onCreate?: () => void;
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
@@ -29,6 +32,7 @@ export function DataTable<T extends Record<string, unknown>>({
   loading,
   error,
   emptyMessage = "Sin registros para mostrar.",
+  successMessage,
   onCreate,
   onEdit,
   onDelete
@@ -41,27 +45,30 @@ export function DataTable<T extends Record<string, unknown>>({
   }, [query, rows]);
 
   return (
-    <section className="rounded-xl border bg-white p-4 shadow-sm">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="font-semibold text-zinc-900">{title ?? "Registros"}</h3>
+    <section className="card-base space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-base font-semibold text-zinc-900">{title ?? "Registros"}</h3>
         <div className="flex items-center gap-2">
+          <label className="sr-only" htmlFor="table-filter">Filtrar en tabla</label>
           <input
-            className="rounded-lg border px-3 py-1.5 text-sm"
+            id="table-filter"
+            className="input-base"
             placeholder="Filtrar en tabla"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
           {onCreate ? (
-            <button className="rounded-lg bg-zinc-900 px-3 py-1.5 text-sm text-white" onClick={onCreate}>
+            <button className="btn-primary" onClick={onCreate}>
               Crear
             </button>
           ) : null}
         </div>
       </div>
 
-      {loading ? <p className="text-sm text-zinc-500">Cargando registros...</p> : null}
-      {!loading && error ? <p className="text-sm text-red-600">Error: {error}</p> : null}
-      {!loading && !error && filtered.length === 0 ? <p className="text-sm text-zinc-500">{emptyMessage}</p> : null}
+      {successMessage ? <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">✅ {successMessage}</p> : null}
+      {loading ? <Skeletons rows={4} /> : null}
+      {!loading && error ? <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">Error: {error}</p> : null}
+      {!loading && !error && filtered.length === 0 ? <EmptyState description={emptyMessage} /> : null}
 
       {!loading && !error && filtered.length > 0 ? (
         <div className="overflow-x-auto">
@@ -73,7 +80,7 @@ export function DataTable<T extends Record<string, unknown>>({
                     {col.header}
                   </th>
                 ))}
-                {(onEdit || onDelete) ? <th className="px-3 py-2">Acciones</th> : null}
+                {onEdit || onDelete ? <th className="px-3 py-2">Acciones</th> : null}
               </tr>
             </thead>
             <tbody>
@@ -87,16 +94,16 @@ export function DataTable<T extends Record<string, unknown>>({
                       </td>
                     );
                   })}
-                  {(onEdit || onDelete) ? (
+                  {onEdit || onDelete ? (
                     <td className="px-3 py-2">
                       <div className="flex gap-2">
                         {onEdit ? (
-                          <button className="rounded border px-2 py-1" onClick={() => onEdit(row)}>
+                          <button className="btn-secondary" onClick={() => onEdit(row)}>
                             Editar
                           </button>
                         ) : null}
                         {onDelete ? (
-                          <button className="rounded border border-red-200 px-2 py-1 text-red-700" onClick={() => onDelete(row)}>
+                          <button className="rounded-lg border border-red-200 px-2 py-1 text-red-700" onClick={() => onDelete(row)}>
                             Eliminar
                           </button>
                         ) : null}

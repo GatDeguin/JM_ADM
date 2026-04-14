@@ -200,6 +200,7 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
   const [records, setRecords] = useState<DomainRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [selected, setSelected] = useState<string>("");
   const [leftId, setLeftId] = useState<string>("");
   const [rightId, setRightId] = useState<string>("");
@@ -255,6 +256,7 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
       }
       setSheetOpen(false);
       form.reset({ name: "", code: "", status: config.statusOptions[0] ?? "draft" });
+      setSuccess("Cambios guardados correctamente.");
       await load();
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "No se pudo guardar");
@@ -275,16 +277,16 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
 
       <section className="mb-4 rounded-xl border bg-white p-4">
         <div className="mb-3 flex flex-wrap gap-2">
-          <button className={`rounded border px-3 py-1 text-sm ${activeFilter === "all" ? "bg-zinc-900 text-white" : ""}`} onClick={() => setActiveFilter("all")}>Todos</button>
+          <button className={`btn-secondary ${activeFilter === "all" ? "bg-zinc-900 text-white" : ""}`} onClick={() => setActiveFilter("all")}>Todos</button>
           {config.businessFilters.map((filter) => {
             const key = `${filter.key}:${filter.value}`;
             return (
-              <button key={key} className={`rounded border px-3 py-1 text-sm ${activeFilter === key ? "bg-zinc-900 text-white" : ""}`} onClick={() => setActiveFilter(key)}>
+              <button key={key} className={`btn-secondary ${activeFilter === key ? "bg-zinc-900 text-white" : ""}`} onClick={() => setActiveFilter(key)}>
                 {filter.label}
               </button>
             );
           })}
-          <button className="ml-auto rounded bg-zinc-900 px-3 py-1 text-sm text-white" onClick={() => setSheetOpen(true)}>
+          <button className="btn-primary ml-auto" onClick={() => setSheetOpen(true)}>
             Crear / Editar
           </button>
         </div>
@@ -311,10 +313,12 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
             ]}
             rows={filteredRecords}
             rowId={(r) => r.id}
+            successMessage={success}
             onEdit={(row) => {
               form.reset({ name: row.name, code: row.code, status: row.status });
               setSelected(row.id);
               setSheetOpen(true);
+              setSuccess("Registro cargado para edición.");
             }}
             onCreate={() => setSheetOpen(true)}
           />
@@ -338,21 +342,23 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
             if (!remove) return;
             setRecords((prev) => prev.filter((r) => r.id !== remove));
             setSelected(keep);
+            setSuccess("Registros fusionados correctamente.");
           }}
         />
       </div>
 
-      <section className="mt-4 rounded-xl border bg-white p-4">
+      <section className="card-base">
         <h3 className="mb-3 font-semibold">Acciones contextuales</h3>
         <div className="flex flex-wrap gap-2">
-          <button className="rounded border px-3 py-1 text-sm" onClick={() => setSheetOpen(true)}>Crear</button>
-          <button className="rounded border px-3 py-1 text-sm" onClick={() => selectedRecord && form.reset({ name: selectedRecord.name, code: selectedRecord.code, status: selectedRecord.status })}>Editar</button>
+          <button className="btn-secondary" onClick={() => setSheetOpen(true)}>Crear</button>
+          <button className="btn-secondary" onClick={() => selectedRecord && form.reset({ name: selectedRecord.name, code: selectedRecord.code, status: selectedRecord.status })}>Editar</button>
           <button
-            className="rounded border px-3 py-1 text-sm"
+            className="btn-secondary"
             onClick={async () => {
               if (!selectedRecord || !config.actionPath) return;
               try {
                 await request(config.actionPath(selectedRecord.id), { method: "POST", body: "{}" });
+                setSuccess("Acción ejecutada correctamente.");
                 await load();
               } catch (actionError) {
                 setError(actionError instanceof Error ? actionError.message : "No se pudo homologar");
@@ -362,11 +368,12 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
             Homologar
           </button>
           <button
-            className="rounded border px-3 py-1 text-sm"
+            className="btn-secondary"
             onClick={async () => {
               if (!selectedRecord || !config.editPath) return;
               try {
                 await request(config.editPath(selectedRecord.id), { method: "PATCH", body: JSON.stringify(config.editPayload(form.getValues())) });
+                setSuccess("Edición guardada correctamente.");
                 await load();
               } catch (actionError) {
                 setError(actionError instanceof Error ? actionError.message : "No se pudo actualizar");
@@ -381,25 +388,25 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
       {sheetOpen ? (
         <div className="fixed inset-0 z-50 bg-black/35">
           <div className="absolute inset-0 md:inset-auto md:right-0 md:top-0 md:h-full md:w-[560px]">
-            <form className="h-full overflow-y-auto bg-white p-4" onSubmit={submit}>
+            <form className="h-full overflow-y-auto bg-white p-4" onSubmit={submit} role="dialog" aria-modal="true" aria-label="Formulario de creación y edición">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="font-semibold">Formulario validado (RHF + Zod)</h3>
-                <button type="button" className="rounded border px-2 py-1 text-sm" onClick={() => setSheetOpen(false)}>
+                <button type="button" className="btn-secondary" onClick={() => setSheetOpen(false)}>
                   Cerrar
                 </button>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <label>
                   <span className="mb-1 block text-sm">Nombre / Referencia</span>
-                  <input className="w-full rounded border px-3 py-2" {...form.register("name")} />
+                  <input aria-label="Nombre / Referencia" className="input-base w-full" {...form.register("name")} />
                 </label>
                 <label>
                   <span className="mb-1 block text-sm">Código</span>
-                  <input className="w-full rounded border px-3 py-2" {...form.register("code")} />
+                  <input aria-label="Código" className="input-base w-full" {...form.register("code")} />
                 </label>
                 <label className="sm:col-span-2">
                   <span className="mb-1 block text-sm">Estado / Campo negocio</span>
-                  <select className="w-full rounded border px-3 py-2" {...form.register("status")}>
+                  <select aria-label="Estado / Campo negocio" className="input-base w-full" {...form.register("status")}>
                     {config.statusOptions.map((status) => (
                       <option value={status} key={status}>
                         {status}
@@ -410,7 +417,7 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
               </div>
               {form.formState.errors.name ? <p className="mt-2 text-sm text-red-600">{form.formState.errors.name.message}</p> : null}
               {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
-              <button className="mt-4 w-full rounded bg-zinc-900 px-3 py-2 text-sm text-white" type="submit" disabled={loading}>
+              <button className="btn-primary mt-4 w-full" type="submit" disabled={loading}>
                 {loading ? "Guardando..." : "Guardar"}
               </button>
             </form>

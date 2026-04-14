@@ -1,2 +1,44 @@
 "use client";
-export function Sidebar(){const items=["Inicio","Catálogo","Técnica","Operación","Stock","Abastecimiento","Comercial","Finanzas","Analítica","Sistema"];return <aside className="hidden md:block w-64 border-r bg-white p-4"><h1 className="font-semibold mb-4">JM ADM</h1><nav className="space-y-2">{items.map(i=><div key={i} className="text-sm text-zinc-600">{i}</div>)}</nav></aside>;}
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+const items = [
+  { label: "Inicio", href: "/inicio" },
+  { label: "Catálogo", href: "/catalogo/productos-base" },
+  { label: "Técnica", href: "/tecnica/formulas" },
+  { label: "Operación", href: "/operacion/produccion" },
+  { label: "Stock", href: "/stock/lotes" },
+  { label: "Abastecimiento", href: "/abastecimiento/proveedores" },
+  { label: "Comercial", href: "/comercial/pedidos" },
+  { label: "Finanzas", href: "/finanzas/tesoreria" },
+  { label: "Analítica", href: "/analitica/reportes" },
+  { label: "Sistema", href: "/sistema/usuarios" }
+] as const;
+
+export function Sidebar() {
+  const pathname = usePathname();
+
+  return (
+    <aside className="hidden w-64 border-r border-zinc-200 bg-white p-4 md:block">
+      <h1 className="mb-4 text-lg font-bold tracking-tight">JM ADM</h1>
+      <nav className="space-y-1" aria-label="Navegación principal">
+        {items.map((item) => {
+          const active = pathname.startsWith(item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={active ? "page" : undefined}
+              className={`block rounded-lg px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2 ${
+                active ? "bg-zinc-900 text-white" : "text-zinc-700 hover:bg-zinc-100"
+              }`}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
+    </aside>
+  );
+}

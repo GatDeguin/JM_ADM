@@ -107,6 +107,7 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
   const [records, setRecords] = useState<DomainRecord[]>([]);
   const [loading] = useState(false);
   const [error] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [selected, setSelected] = useState<string>("");
   const [leftId, setLeftId] = useState<string>("");
   const [rightId, setRightId] = useState<string>("");
@@ -115,10 +116,7 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
     defaultValues: { name: "", code: "", status: "draft" }
   });
 
-  const options: SmartSelectorOption[] = useMemo(
-    () => records.map((r) => ({ id: r.id, label: r.name, meta: `${r.code} · ${r.status}` })),
-    [records]
-  );
+  const options: SmartSelectorOption[] = useMemo(() => records.map((r) => ({ id: r.id, label: r.name, meta: `${r.code} · ${r.status}` })), [records]);
 
   const currentRules = domainRuleMap[domain] ?? defaultRuleConfig;
   const selectedStatus = form.watch("status");
@@ -128,6 +126,7 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
   const saveBlocked = Boolean(currentWarning);
 
   const onSubmit = form.handleSubmit((values) => {
+    setSuccess(null);
     const parsed = formSchema.safeParse(values);
     if (!parsed.success) {
       form.setError("name", { message: parsed.error.issues[0]?.message ?? "Validación" });
@@ -148,6 +147,7 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
     };
     setRecords((prev) => [newRecord, ...prev]);
     setSelected(newRecord.id);
+    setSuccess("Registro guardado correctamente.");
     form.reset({ name: "", code: "", status: "draft" });
   });
 
@@ -157,13 +157,13 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
   return (
     <Layout title={title}>
       <PageHeader title={title} subtitle={subtitle} />
-      <div className="mb-4 grid gap-3 md:grid-cols-3">
+      <div className="grid gap-3 md:grid-cols-3">
         <KPIStatCard label="Registros" value={records.length} />
         <KPIStatCard label="Activos" value={records.filter((r) => r.status === "active").length} />
         <KPIStatCard label="Dominio" value={domain} />
       </div>
 
-      <div className="mb-4 grid gap-4 lg:grid-cols-[1.1fr_2fr]">
+      <div className="grid gap-4 lg:grid-cols-[1.1fr_2fr]">
         <SmartSelector
           label={`Selector de ${domain}`}
           options={options}
@@ -181,14 +181,15 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
               updatedAt: new Date().toISOString().slice(0, 10)
             };
             setRecords((prev) => [created, ...prev]);
+            setSuccess("Alta rápida creada correctamente.");
             return { id: created.id, label: created.name, meta: created.code };
           }}
         />
 
-        <form className="rounded-xl border bg-white p-4" onSubmit={onSubmit}>
-          <h3 className="mb-3 font-semibold">Crear / Editar</h3>
+        <form className="card-base" onSubmit={onSubmit}>
+          <h3 className="mb-3 text-base font-semibold">Crear / Editar</h3>
           {currentRules.warnings.length ? (
-            <div className="mb-3 rounded border border-amber-200 bg-amber-50 p-2 text-xs text-amber-700">
+            <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-700">
               {currentRules.warnings.map((warning) => (
                 <p key={warning}>⚠ {warning}</p>
               ))}
@@ -196,16 +197,16 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
           ) : null}
           <div className="grid gap-3 md:grid-cols-2">
             <label>
-              <span className="mb-1 block text-sm">Nombre</span>
-              <input className="w-full rounded border px-3 py-2" {...form.register("name")} />
+              <span className="mb-1 block text-sm font-medium">Nombre</span>
+              <input aria-label="Nombre" className="input-base w-full" {...form.register("name")} />
             </label>
             <label>
-              <span className="mb-1 block text-sm">Código</span>
-              <input className="w-full rounded border px-3 py-2" {...form.register("code")} />
+              <span className="mb-1 block text-sm font-medium">Código</span>
+              <input aria-label="Código" className="input-base w-full" {...form.register("code")} />
             </label>
             <label>
-              <span className="mb-1 block text-sm">Estado</span>
-              <select className="w-full rounded border px-3 py-2" {...form.register("status")}>
+              <span className="mb-1 block text-sm font-medium">Estado</span>
+              <select aria-label="Estado" className="input-base w-full" {...form.register("status")}>
                 <option value="draft">Borrador</option>
                 <option value="active">Activo</option>
                 <option value="blocked">Bloqueado</option>
@@ -215,7 +216,7 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
           {form.formState.errors.name ? <p className="mt-2 text-sm text-red-600">{form.formState.errors.name.message}</p> : null}
           {form.formState.errors.status ? <p className="mt-2 text-sm text-red-600">{form.formState.errors.status.message}</p> : null}
           {currentWarning ? <p className="mt-2 text-sm text-amber-700">⛔ {currentWarning}</p> : null}
-          <button className="mt-3 rounded bg-zinc-900 px-3 py-2 text-sm text-white disabled:cursor-not-allowed disabled:bg-zinc-400" type="submit" disabled={saveBlocked}>
+          <button className="btn-primary mt-3" type="submit" disabled={saveBlocked}>
             Guardar
           </button>
         </form>
@@ -225,6 +226,7 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
         title={`Tabla ${domain}`}
         loading={loading}
         error={error}
+        successMessage={success}
         columns={[
           { key: "name", header: "Nombre" },
           { key: "code", header: "Código" },
@@ -237,29 +239,32 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
         onEdit={(row) => {
           form.reset({ name: row.name, code: row.code, status: row.status });
           setSelected(row.id);
+          setSuccess("Registro cargado para edición.");
         }}
-        onDelete={(row) => setRecords((prev) => prev.filter((r) => r.id !== row.id))}
+        onDelete={(row) => {
+          setRecords((prev) => prev.filter((r) => r.id !== row.id));
+          setSuccess("Registro eliminado correctamente.");
+        }}
       />
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <SmartSelector label="Registro A" options={options} value={leftId} onChange={setLeftId} />
         <SmartSelector label="Registro B" options={options} value={rightId} onChange={setRightId} />
       </div>
-      <div className="mt-4">
-        <MergeComparePanel
-          leftLabel="Origen A"
-          rightLabel="Origen B"
-          left={records.find((r) => r.id === leftId) ?? selectedRecord}
-          right={records.find((r) => r.id === rightId) ?? null}
-          onMerge={(winner) => {
-            const keep = winner === "left" ? leftId : rightId;
-            const remove = winner === "left" ? rightId : leftId;
-            if (!remove) return;
-            setRecords((prev) => prev.filter((r) => r.id !== remove));
-            setSelected(keep);
-          }}
-        />
-      </div>
+      <MergeComparePanel
+        leftLabel="Origen A"
+        rightLabel="Origen B"
+        left={records.find((r) => r.id === leftId) ?? selectedRecord}
+        right={records.find((r) => r.id === rightId) ?? null}
+        onMerge={(winner) => {
+          const keep = winner === "left" ? leftId : rightId;
+          const remove = winner === "left" ? rightId : leftId;
+          if (!remove) return;
+          setRecords((prev) => prev.filter((r) => r.id !== remove));
+          setSelected(keep);
+          setSuccess("Registros fusionados correctamente.");
+        }}
+      />
     </Layout>
   );
 }

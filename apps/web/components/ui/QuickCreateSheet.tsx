@@ -23,22 +23,24 @@ export function QuickCreateSheet<T extends Record<string, unknown>>({ title, loa
 
   return (
     <div>
-      <button className="rounded-lg bg-zinc-900 px-3 py-2 text-sm text-white" onClick={() => setOpen(true)}>
+      <button className="btn-primary" onClick={() => setOpen(true)}>
         Crear rápido
       </button>
       {open ? (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/30">
-          <div className="h-full w-full max-w-md bg-white p-4 shadow-xl">
+        <div className="fixed inset-0 z-50 flex justify-end bg-black/30" role="dialog" aria-modal="true" aria-label={title}>
+          <div className="h-full w-full bg-white p-4 shadow-xl md:max-w-md">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-semibold">{title}</h3>
-              <button onClick={() => setOpen(false)}>Cerrar</button>
+              <h3 className="text-base font-semibold">{title}</h3>
+              <button className="btn-secondary" onClick={() => setOpen(false)}>
+                Cerrar
+              </button>
             </div>
             <div className="space-y-3">
               {fields.map((field) => (
                 <label key={String(field.key)} className="block">
-                  <span className="mb-1 block text-sm">{field.label}</span>
+                  <span className="mb-1 block text-sm font-medium">{field.label}</span>
                   <input
-                    className="w-full rounded border px-3 py-2"
+                    className="input-base w-full"
                     placeholder={field.placeholder}
                     value={String(values[field.key] ?? "")}
                     onChange={(e) =>
@@ -51,8 +53,8 @@ export function QuickCreateSheet<T extends Record<string, unknown>>({ title, loa
                 </label>
               ))}
             </div>
-            {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
-            <button className="mt-4 w-full rounded-lg bg-zinc-900 px-3 py-2 text-sm text-white" disabled={loading} onClick={submit}>
+            {error ? <p className="mt-3 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
+            <button className="btn-primary mt-4 w-full" disabled={loading} onClick={submit}>
               {loading ? "Guardando..." : "Guardar"}
             </button>
           </div>
