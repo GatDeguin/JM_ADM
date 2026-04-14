@@ -53,10 +53,15 @@ export class ImportProcessorService {
       warnings: processed.warnings,
     });
 
-    await this.importsRepository.appendAudit(job.id, "import.finished", {
-      imported,
-      status,
-      warnings: processed.warnings.length,
+    await this.importsRepository.appendAudit({
+      entityId: job.id,
+      action: "import.finished",
+      origin: "imports.processor.execute",
+      after: {
+        imported,
+        status,
+        warnings: processed.warnings.length,
+      },
     });
 
     this.importEventsService.emitFinished({ jobId: job.id, status, imported });

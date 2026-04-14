@@ -6,8 +6,10 @@ import { ImportersService } from "./application/importers.service";
 import { ImportQueueService } from "./infrastructure/import-queue.service";
 import { ImportProcessorService } from "./application/import-processor.service";
 import { ImportEventsService } from "./infrastructure/import-events.service";
+import { AuditModule } from "../audit/audit.module";
 
 @Module({
+  imports: [AuditModule],
   controllers: [ImportsController],
   providers: [
     ImportsService,

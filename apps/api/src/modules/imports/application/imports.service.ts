@@ -23,7 +23,12 @@ export class ImportsService {
     assertSupportedImportType(this.importersService.isSupported(type), type);
 
     const job = await this.importsRepository.createJob(type, sourceName);
-    await this.importsRepository.appendAudit(job.id, "import.job.created", { type, sourceName });
+    await this.importsRepository.appendAudit({
+      entityId: job.id,
+      action: "import.job.created",
+      origin: "imports.createJob",
+      after: { type, sourceName },
+    });
     return job;
   }
 
@@ -39,7 +44,12 @@ export class ImportsService {
       status: "mapping",
     });
 
-    await this.importsRepository.appendAudit(id, "import.file.uploaded", { rows: rows.length, sourceName });
+    await this.importsRepository.appendAudit({
+      entityId: id,
+      action: "import.file.uploaded",
+      origin: "imports.uploadFile",
+      after: { rows: rows.length, sourceName },
+    });
     return updated;
   }
 
@@ -53,7 +63,12 @@ export class ImportsService {
       status: "validating",
     });
 
-    await this.importsRepository.appendAudit(id, "import.mapping.defined", { mappingKeys: Object.keys(mapping).length });
+    await this.importsRepository.appendAudit({
+      entityId: id,
+      action: "import.mapping.defined",
+      origin: "imports.defineMapping",
+      after: { mappingKeys: Object.keys(mapping).length },
+    });
     return updated;
   }
 
@@ -71,7 +86,12 @@ export class ImportsService {
       warnings: result.warnings,
     });
 
-    await this.importsRepository.appendAudit(id, "import.prevalidated", result.summary);
+    await this.importsRepository.appendAudit({
+      entityId: id,
+      action: "import.prevalidated",
+      origin: "imports.prevalidate",
+      after: result.summary,
+    });
     return { job: updated, warnings: result.warnings, summary: result.summary };
   }
 
@@ -99,7 +119,12 @@ export class ImportsService {
 
     await this.importsRepository.updateJob(id, { status: "ready_to_import" });
     const queueResult = await this.importQueueService.enqueueImport(id);
-    await this.importsRepository.appendAudit(id, "import.confirmed", queueResult);
+    await this.importsRepository.appendAudit({
+      entityId: id,
+      action: "import.confirmed",
+      origin: "imports.confirm",
+      after: queueResult,
+    });
 
     return {
       event: "import.finished",
