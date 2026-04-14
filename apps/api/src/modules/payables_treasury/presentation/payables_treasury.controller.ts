@@ -5,7 +5,14 @@ import { PayablesTreasuryService } from "../application/payables_treasury.servic
 
 const createSchema = z.object({ supplierId: z.string().min(1), sourceType: z.string().min(1), sourceId: z.string().min(1), dueDate: z.string().datetime(), amount: z.number().positive() });
 const updateSchema = z.object({ status: z.enum(["open", "partial", "paid", "overdue", "cancelled"]).optional() });
-const actionSchema = z.object({ code: z.string().min(2), cashAccountId: z.string().min(1), amount: z.number().positive() });
+const actionSchema = z.object({
+  code: z.string().min(2),
+  cashAccountId: z.string().min(1),
+  amount: z.number().positive(),
+  allocations: z.array(z.object({ payableId: z.string().min(1), amount: z.number().positive() })).min(1),
+});
+const transferSchema = z.object({ fromCashAccountId: z.string().min(1), toCashAccountId: z.string().min(1), amount: z.number().positive(), reference: z.string().optional() });
+const reconcileSchema = z.object({ cashAccountId: z.string().min(1), period: z.string().min(4), status: z.string().min(3) });
 
 @Controller("payables_treasury")
 export class PayablesTreasuryController {
@@ -38,9 +45,21 @@ export class PayablesTreasuryController {
     return this.service.remove(id);
   }
 
-  @Post("accounts-payable/:id/action")
+  @Post("payments/apply")
   @UsePipes(new ZodValidationPipe(actionSchema))
-  runAction(@Param("id") id: string, @Body() payload: z.infer<typeof actionSchema>) {
-    return this.service.runAction(id, payload);
+  runAction(@Body() payload: z.infer<typeof actionSchema>) {
+    return this.service.runAction(payload);
+  }
+
+  @Post("treasury/transfers")
+  @UsePipes(new ZodValidationPipe(transferSchema))
+  transferFunds(@Body() payload: z.infer<typeof transferSchema>) {
+    return this.service.transferFunds(payload);
+  }
+
+  @Post("bank-reconciliation")
+  @UsePipes(new ZodValidationPipe(reconcileSchema))
+  reconcileBank(@Body() payload: z.infer<typeof reconcileSchema>) {
+    return this.service.reconcileBank(payload);
   }
 }

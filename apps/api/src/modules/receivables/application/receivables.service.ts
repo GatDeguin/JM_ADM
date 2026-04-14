@@ -11,5 +11,6 @@ export class ReceivablesService {
   create(data: CreateAccountsReceivableInput): Promise<AccountsReceivableDto> { return this.repository.create(data); }
   update(id: string, data: UpdateAccountsReceivableInput): Promise<AccountsReceivableDto> { return this.repository.update(id, data); }
   remove(id: string) { return this.repository.remove(id); }
-  runAction(id: string, payload: ActionAccountsReceivableInput): Promise<AccountsReceivableDto> { return this.repository.runAction(id, payload); }
+  runAction(payload: ActionAccountsReceivableInput): Promise<{ receiptId: string; receivables: AccountsReceivableDto[] }> { return this.repository.runAction(payload); }
+  agingAgenda() { return this.repository.agingAgenda(); }
 }

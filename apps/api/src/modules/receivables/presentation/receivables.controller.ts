@@ -5,7 +5,12 @@ import { ReceivablesService } from "../application/receivables.service";
 
 const createSchema = z.object({ customerId: z.string().min(1), salesOrderId: z.string().min(1), dueDate: z.string().datetime(), amount: z.number().positive() });
 const updateSchema = z.object({ status: z.enum(["open", "partial", "paid", "overdue", "cancelled"]).optional() });
-const actionSchema = z.object({ code: z.string().min(2), cashAccountId: z.string().min(1), amount: z.number().positive() });
+const actionSchema = z.object({
+  code: z.string().min(2),
+  cashAccountId: z.string().min(1),
+  amount: z.number().positive(),
+  allocations: z.array(z.object({ receivableId: z.string().min(1), amount: z.number().positive() })).min(1),
+});
 
 @Controller("receivables")
 export class ReceivablesController {
@@ -14,6 +19,11 @@ export class ReceivablesController {
   @Get("accounts-receivable")
   list() {
     return this.service.list();
+  }
+
+  @Get("accounts-receivable/aging-agenda")
+  agingAgenda() {
+    return this.service.agingAgenda();
   }
 
   @Get("accounts-receivable/:id")
@@ -38,9 +48,9 @@ export class ReceivablesController {
     return this.service.remove(id);
   }
 
-  @Post("accounts-receivable/:id/action")
+  @Post("receipts/apply")
   @UsePipes(new ZodValidationPipe(actionSchema))
-  runAction(@Param("id") id: string, @Body() payload: z.infer<typeof actionSchema>) {
-    return this.service.runAction(id, payload);
+  runAction(@Body() payload: z.infer<typeof actionSchema>) {
+    return this.service.runAction(payload);
   }
 }
