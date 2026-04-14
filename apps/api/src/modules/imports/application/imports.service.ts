@@ -1,4 +1,11 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  assertImportRowsPresent,
+  assertMappingHasFields,
+  assertNoPendingHomologation,
+  assertRequiredText,
+  assertSupportedImportType,
+} from "../../../common/domain-rules/shared-domain-rules";
 import { ImportsRepository } from "../infrastructure/imports.repository";
 import { ImportersService } from "./importers.service";
 import { ImportQueueService } from "../infrastructure/import-queue.service";
@@ -12,9 +19,8 @@ export class ImportsService {
   ) {}
 
   async createJob(type: string, sourceName: string) {
-    if (!this.importersService.isSupported(type)) {
-      throw new BadRequestException("Tipo de importación no soportado");
-    }
+    assertRequiredText(sourceName, "el nombre de origen");
+    assertSupportedImportType(this.importersService.isSupported(type), type);
 
     const job = await this.importsRepository.createJob(type, sourceName);
     await this.importsRepository.appendAudit(job.id, "import.job.created", { type, sourceName });
@@ -23,6 +29,9 @@ export class ImportsService {
 
   async uploadFile(id: string, sourceName: string, rows: Record<string, unknown>[]) {
     await this.ensureJob(id);
+
+    assertRequiredText(sourceName, "el nombre de archivo");
+    assertImportRowsPresent(rows);
 
     const updated = await this.importsRepository.updateJob(id, {
       sourceName,
@@ -37,6 +46,8 @@ export class ImportsService {
   async defineMapping(id: string, mapping: Record<string, string>) {
     await this.ensureJob(id);
 
+    assertMappingHasFields(mapping);
+
     const updated = await this.importsRepository.updateJob(id, {
       mapping,
       status: "validating",
@@ -49,9 +60,7 @@ export class ImportsService {
   async prevalidate(id: string) {
     const job = await this.ensureJob(id);
 
-    if (!this.importersService.isSupported(job.type)) {
-      throw new BadRequestException("Tipo de importación no soportado");
-    }
+    assertSupportedImportType(this.importersService.isSupported(job.type), job.type);
 
     const rows = Array.isArray(job.originals) ? (job.originals as Record<string, unknown>[]) : [];
     const result = this.importersService.process(job.type, rows);
@@ -69,9 +78,7 @@ export class ImportsService {
   async preview(id: string) {
     const job = await this.ensureJob(id);
 
-    if (!this.importersService.isSupported(job.type)) {
-      throw new BadRequestException("Tipo de importación no soportado");
-    }
+    assertSupportedImportType(this.importersService.isSupported(job.type), job.type);
 
     const rows = Array.isArray(job.originals) ? (job.originals as Record<string, unknown>[]) : [];
     const result = this.importersService.process(job.type, rows);
@@ -86,7 +93,10 @@ export class ImportsService {
   }
 
   async confirm(id: string) {
-    await this.ensureJob(id);
+    const job = await this.ensureJob(id);
+    const pendingHomologation = Number(job.summary?.pendingHomologation ?? 0);
+    assertNoPendingHomologation(pendingHomologation);
+
     await this.importsRepository.updateJob(id, { status: "ready_to_import" });
     const queueResult = await this.importQueueService.enqueueImport(id);
     await this.importsRepository.appendAudit(id, "import.confirmed", queueResult);

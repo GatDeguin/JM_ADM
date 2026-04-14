@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { ImportedRecord, ImportSummary, SupportedImportType, supportedImportTypes } from "../domain/imports.types";
 import { isPendingHomologation, normalizeCode, normalizeText } from "../domain/import-normalization";
+import { collectImportBusinessWarnings } from "../../../common/domain-rules/import-domain-rules";
 
 type ImporterDefinition = {
   type: SupportedImportType;
@@ -74,6 +75,8 @@ export class ImportersService {
           rowWarnings.push(`Fila ${index + 1}: falta ${requiredField}`);
         }
       }
+
+      rowWarnings.push(...collectImportBusinessWarnings(type, normalized, index));
 
       const duplicate = seenKeys.has(key);
       if (!duplicate) {

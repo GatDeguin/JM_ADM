@@ -1,4 +1,10 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  assertBatchCanBeFractionated,
+  assertFormulaCanBeUsed,
+  assertPositiveNumber,
+  assertRequiredText,
+} from "../../../common/domain-rules/shared-domain-rules";
 import { ProductionRepository } from "../infrastructure/production.repository";
 
 @Injectable()
@@ -10,13 +16,9 @@ export class ProductionService {
   }
 
   async create(code: string, productBaseId: string, formulaVersionId: string, plannedQty: number) {
-    if (plannedQty <= 0) {
-      throw new BadRequestException("plannedQty debe ser mayor que cero");
-    }
+    assertPositiveNumber(plannedQty, "La cantidad planificada");
     const formulaVersion = await this.productionRepository.findFormulaVersion(formulaVersionId);
-    if (formulaVersion?.status === "obsolete") {
-      throw new BadRequestException("formula obsolete");
-    }
+    assertFormulaCanBeUsed(formulaVersion?.status);
     try {
       return await this.productionRepository.createOrder(code, productBaseId, formulaVersionId, plannedQty);
     } catch (error) {
@@ -36,27 +38,19 @@ export class ProductionService {
   }
 
   async close(id: string, responsible: string, outputQty: number) {
-    if (!responsible) {
-      throw new BadRequestException("responsible required");
-    }
-    if (outputQty <= 0) {
-      throw new BadRequestException("output required");
-    }
+    assertRequiredText(responsible, "el responsable");
+    assertPositiveNumber(outputQty, "La cantidad de salida");
     await this.productionRepository.closeBatch(id, responsible, outputQty);
     return { event: "production.batch.closed", id, outputQty };
   }
 
   async fractionate(batchId: string, qty: number) {
-    if (qty <= 0) {
-      throw new BadRequestException("qty must be > 0");
-    }
+    assertPositiveNumber(qty, "La cantidad a fraccionar");
     const batch = await this.productionRepository.findBatch(batchId);
     if (!batch) {
       throw new NotFoundException("Batch no encontrado");
     }
-    if (batch.status === "retained") {
-      throw new ConflictException("retained batch cannot be fractionated");
-    }
+    assertBatchCanBeFractionated(batch.status);
     return { event: "production.batch.fractionated", batchId, qty };
   }
 }

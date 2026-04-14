@@ -1,4 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { assertRequiredText } from "../../../common/domain-rules/shared-domain-rules";
 import { FormulasRepository } from "../infrastructure/formulas.repository";
 
 @Injectable()
@@ -18,6 +19,9 @@ export class FormulasService {
   }
 
   async create(code: string, name: string) {
+    assertRequiredText(code, "el código de fórmula");
+    assertRequiredText(name, "el nombre de fórmula");
+
     try {
       return await this.formulasRepository.create(code, name);
     } catch (error) {

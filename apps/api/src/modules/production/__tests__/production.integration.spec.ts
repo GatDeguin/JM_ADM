@@ -16,7 +16,7 @@ describe("production integration", () => {
         integrationFixtures.formulas.obsoleteFormulaId,
         10,
       ),
-    ).rejects.toBeInstanceOf(BadRequestException);
+    ).rejects.toBeInstanceOf(ConflictException);
   });
 
   it("bloquea cierre de lote sin responsable o sin output", async () => {
