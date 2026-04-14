@@ -196,6 +196,79 @@ export class ProductionService {
     return { event: "production.batch.fractionated", batchId, packagingOrderId: order.id, qty };
   }
 
+  async generateFractionationOrder(batchId: string, skuId: string, qty: number) {
+    assertPositiveNumber(qty, "La cantidad a fraccionar");
+    const batch = await this.productionRepository.findBatch(batchId);
+    if (!batch) {
+      throw new NotFoundException("Batch no encontrado");
+    }
+    if (batch.status === "retained") {
+      throw new ConflictException("No se puede generar orden de fraccionamiento con lote madre retenido.");
+    }
+
+    const order = await this.productionRepository.createFractionationOrder(batchId, skuId, qty);
+    return { event: "production.fractionation.order.created", batchId, packagingOrderId: order.id, status: order.status };
+  }
+
+  async validateParentBatch(batchId: string) {
+    const batch = await this.productionRepository.findBatch(batchId);
+    if (!batch) {
+      throw new NotFoundException("Batch no encontrado");
+    }
+    return {
+      batchId,
+      status: batch.status,
+      canFractionate: batch.status !== "retained",
+      message: batch.status === "retained" ? "Lote madre retenido: no se puede fraccionar." : "Lote madre válido para fraccionamiento.",
+    };
+  }
+
+  async validatePackagingComponents(packagingOrderId: string) {
+    const order = await this.productionRepository.findPackagingOrder(packagingOrderId);
+    if (!order) {
+      throw new NotFoundException("Orden de packaging no encontrada");
+    }
+    const validation = await this.productionRepository.validatePackagingComponents(packagingOrderId);
+    if (!validation.specs.length) {
+      throw new ConflictException("No hay especificación de packaging para el SKU de la orden.");
+    }
+
+    const missing = validation.validations.filter((line) => !line.ok);
+    return {
+      packagingOrderId,
+      valid: missing.length === 0,
+      missing,
+      details: validation.validations,
+    };
+  }
+
+  async executeFractionation(packagingOrderId: string, childLots: Array<{ lotCode: string; qty: number }>) {
+    const order = await this.productionRepository.findPackagingOrder(packagingOrderId);
+    if (!order) {
+      throw new NotFoundException("Orden de packaging no encontrada");
+    }
+    if (!childLots.length) {
+      throw new ConflictException("Debes informar al menos un lote hijo para ejecutar el fraccionamiento.");
+    }
+    const childTotal = childLots.reduce((acc, child) => acc + child.qty, 0);
+    if (Math.abs(childTotal - Number(order.qty)) > 0.0001) {
+      throw new ConflictException("La suma de lotes hijo debe coincidir con la cantidad de la orden de packaging.");
+    }
+
+    const validation = await this.validatePackagingComponents(packagingOrderId);
+    if (!validation.valid) {
+      throw new ConflictException("No hay disponibilidad suficiente de componentes de packaging.");
+    }
+
+    await this.productionRepository.executeFractionation(packagingOrderId, childLots);
+    return {
+      event: "production.fractionation.executed",
+      packagingOrderId,
+      childBatches: childLots.length,
+      movedToFinishedStock: true,
+    };
+  }
+
   async traceTimeline(batchId: string) {
     return this.productionRepository.getBatchTimeline(batchId);
   }

@@ -214,6 +214,92 @@ export class ProductionRepository {
     });
   }
 
+  createFractionationOrder(batchId: string, skuId: string, qty: number) {
+    return this.prisma.$transaction(async (tx: any) => {
+      const parentBatch = await tx.batch.findUniqueOrThrow({ where: { id: batchId }, select: { code: true } });
+      return tx.packagingOrder.create({
+        data: { code: `PKG-${parentBatch.code}-${Date.now()}`, parentBatchId: batchId, skuId, qty, status: "planned" },
+      });
+    });
+  }
+
+  findPackagingOrder(id: string) {
+    return this.prisma.packagingOrder.findUnique({ where: { id } });
+  }
+
+  async validatePackagingComponents(packagingOrderId: string) {
+    const order = await this.prisma.packagingOrder.findUniqueOrThrow({ where: { id: packagingOrderId } });
+    const specs = await this.prisma.packagingSpec.findMany({ where: { skuId: order.skuId } });
+
+    const validations: Array<{ itemId: string; required: number; available: number; ok: boolean }> = [];
+    for (const spec of specs) {
+      const required = Number(spec.qty) * Number(order.qty);
+      const balance = await this.prisma.stockBalance.aggregate({
+        _sum: { qty: true, reservedQty: true },
+        where: { itemId: spec.itemId },
+      });
+      const available = Number(balance._sum.qty ?? 0) - Number(balance._sum.reservedQty ?? 0);
+      validations.push({ itemId: spec.itemId, required, available, ok: available >= required });
+    }
+
+    return { order, specs, validations };
+  }
+
+  async executeFractionation(packagingOrderId: string, childLots: Array<{ lotCode: string; qty: number }>) {
+    return this.prisma.$transaction(async (tx: any) => {
+      const order = await tx.packagingOrder.findUniqueOrThrow({
+        where: { id: packagingOrderId },
+        include: {
+          parentBatch: { include: { BatchOutput: { orderBy: { id: "asc" }, take: 1, select: { itemId: true } } } },
+        },
+      });
+      const specs = await tx.packagingSpec.findMany({ where: { skuId: order.skuId } });
+
+      for (const spec of specs) {
+        const required = Number(spec.qty) * Number(order.qty);
+        await tx.packagingMaterialConsumption.upsert({
+          where: { packagingOrderId_itemId: { packagingOrderId, itemId: spec.itemId } },
+          create: { packagingOrderId, itemId: spec.itemId, qty: required },
+          update: { qty: required },
+        });
+        await tx.stockMovement.create({
+          data: { itemId: spec.itemId, type: "packaging_consumption", qty: -required, reason: `Fraccionamiento ${order.code}` },
+        });
+      }
+
+      const finishedItemId = order.parentBatch.BatchOutput[0]?.itemId;
+      if (finishedItemId) {
+        const defaultWarehouse = await tx.warehouse.findFirst({ orderBy: { id: "asc" }, select: { id: true } });
+        if (defaultWarehouse) {
+          for (const child of childLots) {
+            const lot = await tx.stockLot.upsert({
+              where: { itemId_warehouseId_lotCode: { itemId: finishedItemId, warehouseId: defaultWarehouse.id, lotCode: child.lotCode } },
+              create: { itemId: finishedItemId, warehouseId: defaultWarehouse.id, lotCode: child.lotCode },
+              update: {},
+            });
+            await tx.stockMovement.create({
+              data: {
+                itemId: finishedItemId,
+                lotId: lot.id,
+                type: "finished_transfer",
+                qty: child.qty,
+                reason: `Ingreso terminado lote hijo ${child.lotCode} (${order.code})`,
+              },
+            });
+          }
+        }
+      }
+
+      await tx.childBatch.deleteMany({ where: { packagingOrderId } });
+      await tx.childBatch.createMany({
+        data: childLots.map((child) => ({ packagingOrderId, lotCode: child.lotCode, qty: child.qty })),
+      });
+
+      await tx.packagingOrder.update({ where: { id: packagingOrderId }, data: { status: "released" } });
+      return order;
+    });
+  }
+
   async getBatchTimeline(batchId: string) {
     const batch = await this.prisma.batch.findUniqueOrThrow({
       where: { id: batchId },
