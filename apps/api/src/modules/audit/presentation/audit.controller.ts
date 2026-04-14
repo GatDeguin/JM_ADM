@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UsePipes } from "@nestjs/common";
+import { Body, Controller, Delete, Get, MethodNotAllowedException, Param, Patch, Post, Query, UsePipes } from "@nestjs/common";
 import { z } from "zod";
 import { ZodValidationPipe } from "../../../common/validation/zod-validation.pipe";
 import { AuditService } from "../application/audit.service";
@@ -12,8 +12,13 @@ export class AuditController {
   constructor(private readonly service: AuditService) {}
 
   @Get("audit-logs")
-  list() {
-    return this.service.list();
+  list(@Query("limit") limit?: string) {
+    return this.service.list(limit ? Number(limit) : undefined);
+  }
+
+  @Get("audit-logs/timeline/:entity/:entityId")
+  timelineByEntity(@Param("entity") entity: string, @Param("entityId") entityId: string, @Query("limit") limit?: string) {
+    return this.service.timeline(entity, entityId, limit ? Number(limit) : undefined);
   }
 
   @Get("audit-logs/:id")
@@ -34,8 +39,8 @@ export class AuditController {
   }
 
   @Delete("audit-logs/:id")
-  remove(@Param("id") id: string) {
-    return this.service.remove(id);
+  remove() {
+    throw new MethodNotAllowedException("No se permite eliminación física del historial de auditoría.");
   }
 
   @Post("audit-logs/:id/action")

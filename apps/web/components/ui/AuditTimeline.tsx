@@ -2,10 +2,11 @@
 
 export type AuditEvent = {
   id: string;
-  action: "create" | "update" | "delete" | "merge" | "homologation";
+  action: "create" | "update" | "delete" | "merge" | "homologation" | "import" | "transactional_action" | string;
   user: string;
   at: string;
   detail: string;
+  origin?: string;
 };
 
 type AuditTimelineProps = {
@@ -25,7 +26,7 @@ export function AuditTimeline({ events, loading, error, onRevert }: AuditTimelin
       {events.map((event) => (
         <li key={event.id} className="mb-3 border-l-2 border-zinc-200 pl-3 last:mb-0">
           <div className="text-sm font-medium">{event.action.toUpperCase()} · {event.user}</div>
-          <div className="text-xs text-zinc-500">{event.at}</div>
+          <div className="text-xs text-zinc-500">{event.at}{event.origin ? ` · ${event.origin}` : ""}</div>
           <p className="text-sm text-zinc-700">{event.detail}</p>
           {onRevert ? <button className="mt-1 text-xs text-indigo-700" onClick={() => onRevert(event.id)}>Revertir</button> : null}
         </li>

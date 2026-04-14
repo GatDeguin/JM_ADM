@@ -1,10 +1,19 @@
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { assertRequiredText } from "../../../common/domain-rules/shared-domain-rules";
 import { FormulasRepository } from "../infrastructure/formulas.repository";
+import { AuditTrailService } from "../../audit/application/audit-trail.service";
+
+const noopAuditTrail = {
+  logCreate: async () => undefined,
+  logHomologation: async () => undefined,
+};
 
 @Injectable()
 export class FormulasService {
-  constructor(private readonly formulasRepository: FormulasRepository) {}
+  constructor(
+    private readonly formulasRepository: FormulasRepository,
+    private readonly auditTrailService: Pick<AuditTrailService, "logCreate" | "logHomologation"> = noopAuditTrail,
+  ) {}
 
   list() {
     return this.formulasRepository.list();
@@ -23,7 +32,14 @@ export class FormulasService {
     assertRequiredText(name, "el nombre de fórmula");
 
     try {
-      return await this.formulasRepository.create(code, name);
+      const created = await this.formulasRepository.create(code, name);
+      await this.auditTrailService.logCreate({
+        entity: "FormulaTemplate",
+        entityId: created.id,
+        origin: "formulas.create",
+        after: created,
+      });
+      return created;
     } catch (error) {
       if (typeof error === "object" && error && "code" in error && error.code === "P2002") {
         throw new ConflictException("El código de fórmula ya existe");
@@ -33,8 +49,15 @@ export class FormulasService {
   }
 
   async approve(id: string) {
-    await this.detail(id);
+    const previous = await this.detail(id);
     const formula = await this.formulasRepository.approve(id);
+    await this.auditTrailService.logHomologation({
+      entity: "FormulaTemplate",
+      entityId: id,
+      origin: "formulas.approve",
+      before: previous,
+      after: formula,
+    });
     return { event: "formula.approved", formula };
   }
 }

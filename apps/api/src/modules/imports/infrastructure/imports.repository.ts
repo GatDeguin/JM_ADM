@@ -1,9 +1,13 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../../../infrastructure/prisma/prisma.service";
+import { AuditTrailService } from "../../audit/application/audit-trail.service";
 
 @Injectable()
 export class ImportsRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditTrailService: AuditTrailService,
+  ) {}
 
   createJob(type: string, sourceName: string) {
     return this.prisma.importJob.create({
@@ -26,15 +30,15 @@ export class ImportsRepository {
     return this.prisma.importJob.update({ where: { id }, data: data as never });
   }
 
-  async appendAudit(entityId: string, action: string, after?: unknown) {
-    await this.prisma.auditLog.create({
-      data: {
-        entity: "ImportBatch",
-        entityId,
-        action,
-        origin: "imports.module",
-        after: after as never,
-      },
+  async appendAudit(input: { entityId: string; action: string; origin: string; userId?: string; before?: unknown; after?: unknown }) {
+    await this.auditTrailService.log({
+      entity: "ImportBatch",
+      entityId: input.entityId,
+      action: input.action,
+      origin: input.origin,
+      userId: input.userId,
+      before: input.before,
+      after: input.after,
     });
   }
 
