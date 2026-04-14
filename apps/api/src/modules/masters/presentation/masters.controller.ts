@@ -2,10 +2,17 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, UsePipes } from "@ne
 import { z } from "zod";
 import { ZodValidationPipe } from "../../../common/validation/zod-validation.pipe";
 import { MastersService } from "../application/masters.service";
+import { contextualEntityTypes } from "../domain/masters.types";
 
 const createSchema = z.object({ code: z.string().min(1), name: z.string().min(1) });
 const updateSchema = z.object({ name: z.string().min(1).optional(), status: z.enum(["draft", "active", "inactive", "pending_homologation", "archived"]).optional() });
 const actionSchema = z.object({});
+const contextualEntityTypeSchema = z.enum(contextualEntityTypes);
+const contextualCreateSchema = z.object({
+  label: z.string().min(1),
+  meta: z.string().optional(),
+  originFlow: z.string().min(1).optional()
+});
 
 @Controller("masters")
 export class MastersController {
@@ -42,5 +49,18 @@ export class MastersController {
   @UsePipes(new ZodValidationPipe(actionSchema))
   runAction(@Param("id") id: string, @Body() payload: z.infer<typeof actionSchema>) {
     return this.service.runAction(id, payload);
+  }
+
+  @Get("contextual/entities/:entityType/options")
+  listContextualOptions(@Param("entityType") entityType: string) {
+    const parsed = contextualEntityTypeSchema.parse(entityType);
+    return this.service.listContextualOptions(parsed);
+  }
+
+  @Post("contextual/entities/:entityType")
+  @UsePipes(new ZodValidationPipe(contextualCreateSchema))
+  createContextualEntity(@Param("entityType") entityType: string, @Body() body: z.infer<typeof contextualCreateSchema>) {
+    const parsed = contextualEntityTypeSchema.parse(entityType);
+    return this.service.createContextualEntity(parsed, body);
   }
 }

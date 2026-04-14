@@ -7,7 +7,7 @@ import { Layout } from "@/components/layout";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { KPIStatCard } from "@/components/ui/KPIStatCard";
 import { DataTable } from "@/components/ui/DataTable";
-import { SmartSelector, type SmartSelectorOption } from "@/components/ui/SmartSelector";
+import { SmartSelector, type ContextualEntityType, type SmartSelectorOption } from "@/components/ui/SmartSelector";
 import { MergeComparePanel } from "@/components/ui/MergeComparePanel";
 
 const formSchema = z.object({
@@ -94,6 +94,15 @@ const defaultRuleConfig: DomainRuleConfig = {
   warnings: []
 };
 
+const contextualEntityByDomain: Partial<Record<string, ContextualEntityType>> = {
+  "catalogo-presentaciones": "presentacion",
+  "catalogo-unidades": "unidad",
+  "catalogo-alias": "alias",
+  "abastecimiento-proveedores": "proveedor",
+  "comercial-listas": "lista",
+  "finanzas-tesoreria": "cuenta"
+};
+
 export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps) {
   const [records, setRecords] = useState<DomainRecord[]>([]);
   const [loading] = useState(false);
@@ -143,6 +152,7 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
   });
 
   const selectedRecord = records.find((r) => r.id === selected) ?? null;
+  const contextualEntityType = contextualEntityByDomain[domain];
 
   return (
     <Layout title={title}>
@@ -161,6 +171,7 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
           loading={loading}
           error={error}
           onChange={setSelected}
+          contextualConfig={contextualEntityType ? { entityType: contextualEntityType, originFlow: domain } : undefined}
           onCreateOption={async (input) => {
             const created: DomainRecord = {
               id: `${domain}-${Date.now()}`,

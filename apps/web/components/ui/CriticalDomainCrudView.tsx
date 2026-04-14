@@ -7,7 +7,7 @@ import { DataTable } from "@/components/ui/DataTable";
 import { KPIStatCard } from "@/components/ui/KPIStatCard";
 import { MergeComparePanel } from "@/components/ui/MergeComparePanel";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { SmartSelector, type SmartSelectorOption } from "@/components/ui/SmartSelector";
+import { SmartSelector, type ContextualEntityType, type SmartSelectorOption } from "@/components/ui/SmartSelector";
 import { z } from "zod";
 
 type CriticalDomain = "producto-base" | "sku" | "formula" | "lote" | "pedido" | "cliente";
@@ -240,6 +240,7 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
     () => records.map((r) => ({ id: r.id, label: r.name, meta: `${r.code} · ${r.status}` })),
     [records]
   );
+  const contextualEntityType: ContextualEntityType | undefined = domain === "sku" ? "sku" : domain === "cliente" ? "cliente" : undefined;
 
   const submit = form.handleSubmit(async (input) => {
     const parsed = formSchema.safeParse(input);
@@ -289,7 +290,15 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[1fr_2fr]">
-          <SmartSelector label={`Selector ${config.title}`} options={options} value={selected} loading={loading} error={error} onChange={setSelected} />
+          <SmartSelector
+            label={`Selector ${config.title}`}
+            options={options}
+            value={selected}
+            loading={loading}
+            error={error}
+            onChange={setSelected}
+            contextualConfig={contextualEntityType ? { entityType: contextualEntityType, originFlow: `${domain}-nested-flow` } : undefined}
+          />
           <DataTable
             title={`Tabla ${config.title}`}
             loading={loading}
