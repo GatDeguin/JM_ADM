@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { ReportingWorkspace } from "@/components/ui/ReportingWorkspace";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Analitica · Costos"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="analitica-costos"
-    />
-  );
+  return <ReportingWorkspace title="Analítica · Costos" subtitle="KPIs de costos y generación de snapshots mensuales" mode="costos" />;
 }
