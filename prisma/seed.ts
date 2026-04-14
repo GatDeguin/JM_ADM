@@ -53,6 +53,8 @@ async function main() {
     "Shampoo",
     "Acondicionador / Bálsamo",
     "Baño de crema",
+    "Líquidos",
+    "Cremas",
     "Máscara",
     "Tratamiento en crema",
     "Protector térmico / Leave-in",
@@ -74,7 +76,8 @@ async function main() {
   const lines = [
     "Cherry", "Oro", "Coco", "Açaí", "Savia", "Ácido Hialurónico", "Anti Frizz", "Caviar", "Aloe & Palta",
     "Romero & Ortiga", "Jazmín & Miel", "Almendras", "Purple Plex", "Biotina", "Keratina", "Botox", "Glow Up",
-    "Rejuvelac", "Baño de Seda", "Lifting Oro", "Vainilla & Coco", "Células Madre", "Restructure", "Black", "Barber"
+    "Rejuvelac", "Baño de Seda", "Lifting Oro", "Vainilla & Coco", "Células Madre", "Restructure", "Black", "Barber",
+    "Argán", "Macadamia", "Neutral"
   ];
   await upsertByName(lines.map((name) => ({ name })), (name) =>
     prisma.line.upsert({ where: { name }, update: { status: EntityStatus.active }, create: { name } })
@@ -83,7 +86,7 @@ async function main() {
   const variants = [
     "Cherry", "Oro", "Coco", "Açaí", "Savia", "Ácido", "Anti Frizz", "Caviar", "Aloe y Palta", "Romero y Ortiga",
     "Jazmín y Miel", "Almendras", "Purple Plex", "Biotina", "Keratina", "Botox", "Glow Up", "Rejuvelac", "Baño de Seda",
-    "Lifting Oro", "Vainilla y Coco", "Células Madre", "Restructure", "Black", "Barber"
+    "Lifting Oro", "Vainilla y Coco", "Células Madre", "Restructure", "Black", "Barber", "Argán", "Macadamia", "Neutral"
   ];
   await upsertByName(variants.map((name) => ({ name })), (name) =>
     prisma.variant.upsert({ where: { name }, update: { status: EntityStatus.active }, create: { name } })
@@ -104,6 +107,8 @@ async function main() {
     ["PB-AMP-RJ", "Ampolla Rejuvelac", "Ampolla", "Rejuvelac", "Rejuvelac"],
     ["PB-ACE-CV", "Aceite Caviar Puntas", "Aceite / Sérum", "Caviar", "Caviar"],
     ["PB-PFC-GU", "Perfume Capilar Glow Up", "Perfume capilar", "Glow Up", "Glow Up"],
+    ["PB-LIQ-AR", "Líquido Capilar Argán", "Líquidos", "Argán", "Argán"],
+    ["PB-CRE-MD", "Crema Capilar Macadamia", "Cremas", "Macadamia", "Macadamia"],
     ["PB-BRB-BK", "Shampoo Barber Black", "Barber", "Barber", "Black"],
     ["PB-COL-PP", "Matizador Purple Plex", "Coloración", "Purple Plex", "Purple Plex"],
   ] as const;
@@ -131,18 +136,19 @@ async function main() {
 
   const unitByCode = new Map((await prisma.unit.findMany()).map((x) => [x.code, x.id]));
   const presentations = [
-    ["Granel", "KG", "1"],
+    ["granel", "KG", "1"],
     ["5L", "L", "5"],
     ["1L", "L", "1"],
-    ["500ml", "ML", "500"],
-    ["250ml", "ML", "250"],
+    ["500ML", "ML", "500"],
+    ["250ML", "ML", "250"],
     ["200ml", "ML", "200"],
     ["120ml", "ML", "120"],
     ["60ml", "ML", "60"],
-    ["30ml", "ML", "30"],
-    ["Unidad", "UN", "1"],
-    ["Pack x6", "UN", "6"],
-    ["Caja x12", "UN", "12"],
+    ["30ML", "ML", "30"],
+    ["unidad", "UN", "1"],
+    ["pack", "UN", "6"],
+    ["combo", "UN", "3"],
+    ["caja", "UN", "12"],
   ] as const;
 
   for (const [name, unitCode, factor] of presentations) {
@@ -158,18 +164,24 @@ async function main() {
   const presentationByName = new Map((await prisma.presentation.findMany()).map((x) => [x.name, x.id]));
 
   const skus = [
-    ["SKU-SHA-CH-500", "PB-SHA-CH", "500ml", "7790000000010"],
-    ["SKU-BAL-OR-500", "PB-BAL-OR", "500ml", "7790000000011"],
+    ["SKU-SHA-CH-500", "PB-SHA-CH", "500ML", "7790000000010"],
+    ["SKU-BAL-OR-500", "PB-BAL-OR", "500ML", "7790000000011"],
     ["SKU-BCR-OR-1000", "PB-BCR-OR", "1L", "7790000000012"],
-    ["SKU-MAS-PP-250", "PB-MAS-PP", "250ml", "7790000000013"],
-    ["SKU-TRC-BX-250", "PB-TRC-BX", "250ml", "7790000000014"],
+    ["SKU-MAS-PP-250", "PB-MAS-PP", "250ML", "7790000000013"],
+    ["SKU-TRC-BX-250", "PB-TRC-BX", "250ML", "7790000000014"],
     ["SKU-PTL-OR-120", "PB-PTL-OR", "120ml", "7790000000015"],
-    ["SKU-CPN-SV-250", "PB-CPN-SV", "250ml", "7790000000016"],
-    ["SKU-AMP-RJ-30", "PB-AMP-RJ", "30ml", "7790000000017"],
+    ["SKU-CPN-SV-250", "PB-CPN-SV", "250ML", "7790000000016"],
+    ["SKU-AMP-RJ-30", "PB-AMP-RJ", "30ML", "7790000000017"],
     ["SKU-ACE-CV-60", "PB-ACE-CV", "60ml", "7790000000018"],
     ["SKU-PFC-GU-120", "PB-PFC-GU", "120ml", "7790000000019"],
-    ["SKU-BRB-BK-500", "PB-BRB-BK", "500ml", "7790000000020"],
-    ["SKU-COL-PP-250", "PB-COL-PP", "250ml", "7790000000021"],
+    ["SKU-LIQ-AR-1000", "PB-LIQ-AR", "1L", "7790000000020"],
+    ["SKU-CRE-MD-250", "PB-CRE-MD", "250ML", "7790000000021"],
+    ["SKU-BRB-BK-500", "PB-BRB-BK", "500ML", "7790000000022"],
+    ["SKU-COL-PP-250", "PB-COL-PP", "250ML", "7790000000023"],
+    ["SKU-BAL-OR-PACK", "PB-BAL-OR", "pack", "7790000000024"],
+    ["SKU-PFC-GU-COMBO", "PB-PFC-GU", "combo", "7790000000025"],
+    ["SKU-SHA-CH-CAJA", "PB-SHA-CH", "caja", "7790000000026"],
+    ["SKU-SHA-CH-GRA", "PB-SHA-CH", "granel", "7790000000027"],
   ] as const;
 
   for (const [code, pbCode, presentation, barcode] of skus) {
@@ -195,9 +207,15 @@ async function main() {
     ["product_base", "ORO CREMA", "PB-TRC-BX", "Tratamiento Botox en Crema", EntityStatus.pending_homologation, "ORO CREMA"],
     ["product_base", "ORO LIQ", "PB-PTL-OR", "Protector Térmico Oro Líquido", EntityStatus.active, "ORO LIQUIDO"],
     ["product_base", "LEVANTA MUERTOS", "PB-AMP-RJ", "Ampolla Rejuvelac", EntityStatus.pending_homologation, "LEVANTA MUERTOS"],
+    ["product_base", "BANO ORO", "PB-BCR-OR", "Baño de Crema Oro", EntityStatus.active, "BANO ORO"],
+    ["product_base", "SH OR", "PB-BRB-BK", "Shampoo Barber Black", EntityStatus.pending_homologation, "SH OR"],
     ["line", "LIFTING", null, "Lifting Oro", EntityStatus.pending_homologation, "LIFTING"],
+    ["line", "ARGAN", null, "Argán", EntityStatus.active, "ARGAN"],
     ["variant", "ACAI", null, "Açaí", EntityStatus.active, "ACAI"],
+    ["variant", "AÇAÍ", null, "Açaí", EntityStatus.pending_homologation, "AÇAÍ"],
+    ["variant", "ORQUIDEA", null, null, EntityStatus.pending_homologation, "ORQUIDEA"],
     ["family", "ENJUAGUE", null, "Acondicionador / Bálsamo", EntityStatus.active, "ENJUAGUE"],
+    ["family", "LIQUIDO", null, "Líquidos", EntityStatus.active, "LIQUIDO"],
   ] as const;
 
   for (const [entityType, alias, canonicalCode, canonicalName, status, originalValue] of aliases) {
@@ -508,14 +526,45 @@ async function main() {
       type: "aliases_bootstrap",
       status: ImportStatus.imported_with_warnings,
       sourceName: "demo_aliases_2026_04.csv",
-      summary: { pendingHomologation: 2, total: 6 },
+      summary: { pendingHomologation: 6, total: 12, ambiguous: ["ORQUIDEA", "SH OR", "AÇAÍ"] },
     },
     create: {
       id: "IMP-001",
       type: "aliases_bootstrap",
       status: ImportStatus.imported_with_warnings,
       sourceName: "demo_aliases_2026_04.csv",
-      summary: { pendingHomologation: 2, total: 6 },
+      summary: { pendingHomologation: 6, total: 12, ambiguous: ["ORQUIDEA", "SH OR", "AÇAÍ"] },
+    },
+  });
+
+  await prisma.importJob.upsert({
+    where: { id: "IMP-002" },
+    update: {
+      type: "operational_report_snapshot",
+      status: ImportStatus.imported,
+      sourceName: "connected_flow_report_2026_04.json",
+      summary: {
+        purchaseOrders: 1,
+        productionOrders: 1,
+        packagingOrders: 1,
+        salesOrders: 1,
+        collections: 1,
+        payments: 1,
+      },
+    },
+    create: {
+      id: "IMP-002",
+      type: "operational_report_snapshot",
+      status: ImportStatus.imported,
+      sourceName: "connected_flow_report_2026_04.json",
+      summary: {
+        purchaseOrders: 1,
+        productionOrders: 1,
+        packagingOrders: 1,
+        salesOrders: 1,
+        collections: 1,
+        payments: 1,
+      },
     },
   });
 }
