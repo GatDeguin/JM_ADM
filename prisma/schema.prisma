@@ -1,0 +1,102 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+
+enum EntityStatus { draft active inactive pending_homologation archived }
+enum FormulaStatus { draft in_review approved obsolete }
+enum ProductionStatus { draft planned reserved in_process qc_pending released retained closed cancelled }
+enum SalesStatus { draft confirmed reserved picking dispatched delivered closed cancelled }
+enum AccountStatus { open partial paid overdue cancelled }
+enum ImportStatus { uploaded mapping validating ready_to_import imported imported_with_warnings failed }
+
+model User { id String @id @default(cuid()) email String @unique name String passwordHash String status EntityStatus @default(active) roles UserRole[] audits AuditLog[] createdAt DateTime @default(now()) }
+model Role { id String @id @default(cuid()) name String @unique permissions RolePermission[] users UserRole[] }
+model Permission { id String @id @default(cuid()) key String @unique roles RolePermission[] }
+model UserRole { userId String roleId String user User @relation(fields:[userId], references:[id]) role Role @relation(fields:[roleId], references:[id]) @@id([userId, roleId]) }
+model RolePermission { roleId String permissionId String role Role @relation(fields:[roleId], references:[id]) permission Permission @relation(fields:[permissionId], references:[id]) @@id([roleId, permissionId]) }
+model AuditLog { id String @id @default(cuid()) userId String? entity String entityId String action String origin String? before Json? after Json? createdAt DateTime @default(now()) user User? @relation(fields:[userId], references:[id]) }
+
+model Unit { id String @id @default(cuid()) code String @unique name String status EntityStatus @default(active) }
+model Family { id String @id @default(cuid()) name String @unique status EntityStatus @default(active) }
+model Line { id String @id @default(cuid()) name String @unique status EntityStatus @default(active) }
+model Variant { id String @id @default(cuid()) name String @unique status EntityStatus @default(active) }
+model PaymentMethod { id String @id @default(cuid()) name String @unique status EntityStatus @default(active) }
+model CashAccount { id String @id @default(cuid()) name String type String status EntityStatus @default(active) }
+model Warehouse { id String @id @default(cuid()) name String status EntityStatus @default(active) }
+model WarehouseLocation { id String @id @default(cuid()) warehouseId String name String status EntityStatus @default(active) warehouse Warehouse @relation(fields:[warehouseId], references:[id]) }
+model CostCenter { id String @id @default(cuid()) name String status EntityStatus @default(active) }
+model NumberSequence { id String @id @default(cuid()) key String @unique next Int @default(1) }
+model EntityAlias { id String @id @default(cuid()) entityType String canonicalId String? alias String canonicalName String? status EntityStatus @default(active) originalValue String? }
+
+model Item { id String @id @default(cuid()) code String @unique name String status EntityStatus @default(active) }
+model ProductBase { id String @id @default(cuid()) code String @unique name String familyId String? variantId String? lineId String? status EntityStatus @default(active) }
+model Presentation { id String @id @default(cuid()) name String unitId String? factor Decimal @default(1) status EntityStatus @default(active) }
+model SKU { id String @id @default(cuid()) code String @unique productBaseId String presentationId String barcode String? status EntityStatus @default(active) }
+model PackagingSpec { id String @id @default(cuid()) skuId String componentType String itemId String qty Decimal }
+model ComboPack { id String @id @default(cuid()) code String @unique name String status EntityStatus @default(active) }
+model ComboPackItem { id String @id @default(cuid()) comboId String skuId String qty Decimal }
+
+model FormulaTemplate { id String @id @default(cuid()) code String @unique name String familyId String? status FormulaStatus @default(draft) }
+model FormulaVersion { id String @id @default(cuid()) templateId String version Int status FormulaStatus @default(draft) warning String? }
+model FormulaComponent { id String @id @default(cuid()) formulaVersionId String itemId String qty Decimal unitId String }
+model FormulaStep { id String @id @default(cuid()) formulaVersionId String stepNo Int instruction String }
+model FormulaApproval { id String @id @default(cuid()) formulaVersionId String approvedBy String approvedAt DateTime @default(now()) }
+
+model ProductionOrder { id String @id @default(cuid()) code String @unique productBaseId String formulaVersionId String plannedQty Decimal status ProductionStatus @default(planned) }
+model ProductionOrderMaterialPlan { id String @id @default(cuid()) productionOrderId String itemId String qty Decimal reservedQty Decimal @default(0) }
+model Batch { id String @id @default(cuid()) code String @unique productionOrderId String? status ProductionStatus @default(in_process) responsibleUserId String? outputQty Decimal? }
+model BatchMaterialConsumption { id String @id @default(cuid()) batchId String itemId String plannedQty Decimal actualQty Decimal }
+model BatchOutput { id String @id @default(cuid()) batchId String itemId String qty Decimal }
+model BatchWaste { id String @id @default(cuid()) batchId String reason String qty Decimal }
+
+model PackagingOrder { id String @id @default(cuid()) code String @unique parentBatchId String skuId String qty Decimal status ProductionStatus @default(planned) }
+model PackagingMaterialConsumption { id String @id @default(cuid()) packagingOrderId String itemId String qty Decimal }
+model ChildBatch { id String @id @default(cuid()) packagingOrderId String lotCode String qty Decimal }
+
+model QCChecklist { id String @id @default(cuid()) name String active Boolean @default(true) }
+model QCRecord { id String @id @default(cuid()) batchId String decision String notes String? createdAt DateTime @default(now()) }
+model QCRecordItem { id String @id @default(cuid()) qcRecordId String checklistItem String passed Boolean note String? }
+model QCNonConformity { id String @id @default(cuid()) qcRecordId String severity String action String }
+
+model StockLot { id String @id @default(cuid()) itemId String lotCode String warehouseId String status EntityStatus @default(active) }
+model StockBalance { id String @id @default(cuid()) itemId String warehouseId String locationId String? qty Decimal reservedQty Decimal @default(0) }
+model StockMovement { id String @id @default(cuid()) itemId String lotId String? type String qty Decimal reason String? createdAt DateTime @default(now()) }
+model StockReservation { id String @id @default(cuid()) itemId String referenceType String referenceId String qty Decimal }
+model CycleCount { id String @id @default(cuid()) warehouseId String date DateTime @default(now()) status String }
+model InventoryAdjustment { id String @id @default(cuid()) itemId String qty Decimal reason String createdAt DateTime @default(now()) }
+
+model Supplier { id String @id @default(cuid()) code String @unique name String status EntityStatus @default(active) }
+model PurchaseRequest { id String @id @default(cuid()) code String @unique status String }
+model PurchaseRequestItem { id String @id @default(cuid()) requestId String itemId String qty Decimal }
+model PurchaseOrder { id String @id @default(cuid()) code String @unique supplierId String status String }
+model PurchaseOrderItem { id String @id @default(cuid()) purchaseOrderId String itemId String qty Decimal unitCost Decimal }
+model GoodsReceipt { id String @id @default(cuid()) code String @unique purchaseOrderId String status String }
+model GoodsReceiptItem { id String @id @default(cuid()) goodsReceiptId String itemId String qty Decimal acceptedQty Decimal }
+model ExpenseCategory { id String @id @default(cuid()) name String }
+model ExpenseSubcategory { id String @id @default(cuid()) categoryId String name String }
+model Expense { id String @id @default(cuid()) date DateTime @default(now()) supplierId String? categoryId String amount Decimal status AccountStatus @default(open) }
+
+model Customer { id String @id @default(cuid()) code String @unique name String status EntityStatus @default(active) }
+model CustomerAddress { id String @id @default(cuid()) customerId String label String address String city String }
+model CustomerContact { id String @id @default(cuid()) customerId String name String phone String? email String? }
+model CustomerPriceList { id String @id @default(cuid()) customerId String priceListId String }
+model PriceList { id String @id @default(cuid()) code String @unique name String startsAt DateTime status EntityStatus @default(active) }
+model PriceListItem { id String @id @default(cuid()) priceListId String skuId String price Decimal }
+model SalesOrder { id String @id @default(cuid()) code String @unique customerId String priceListId String status SalesStatus @default(draft) total Decimal @default(0) }
+model SalesOrderItem { id String @id @default(cuid()) salesOrderId String skuId String qty Decimal unitPrice Decimal }
+model DispatchOrder { id String @id @default(cuid()) code String @unique salesOrderId String status SalesStatus @default(confirmed) }
+model DispatchItem { id String @id @default(cuid()) dispatchOrderId String skuId String qty Decimal }
+model SalesReturn { id String @id @default(cuid()) code String @unique salesOrderId String reason String }
+
+model AccountsReceivable { id String @id @default(cuid()) customerId String salesOrderId String dueDate DateTime amount Decimal balance Decimal status AccountStatus @default(open) }
+model Receipt { id String @id @default(cuid()) code String @unique customerId String amount Decimal cashAccountId String createdAt DateTime @default(now()) }
+model ReceiptAllocation { id String @id @default(cuid()) receiptId String receivableId String amount Decimal }
+model AccountsPayable { id String @id @default(cuid()) supplierId String sourceType String sourceId String dueDate DateTime amount Decimal balance Decimal status AccountStatus @default(open) }
+model Payment { id String @id @default(cuid()) code String @unique supplierId String amount Decimal cashAccountId String createdAt DateTime @default(now()) }
+model PaymentAllocation { id String @id @default(cuid()) paymentId String payableId String amount Decimal }
+model TreasuryMovement { id String @id @default(cuid()) cashAccountId String type String amount Decimal date DateTime @default(now()) reference String? }
+model BankReconciliation { id String @id @default(cuid()) cashAccountId String period String status String }
+
+model CostSnapshot { id String @id @default(cuid()) key String date DateTime @default(now()) payload Json }
+model MarginSnapshot { id String @id @default(cuid()) key String date DateTime @default(now()) payload Json }
+model MonthlyClose { id String @id @default(cuid()) month String @unique status String closedAt DateTime? }
+model ImportJob { id String @id @default(cuid()) type String status ImportStatus @default(uploaded) sourceName String mapping Json? summary Json? createdAt DateTime @default(now()) }
