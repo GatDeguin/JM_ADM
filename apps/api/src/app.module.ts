@@ -21,6 +21,7 @@ import { CostingModule } from "./modules/costing/costing.module";
 import { ReportingModule } from "./modules/reporting/reporting.module";
 import { ImportsModule } from "./modules/imports/imports.module";
 import { AuditModule } from "./modules/audit/audit.module";
+import { FinanceModule } from "./modules/finance/finance.module";
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { AuditModule } from "./modules/audit/audit.module";
     ReportingModule,
     ImportsModule,
     AuditModule,
+    FinanceModule,
   ],
 })
 export class AppModule {}
