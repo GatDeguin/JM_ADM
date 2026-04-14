@@ -23,6 +23,15 @@ const fractionateSchema = z.object({
   childLots: z.array(z.object({ lotCode: z.string().min(2), qty: z.number().positive() })).min(1),
 });
 
+const createFractionationOrderSchema = z.object({
+  skuId: z.string().min(1),
+  qty: z.number().positive(),
+});
+
+const executeFractionationSchema = z.object({
+  childLots: z.array(z.object({ lotCode: z.string().min(2), qty: z.number().positive() })).min(1),
+});
+
 @Controller("production")
 export class ProductionController {
   constructor(private readonly productionService: ProductionService) {}
@@ -63,6 +72,28 @@ export class ProductionController {
   @UsePipes(new ZodValidationPipe(fractionateSchema))
   fractionate(@Param("id") id: string, @Body() body: z.infer<typeof fractionateSchema>) {
     return this.productionService.fractionate(id, body.qty, body.skuId, body.childLots);
+  }
+
+  @Post("batches/:id/fractionation-order")
+  @UsePipes(new ZodValidationPipe(createFractionationOrderSchema))
+  createFractionationOrder(@Param("id") id: string, @Body() body: z.infer<typeof createFractionationOrderSchema>) {
+    return this.productionService.generateFractionationOrder(id, body.skuId, body.qty);
+  }
+
+  @Get("batches/:id/validate-parent")
+  validateParent(@Param("id") id: string) {
+    return this.productionService.validateParentBatch(id);
+  }
+
+  @Post("packaging-orders/:id/validate-components")
+  validateComponents(@Param("id") id: string) {
+    return this.productionService.validatePackagingComponents(id);
+  }
+
+  @Post("packaging-orders/:id/execute-fractionation")
+  @UsePipes(new ZodValidationPipe(executeFractionationSchema))
+  executeFractionation(@Param("id") id: string, @Body() body: z.infer<typeof executeFractionationSchema>) {
+    return this.productionService.executeFractionation(id, body.childLots);
   }
 
   @Get("batches/:id/timeline")
