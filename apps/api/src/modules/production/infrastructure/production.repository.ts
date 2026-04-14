@@ -37,6 +37,42 @@ export class ProductionRepository {
     return this.prisma.qCRecord.findFirst({ where: { batchId }, orderBy: { createdAt: "desc" } });
   }
 
+  async batchRequiresQc(batchId: string) {
+    const context = await this.prisma.batch.findUnique({
+      where: { id: batchId },
+      select: {
+        productionOrder: {
+          select: {
+            productBase: { select: { familyId: true, family: { select: { name: true } } } },
+          },
+        },
+      },
+    });
+
+    const familyId = context?.productionOrder?.productBase?.familyId;
+    const familyName = context?.productionOrder?.productBase?.family?.name;
+    if (!familyId && !familyName) {
+      return false;
+    }
+
+    const activeChecklists = await this.prisma.qCChecklist.findMany({ where: { active: true }, select: { name: true } });
+    return activeChecklists.some((checklist: { name: string }) => {
+      const normalized = checklist.name.trim();
+      const match = normalized.match(/^FAMILY=(.*?);SKU=(.*?);PROCESS=(.*?);ITEM=(.+)$/i);
+      if (match) {
+        const family = match[1] && match[1] !== "*" ? match[1] : null;
+        const process = match[3] && match[3] !== "*" ? match[3].toLowerCase() : "production";
+        if (process !== "production") {
+          return false;
+        }
+        return !family || family === familyId || (familyName ? family.toLowerCase() === familyName.toLowerCase() : false);
+      }
+
+      const legacy = normalized.split("::");
+      return legacy.length >= 2 && (legacy[0] === familyId || (familyName ? legacy[0].toLowerCase() === familyName.toLowerCase() : false));
+    });
+  }
+
   async calculateTheoreticalMaterials(orderId: string) {
     const order = await this.prisma.productionOrder.findUniqueOrThrow({
       where: { id: orderId },

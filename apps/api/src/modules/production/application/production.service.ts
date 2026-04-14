@@ -164,13 +164,17 @@ export class ProductionService {
     if (!batch) {
       throw new NotFoundException("Batch no encontrado");
     }
-    const latestQc = await this.productionRepository.findLatestQc(batch.id);
-    if (!latestQc || latestQc.decision !== "approved") {
-      throw new ConflictException("No se puede liberar el lote sin QC aprobado.");
+
+    const requiresQc = this.productionRepository.batchRequiresQc ? await this.productionRepository.batchRequiresQc(batch.id) : true;
+    if (requiresQc) {
+      const latestQc = await this.productionRepository.findLatestQc(batch.id);
+      if (!latestQc || latestQc.decision !== "approved") {
+        throw new ConflictException("No se puede liberar el lote sin QC aprobado.");
+      }
     }
 
     await this.productionRepository.releaseBatch(id);
-    return { event: "quality.batch.released", id };
+    return { event: "quality.batch.released", id, qcRequired: requiresQc };
   }
 
   async fractionate(batchId: string, qty: number, skuId: string, childLots: Array<{ lotCode: string; qty: number }>) {

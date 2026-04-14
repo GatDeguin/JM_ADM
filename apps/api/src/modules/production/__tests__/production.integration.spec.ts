@@ -101,10 +101,25 @@ describe("production integration", () => {
   it("rechaza liberar lote sin QC aprobado", async () => {
     const service = new ProductionService({
       findBatch: async () => ({ id: "batch-1", status: "closed" }),
+      batchRequiresQc: async () => true,
       findLatestQc: async () => ({ decision: "rejected" }),
     } as never);
 
     await expect(service.releaseBatch("batch-1")).rejects.toBeInstanceOf(ConflictException);
+  });
+
+
+  it("permite liberar lote sin QC cuando no aplica checklist", async () => {
+    const repositoryStub = {
+      findBatch: async () => ({ id: "batch-1", status: "closed" }),
+      batchRequiresQc: async () => false,
+      releaseBatch: vi.fn(async () => undefined),
+    };
+    const service = new ProductionService(repositoryStub as never);
+
+    const result = await service.releaseBatch("batch-1");
+    expect(result.qcRequired).toBe(false);
+    expect(repositoryStub.releaseBatch).toHaveBeenCalledWith("batch-1");
   });
 
   it("rechaza reserva para OP inexistente", async () => {
