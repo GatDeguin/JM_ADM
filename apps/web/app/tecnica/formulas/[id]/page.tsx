@@ -2,6 +2,12 @@ import { Layout } from "@/components/layout";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { AuditTimeline } from "@/components/ui/AuditTimeline";
 
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return [{ id: "FOR-001" }, { id: "FOR-002" }, { id: "FOR-003" }];
+}
+
 export default async function FormulaDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   return (

@@ -3,6 +3,8 @@ name: Deploy Pages
 on:
   push:
     branches:
+      - main
+      - master
       - work
   workflow_dispatch:
 
@@ -41,6 +43,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build web
+        env:
+          GITHUB_PAGES: "true"
         run: pnpm --filter web build
 
       - name: Upload Pages artifact
