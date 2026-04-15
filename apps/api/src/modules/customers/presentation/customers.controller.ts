@@ -7,24 +7,24 @@ import { createCustomerSchema, CreateCustomerDto, customerActionSchema, Customer
 export class CustomersController {
   constructor(private readonly service: CustomersService) {}
 
-  @Get("customers")
+  @Get("")
   list() { return this.service.list(); }
 
-  @Get("customers/:id")
+  @Get(":id")
   get(@Param("id") id: string) { return this.service.get(id); }
 
-  @Post("customers")
+  @Post("")
   @UsePipes(new ZodValidationPipe(createCustomerSchema))
   create(@Body() body: CreateCustomerDto) { return this.service.create(body); }
 
-  @Patch("customers/:id")
+  @Patch(":id")
   @UsePipes(new ZodValidationPipe(updateCustomerSchema))
   update(@Param("id") id: string, @Body() body: UpdateCustomerDto) { return this.service.update(id, body); }
 
-  @Delete("customers/:id")
+  @Delete(":id")
   remove(@Param("id") id: string) { return this.service.remove(id); }
 
-  @Post("customers/:id/action")
+  @Post(":id/action")
   @UsePipes(new ZodValidationPipe(customerActionSchema))
   runAction(@Param("id") id: string, @Body() payload: CustomerActionDto) { return this.service.runAction(id, payload); }
 }

@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
+import { RequestMethod } from "@nestjs/common";
+import { METHOD_METADATA, PATH_METADATA } from "@nestjs/common/constants";
 import { CustomersService } from "../application/customers.service";
+import { CustomersController } from "../presentation/customers.controller";
+import { mapLegacyPath, mapNormalizedPathToLegacy } from "../../../config/api-routes";
 
 describe("customers integration", () => {
   it("delegates CRUD and business action to repository", async () => {
@@ -23,5 +27,27 @@ describe("customers integration", () => {
     expect(repo.list).toHaveBeenCalled();
     expect(repo.runAction).toHaveBeenCalledWith("c-1", {});
     expect(acted.status).toBe("archived");
+  });
+
+  it("normaliza rutas del controlador sin duplicar prefijo de recurso", () => {
+    expect(Reflect.getMetadata(PATH_METADATA, CustomersController)).toBe("customers");
+
+    const listHandler = Reflect.getMetadata(PATH_METADATA, CustomersController.prototype.list);
+    const getHandler = Reflect.getMetadata(PATH_METADATA, CustomersController.prototype.get);
+    const createHandler = Reflect.getMetadata(PATH_METADATA, CustomersController.prototype.create);
+    const updateHandler = Reflect.getMetadata(PATH_METADATA, CustomersController.prototype.update);
+    const removeHandler = Reflect.getMetadata(PATH_METADATA, CustomersController.prototype.remove);
+    const actionHandler = Reflect.getMetadata(PATH_METADATA, CustomersController.prototype.runAction);
+    const createMethod = Reflect.getMetadata(METHOD_METADATA, CustomersController.prototype.create);
+
+    expect(listHandler).toBe("/");
+    expect(getHandler).toBe(":id");
+    expect(createHandler).toBe("/");
+    expect(updateHandler).toBe(":id");
+    expect(removeHandler).toBe(":id");
+    expect(actionHandler).toBe(":id/action");
+    expect(createMethod).toBe(RequestMethod.POST);
+    expect(mapLegacyPath("/customers")).toBe("/commercial/customers");
+    expect(mapNormalizedPathToLegacy("/commercial/customers")).toBe("/customers");
   });
 });
