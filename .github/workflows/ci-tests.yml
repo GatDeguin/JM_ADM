@@ -26,6 +26,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Lint workspace (ESLint)
+        run: pnpm lint
+
+      - name: Format check (Prettier)
+        run: pnpm format:check
+
       - name: Install Playwright browsers
         run: pnpm --filter web exec playwright install --with-deps chromium
 
@@ -38,8 +44,11 @@ jobs:
       - name: Web unit tests (vitest report)
         run: pnpm --filter web test -- --reporter=default --reporter=junit --outputFile=../../artifacts/web-junit.xml
 
-      - name: Frontend e2e workflows (Playwright report)
-        run: pnpm --filter web test:e2e --reporter=line,html,junit
+      - name: Frontend e2e smoke (mocked)
+        run: pnpm --filter web test:e2e:smoke --reporter=line,html,junit
+
+      - name: Frontend e2e real layer (API + DB test) - optional in CI
+        run: pnpm --filter web test:e2e:all --project=real-api-db --reporter=line
 
       - name: Upload test artifacts
         if: always()

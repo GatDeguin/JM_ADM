@@ -1,1 +1,6 @@
-import { test, expect } from "@playwright/test"; test("homepage", async ({ page }) => { await page.goto("http://localhost:3000/inicio"); await expect(page).toHaveTitle(/.*/);});
+import { expect, test } from "@playwright/test";
+
+test("homepage", async ({ page }) => {
+  await page.goto("/inicio");
+  await expect(page).toHaveTitle(/.*/);
+});

@@ -6,9 +6,14 @@
     "build": "next build",
     "export": "next build",
     "start": "next start -p 3000",
-    "lint": "echo lint-ok",
+    "lint": "eslint . --ext .ts,.tsx",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test --project=smoke-mocked",
+    "format": "prettier --write \"{package.json,tsconfig.json,playwright.config.ts}\" \"tests/**/*.{ts,tsx}\"",
+    "format:check": "prettier --check \"{package.json,tsconfig.json,playwright.config.ts}\" \"tests/**/*.{ts,tsx}\"",
+    "test:e2e:smoke": "playwright test --project=smoke-mocked",
+    "test:e2e:real": "E2E_REAL=1 playwright test --project=real-api-db",
+    "test:e2e:all": "playwright test"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.59.0",
