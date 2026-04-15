@@ -43,6 +43,10 @@ export function DataTable<T extends Record<string, unknown>>({
     if (!query.trim()) return rows;
     return rows.filter((row) => JSON.stringify(row).toLowerCase().includes(query.toLowerCase()));
   }, [query, rows]);
+  const hasFilter = query.trim().length > 0;
+  const hasRows = rows.length > 0;
+  const showNoResults = hasFilter && filtered.length === 0 && hasRows;
+  const showNoData = !hasRows;
 
   return (
     <section className="card-base space-y-4">
@@ -72,62 +76,85 @@ export function DataTable<T extends Record<string, unknown>>({
           ✅ {successMessage}
         </p>
       ) : null}
-      {loading ? <Skeletons variant="table" rows={4} density="normal" /> : null}
-      {!loading && error ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/70 dark:bg-red-950/50 dark:text-red-200">Error: {error}</p>
-      ) : null}
-      {!loading && !error && filtered.length === 0 ? <EmptyState description={emptyMessage} /> : null}
-
-      {!loading && !error && filtered.length > 0 ? (
-        <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800" tabIndex={0} aria-label="Tabla de resultados">
-          <table className="min-w-full border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-zinc-200 bg-zinc-50 text-left dark:border-zinc-800 dark:bg-zinc-900/60">
-                {columns.map((col) => (
-                  <th key={String(col.key)} className="px-3 py-2 font-medium text-zinc-700 dark:text-zinc-200">
-                    {col.header}
-                  </th>
-                ))}
-                {onEdit || onDelete ? <th className="px-3 py-2 text-zinc-700 dark:text-zinc-200">Acciones</th> : null}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((row) => (
-                <tr key={rowId(row)} className="border-b border-zinc-200 last:border-b-0 dark:border-zinc-800">
-                  {columns.map((col) => {
-                    const value = row[col.key];
-                    return (
-                      <td key={String(col.key)} className="px-3 py-2 text-zinc-700 dark:text-zinc-200">
-                        {col.render ? col.render(value, row) : String(value ?? "-")}
-                      </td>
-                    );
-                  })}
-                  {onEdit || onDelete ? (
-                    <td className="px-3 py-2">
-                      <div className="flex flex-wrap gap-2">
-                        {onEdit ? (
-                          <button className="btn-secondary" type="button" onClick={() => onEdit(row)}>
-                            Editar
-                          </button>
-                        ) : null}
-                        {onDelete ? (
-                          <button
-                            className="rounded-lg border border-red-300 px-2 py-1 text-red-700 hover:bg-red-50 dark:border-red-900/80 dark:text-red-300 dark:hover:bg-red-950/40"
-                            type="button"
-                            onClick={() => onDelete(row)}
-                          >
-                            Eliminar
-                          </button>
-                        ) : null}
-                      </div>
-                    </td>
-                  ) : null}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="relative min-h-52">
+        <div
+          className={`transition-opacity duration-300 ease-out ${loading ? "opacity-100" : "pointer-events-none absolute inset-0 opacity-0"}`}
+          aria-hidden={!loading}
+        >
+          <Skeletons variant="table" rows={4} density="normal" />
         </div>
-      ) : null}
+        <div className={`transition-opacity duration-300 ease-out ${loading ? "opacity-0" : "opacity-100"}`} aria-busy={loading}>
+          {!loading && error ? (
+            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/70 dark:bg-red-950/50 dark:text-red-200">Error: {error}</p>
+          ) : null}
+          {!loading && !error && showNoData ? (
+            <EmptyState
+              title="Todavía no hay registros"
+              subtitle={emptyMessage}
+              primaryAction={onCreate ? { label: "Crear registro", onClick: onCreate } : undefined}
+            />
+          ) : null}
+          {!loading && !error && showNoResults ? (
+            <EmptyState
+              title="No hay coincidencias"
+              subtitle="No encontramos resultados para el filtro aplicado."
+              primaryAction={{ label: "Limpiar filtro", onClick: () => setQuery("") }}
+              secondaryAction={onCreate ? { label: "Crear registro", onClick: onCreate } : undefined}
+            />
+          ) : null}
+
+          {!loading && !error && filtered.length > 0 ? (
+            <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800" tabIndex={0} aria-label="Tabla de resultados">
+              <table className="min-w-full border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-zinc-200 bg-zinc-50 text-left dark:border-zinc-800 dark:bg-zinc-900/60">
+                    {columns.map((col) => (
+                      <th key={String(col.key)} className="px-3 py-2 font-medium text-zinc-700 dark:text-zinc-200">
+                        {col.header}
+                      </th>
+                    ))}
+                    {onEdit || onDelete ? <th className="px-3 py-2 text-zinc-700 dark:text-zinc-200">Acciones</th> : null}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((row) => (
+                    <tr key={rowId(row)} className="border-b border-zinc-200 last:border-b-0 dark:border-zinc-800">
+                      {columns.map((col) => {
+                        const value = row[col.key];
+                        return (
+                          <td key={String(col.key)} className="px-3 py-2 text-zinc-700 dark:text-zinc-200">
+                            {col.render ? col.render(value, row) : String(value ?? "-")}
+                          </td>
+                        );
+                      })}
+                      {onEdit || onDelete ? (
+                        <td className="px-3 py-2">
+                          <div className="flex flex-wrap gap-2">
+                            {onEdit ? (
+                              <button className="btn-secondary" type="button" onClick={() => onEdit(row)}>
+                                Editar
+                              </button>
+                            ) : null}
+                            {onDelete ? (
+                              <button
+                                className="rounded-lg border border-red-300 px-2 py-1 text-red-700 hover:bg-red-50 dark:border-red-900/80 dark:text-red-300 dark:hover:bg-red-950/40"
+                                type="button"
+                                onClick={() => onDelete(row)}
+                              >
+                                Eliminar
+                              </button>
+                            ) : null}
+                          </div>
+                        </td>
+                      ) : null}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
+        </div>
+      </div>
     </section>
   );
 }
