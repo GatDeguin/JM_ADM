@@ -74,7 +74,7 @@ export function SmartSelector({ label, options, value, loading, error, emptyMess
       {error || contextualError ? (
         <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-200">{error ?? contextualError}</p>
       ) : null}
-      {!loading && !error && !contextualError && filtered.length === 0 ? <EmptyState title="Sin coincidencias" description={emptyMessage} /> : null}
+      {!loading && !error && !contextualError && filtered.length === 0 ? <EmptyState title="Sin coincidencias" subtitle={emptyMessage} /> : null}
       <div className="space-y-1" role="listbox" aria-label={label}>
         {filtered.map((option) => (
           <button
