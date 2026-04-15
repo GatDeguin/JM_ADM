@@ -27,7 +27,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 9.12.0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -46,6 +46,12 @@ jobs:
         env:
           GITHUB_PAGES: "true"
         run: pnpm --filter web build
+
+
+      - name: Verify static export output
+        run: |
+          test -d apps/web/out
+          test -f apps/web/out/index.html
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
