@@ -32,7 +32,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
@@ -46,7 +46,6 @@ jobs:
         env:
           GITHUB_PAGES: "true"
         run: pnpm --filter web build
-
 
       - name: Verify static export output
         run: |
