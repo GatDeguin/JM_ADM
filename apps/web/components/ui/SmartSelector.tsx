@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { API_BASE_URL } from "@/lib/env";
 import { QuickCreateSheet } from "@/components/ui/QuickCreateSheet";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -8,14 +9,20 @@ import { Skeletons } from "@/components/ui/Skeletons";
 
 export type SmartSelectorOption = { id: string; label: string; meta?: string };
 export type ContextualEntityType =
+  | "producto"
+  | "variante"
   | "presentacion"
   | "unidad"
   | "sku"
   | "alias"
   | "proveedor"
   | "cliente"
+  | "direccion"
   | "lista"
-  | "cuenta";
+  | "cuenta"
+  | "cuenta_cobrar"
+  | "cuenta_pagar"
+  | "formula_version";
 
 type SmartSelectorProps = {
   label: string;
@@ -29,6 +36,7 @@ type SmartSelectorProps = {
   contextualConfig?: {
     entityType: ContextualEntityType;
     originFlow?: string;
+    context?: Record<string, unknown>;
   };
 };
 
@@ -44,6 +52,9 @@ export function SmartSelector({
   contextualConfig,
 }: SmartSelectorProps) {
   const [query, setQuery] = useState("");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [contextualOptions, setContextualOptions] = useState<SmartSelectorOption[]>([]);
   const [contextualError, setContextualError] = useState<string | null>(null);
 
@@ -76,7 +87,7 @@ export function SmartSelector({
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...payload, originFlow: contextualConfig.originFlow }),
+        body: JSON.stringify({ ...payload, originFlow: contextualConfig.originFlow, context: contextualConfig.context }),
       },
     );
     if (!response.ok) throw new Error(await response.text());
@@ -85,6 +96,21 @@ export function SmartSelector({
     return created;
   };
 
+
+
+  useEffect(() => {
+    if (!contextualConfig) return;
+    const selectedType = searchParams.get("contextualEntityType");
+    const selectedId = searchParams.get("contextualEntityId");
+    if (selectedType !== contextualConfig.entityType || !selectedId) return;
+
+    onChange(selectedId);
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("contextualEntityType");
+    next.delete("contextualEntityId");
+    const query = next.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname);
+  }, [contextualConfig, onChange, pathname, router, searchParams]);
   const sourceOptions = contextualConfig
     ? [
         ...contextualOptions,

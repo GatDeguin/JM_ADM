@@ -12,6 +12,7 @@ export const createContextualEntitySchema = z.object({
   label: z.string().min(1),
   meta: z.string().optional(),
   originFlow: z.string().min(1).optional(),
+  context: z.record(z.string(), z.any()).optional(),
 });
 
 export type CreateUnitDto = z.infer<typeof createUnitSchema>;

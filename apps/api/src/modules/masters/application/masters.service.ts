@@ -23,7 +23,8 @@ export class MastersService {
       entityType,
       entityId: created.id,
       originFlow: data.originFlow,
-      payload: data
+      payload: data,
+      created,
     });
     return created;
   }

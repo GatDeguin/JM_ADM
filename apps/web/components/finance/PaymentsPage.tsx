@@ -84,11 +84,13 @@ export function PaymentsPage() {
             <input className="input-base w-full" type="number" min={0.01} step="0.01" {...form.register("amount")} />
             {form.formState.errors.amount ? <p className="text-xs text-red-600">{form.formState.errors.amount.message}</p> : null}
           </label>
-          <label className="space-y-1 text-sm">
-            <span className="font-medium">ID cuenta por pagar</span>
-            <input className="input-base w-full" {...form.register("payableId")} placeholder="ap-001" />
-            {form.formState.errors.payableId ? <p className="text-xs text-red-600">{form.formState.errors.payableId.message}</p> : null}
-          </label>
+          <SmartSelector
+            label="Cuenta por pagar"
+            value={form.watch("payableId")}
+            onChange={(value) => form.setValue("payableId", value, { shouldValidate: true })}
+            options={[]}
+            contextualConfig={{ entityType: "cuenta_pagar", originFlow: "finanzas/pagos" }}
+          />
           <label className="space-y-1 text-sm">
             <span className="font-medium">Importe a imputar</span>
             <input className="input-base w-full" type="number" min={0.01} step="0.01" {...form.register("allocatedAmount")} />

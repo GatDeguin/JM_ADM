@@ -84,11 +84,13 @@ export function ReceiptsPage() {
             <input className="input-base w-full" type="number" min={0.01} step="0.01" {...form.register("amount")} />
             {form.formState.errors.amount ? <p className="text-xs text-red-600">{form.formState.errors.amount.message}</p> : null}
           </label>
-          <label className="space-y-1 text-sm">
-            <span className="font-medium">ID cuenta por cobrar</span>
-            <input className="input-base w-full" {...form.register("receivableId")} placeholder="ar-001" />
-            {form.formState.errors.receivableId ? <p className="text-xs text-red-600">{form.formState.errors.receivableId.message}</p> : null}
-          </label>
+          <SmartSelector
+            label="Cuenta por cobrar"
+            value={form.watch("receivableId")}
+            onChange={(value) => form.setValue("receivableId", value, { shouldValidate: true })}
+            options={[]}
+            contextualConfig={{ entityType: "cuenta_cobrar", originFlow: "finanzas/cobranzas" }}
+          />
           <label className="space-y-1 text-sm">
             <span className="font-medium">Importe a imputar</span>
             <input className="input-base w-full" type="number" min={0.01} step="0.01" {...form.register("allocatedAmount")} />

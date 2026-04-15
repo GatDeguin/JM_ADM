@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Layout } from "@/components/layout";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { SmartSelector } from "@/components/ui/SmartSelector";
 import { logOriginAudit, apiRequest } from "@/components/workflows/api";
 
 const schema = z.object({
@@ -78,16 +79,20 @@ export function NewProductionPage() {
             <input className="input-base w-full" type="number" min={1} step="0.01" {...form.register("plannedQty")} />
             {form.formState.errors.plannedQty ? <p className="text-xs text-red-600">{form.formState.errors.plannedQty.message}</p> : null}
           </label>
-          <label className="space-y-1 text-sm">
-            <span className="font-medium">Producto base (ID)</span>
-            <input className="input-base w-full" {...form.register("productBaseId")} placeholder="pb-001" />
-            {form.formState.errors.productBaseId ? <p className="text-xs text-red-600">{form.formState.errors.productBaseId.message}</p> : null}
-          </label>
-          <label className="space-y-1 text-sm">
-            <span className="font-medium">Versión de fórmula (ID)</span>
-            <input className="input-base w-full" {...form.register("formulaVersionId")} placeholder="fv-001" />
-            {form.formState.errors.formulaVersionId ? <p className="text-xs text-red-600">{form.formState.errors.formulaVersionId.message}</p> : null}
-          </label>
+          <SmartSelector
+            label="Producto base"
+            value={form.watch("productBaseId")}
+            onChange={(value) => form.setValue("productBaseId", value, { shouldValidate: true })}
+            options={[]}
+            contextualConfig={{ entityType: "producto", originFlow: "operacion/produccion/nueva" }}
+          />
+          <SmartSelector
+            label="Versión de fórmula"
+            value={form.watch("formulaVersionId")}
+            onChange={(value) => form.setValue("formulaVersionId", value, { shouldValidate: true })}
+            options={[]}
+            contextualConfig={{ entityType: "formula_version", originFlow: "operacion/produccion/nueva" }}
+          />
         </div>
 
         {error ? <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
