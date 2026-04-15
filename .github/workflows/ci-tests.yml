@@ -57,17 +57,14 @@ jobs:
       - name: Create report directories
         run: mkdir -p artifacts
 
-      - name: API integration tests (vitest report)
-        run: pnpm --filter api test -- --reporter=default --reporter=junit --outputFile=../../artifacts/api-junit.xml
-
       - name: Web unit tests (vitest report)
         run: pnpm --filter web test -- --reporter=default --reporter=junit --outputFile=../../artifacts/web-junit.xml
 
       - name: Frontend e2e smoke (mocked)
         run: pnpm --filter web test:e2e:smoke --reporter=line,html,junit
 
-      - name: Frontend e2e real layer crítica (API + DB test) - obligatorio
-        run: pnpm --filter web test:e2e:critical --reporter=line
+      - name: Ejecutar matriz DoD (API integration + E2E real + seed checks)
+        run: pnpm test:dod
 
       - name: Build workspace
         run: pnpm build
@@ -79,5 +76,7 @@ jobs:
           name: test-reports
           path: |
             artifacts/*.xml
+            artifacts/dod-compliance.json
+            artifacts/dod-compliance.md
             apps/web/playwright-report
             apps/web/test-results
