@@ -19,6 +19,11 @@ export type ImportSummary = {
   duplicates: number;
   pendingHomologation: number;
   imported?: number;
+  created?: number;
+  updated?: number;
+  skipped?: number;
+  errors?: number;
+  entities?: Record<string, { created: number; updated: number; skipped: number; errors: number }>;
 };
 
 export type ImportedRecord = {
