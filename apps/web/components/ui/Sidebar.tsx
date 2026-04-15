@@ -83,7 +83,7 @@ export function Sidebar() {
   }, [pathname]);
 
   return (
-    <aside className="hidden w-64 border-r border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 md:block">
+    <aside className="glass-bg glass-edge-highlight elevation-1 surface-blur-soft surface-noise hidden w-64 border-r border-[color:var(--glass-border)] p-4 md:block">
       <h1 className="mb-4 text-lg font-bold tracking-tight">JM ADM</h1>
       <nav ref={navRef} className="relative space-y-1" aria-label="Navegación principal">
         <span
