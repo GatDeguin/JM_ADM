@@ -2,7 +2,7 @@
 
 import { useId, useMemo, useRef, useState } from "react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+import { API_BASE_URL } from "@/lib/env";
 
 export type UploadedAttachment = {
   id: string;
@@ -44,9 +44,9 @@ async function uploadSingleFile(params: {
     body.append("metadata", JSON.stringify(params.metadata));
   }
 
-  const response = await fetch(`${API_URL}/attachments/upload`, {
+  const response = await fetch(`${API_BASE_URL}/attachments/upload`, {
     method: "POST",
-    body
+    body,
   });
 
   if (!response.ok) {
@@ -67,7 +67,7 @@ export function AttachmentUploader({
   error,
   maxSizeMb = 10,
   metadata,
-  onUploaded
+  onUploaded,
 }: AttachmentUploaderProps) {
   const [internalError, setInternalError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -97,12 +97,16 @@ export function AttachmentUploader({
 
     setUploading(true);
     try {
-      const uploaded = await Promise.all(chosen.map((file) => uploadSingleFile({ file, entityType, entityId, metadata })));
+      const uploaded = await Promise.all(
+        chosen.map((file) => uploadSingleFile({ file, entityType, entityId, metadata })),
+      );
       setRecentUploads((prev) => [...uploaded, ...prev].slice(0, 6));
       onUploaded?.(uploaded);
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (uploadError) {
-      setInternalError(uploadError instanceof Error ? uploadError.message : "Error al subir archivos");
+      setInternalError(
+        uploadError instanceof Error ? uploadError.message : "Error al subir archivos",
+      );
     } finally {
       setUploading(false);
     }
@@ -115,7 +119,12 @@ export function AttachmentUploader({
           <h3 className="text-sm font-semibold">Adjuntos</h3>
           <p className="text-xs text-zinc-500 dark:text-zinc-400">{helper}</p>
         </div>
-        <button type="button" className="btn-secondary" disabled={disabled || busy} onClick={() => fileInputRef.current?.click()}>
+        <button
+          type="button"
+          className="btn-secondary"
+          disabled={disabled || busy}
+          onClick={() => fileInputRef.current?.click()}
+        >
           {busy ? "Subiendo..." : "Seleccionar archivo"}
         </button>
       </div>
@@ -134,14 +143,23 @@ export function AttachmentUploader({
         Subir adjunto
       </label>
 
-      {resolvedError ? <p className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">{resolvedError}</p> : null}
+      {resolvedError ? (
+        <p className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {resolvedError}
+        </p>
+      ) : null}
 
       {recentUploads.length ? (
         <ul className="space-y-2" aria-label="Archivos subidos">
           {recentUploads.map((item) => (
-            <li key={item.id} className="flex items-center justify-between rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-800">
+            <li
+              key={item.id}
+              className="flex items-center justify-between rounded-lg border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-800"
+            >
               <div className="min-w-0">
-                <p className="truncate font-medium text-zinc-900 dark:text-zinc-100">{item.fileName}</p>
+                <p className="truncate font-medium text-zinc-900 dark:text-zinc-100">
+                  {item.fileName}
+                </p>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400">
                   {(item.size / 1024).toFixed(1)} KB · {item.mimeType}
                 </p>

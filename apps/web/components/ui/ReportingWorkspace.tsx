@@ -6,7 +6,7 @@ import { DataTable } from "@/components/ui/DataTable";
 import { KPIStatCard } from "@/components/ui/KPIStatCard";
 import { PageHeader } from "@/components/ui/PageHeader";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+import { API_BASE_URL } from "@/lib/env";
 
 type Filters = {
   startDate: string;
@@ -23,7 +23,7 @@ type Props = {
 };
 
 async function request(path: string, init?: RequestInit) {
-  const response = await fetch(`${API_URL}${path}`, { cache: "no-store", ...init });
+  const response = await fetch(`${API_BASE_URL}${path}`, { cache: "no-store", ...init });
   if (!response.ok) throw new Error(`Error ${response.status}`);
   return response.json();
 }
@@ -42,7 +42,10 @@ function toQuery(filters: Filters) {
 function downloadCsv(filename: string, rows: Array<Record<string, string | number>>) {
   if (!rows.length) return;
   const headers = Object.keys(rows[0]);
-  const csv = [headers.join(","), ...rows.map((row) => headers.map((header) => JSON.stringify(row[header] ?? "")).join(","))].join("\n");
+  const csv = [
+    headers.join(","),
+    ...rows.map((row) => headers.map((header) => JSON.stringify(row[header] ?? "")).join(",")),
+  ].join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -53,7 +56,13 @@ function downloadCsv(filename: string, rows: Array<Record<string, string | numbe
 }
 
 export function ReportingWorkspace({ title, subtitle, mode }: Props) {
-  const [filters, setFilters] = useState<Filters>({ startDate: "", endDate: "", channel: "", line: "", customerId: "" });
+  const [filters, setFilters] = useState<Filters>({
+    startDate: "",
+    endDate: "",
+    channel: "",
+    line: "",
+    customerId: "",
+  });
   const [dashboard, setDashboard] = useState<Record<string, any> | null>(null);
   const [dataQualityLists, setDataQualityLists] = useState<Record<string, any> | null>(null);
   const [loading, setLoading] = useState(false);
@@ -103,14 +112,41 @@ export function ReportingWorkspace({ title, subtitle, mode }: Props) {
 
       <section className="card-base">
         <div className="grid gap-2 md:grid-cols-5">
-          <input className="input-base" type="date" value={filters.startDate} onChange={(e) => setFilters((prev) => ({ ...prev, startDate: e.target.value }))} />
-          <input className="input-base" type="date" value={filters.endDate} onChange={(e) => setFilters((prev) => ({ ...prev, endDate: e.target.value }))} />
-          <input className="input-base" placeholder="Canal" value={filters.channel} onChange={(e) => setFilters((prev) => ({ ...prev, channel: e.target.value }))} />
-          <input className="input-base" placeholder="Línea" value={filters.line} onChange={(e) => setFilters((prev) => ({ ...prev, line: e.target.value }))} />
-          <input className="input-base" placeholder="Cliente (id)" value={filters.customerId} onChange={(e) => setFilters((prev) => ({ ...prev, customerId: e.target.value }))} />
+          <input
+            className="input-base"
+            type="date"
+            value={filters.startDate}
+            onChange={(e) => setFilters((prev) => ({ ...prev, startDate: e.target.value }))}
+          />
+          <input
+            className="input-base"
+            type="date"
+            value={filters.endDate}
+            onChange={(e) => setFilters((prev) => ({ ...prev, endDate: e.target.value }))}
+          />
+          <input
+            className="input-base"
+            placeholder="Canal"
+            value={filters.channel}
+            onChange={(e) => setFilters((prev) => ({ ...prev, channel: e.target.value }))}
+          />
+          <input
+            className="input-base"
+            placeholder="Línea"
+            value={filters.line}
+            onChange={(e) => setFilters((prev) => ({ ...prev, line: e.target.value }))}
+          />
+          <input
+            className="input-base"
+            placeholder="Cliente (id)"
+            value={filters.customerId}
+            onChange={(e) => setFilters((prev) => ({ ...prev, customerId: e.target.value }))}
+          />
         </div>
         <div className="mt-3 flex gap-2">
-          <button className="btn-primary" onClick={() => void load()} disabled={loading}>Aplicar filtros</button>
+          <button className="btn-primary" onClick={() => void load()} disabled={loading}>
+            Aplicar filtros
+          </button>
           <button
             className="btn-secondary"
             onClick={async () => {
@@ -126,7 +162,9 @@ export function ReportingWorkspace({ title, subtitle, mode }: Props) {
             Generar snapshots
           </button>
         </div>
-        {snapshotMessage ? <p className="mt-2 text-sm text-emerald-700">{snapshotMessage}</p> : null}
+        {snapshotMessage ? (
+          <p className="mt-2 text-sm text-emerald-700">{snapshotMessage}</p>
+        ) : null}
         {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
       </section>
 
@@ -141,15 +179,36 @@ export function ReportingWorkspace({ title, subtitle, mode }: Props) {
         <section className="card-base space-y-2">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-semibold">Reportes operativos</h3>
-            <button className="btn-secondary" onClick={() => downloadCsv("reportes.csv", [dashboard.production, dashboard.stock, dashboard.sales, dashboard.finance])}>
+            <button
+              className="btn-secondary"
+              onClick={() =>
+                downloadCsv("reportes.csv", [
+                  dashboard.production,
+                  dashboard.stock,
+                  dashboard.sales,
+                  dashboard.finance,
+                ])
+              }
+            >
               Exportar CSV
             </button>
           </div>
-          <pre className="overflow-x-auto rounded bg-zinc-50 p-3 text-xs">{JSON.stringify({ production: dashboard.production, stock: dashboard.stock, sales: dashboard.sales, finance: dashboard.finance }, null, 2)}</pre>
+          <pre className="overflow-x-auto rounded bg-zinc-50 p-3 text-xs">
+            {JSON.stringify(
+              {
+                production: dashboard.production,
+                stock: dashboard.stock,
+                sales: dashboard.sales,
+                finance: dashboard.finance,
+              },
+              null,
+              2,
+            )}
+          </pre>
         </section>
       ) : null}
 
-      {(mode === "margenes" || mode === "reportes") ? (
+      {mode === "margenes" || mode === "reportes" ? (
         <DataTable
           title="Reporte de márgenes"
           columns={[
@@ -176,7 +235,10 @@ export function ReportingWorkspace({ title, subtitle, mode }: Props) {
                   { lista: "alias_pendientes", cantidad: dataQualityLists.pendingAliases.length },
                   { lista: "duplicados", cantidad: dataQualityLists.duplicateAliases.length },
                   { lista: "skus_sin_precio", cantidad: dataQualityLists.skusWithoutPrice.length },
-                  { lista: "formulas_warning", cantidad: dataQualityLists.formulasWithWarning.length },
+                  {
+                    lista: "formulas_warning",
+                    cantidad: dataQualityLists.formulasWithWarning.length,
+                  },
                   { lista: "items_sin_costo", cantidad: dataQualityLists.itemsWithoutCost.length },
                   { lista: "lotes_retenidos", cantidad: dataQualityLists.retainedLots.length },
                 ])

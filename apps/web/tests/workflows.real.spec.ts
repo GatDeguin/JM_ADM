@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { API_BASE_URL } from "../lib/env";
 import { workflowData } from "./fixtures/workflow-data";
 import { altaContextual, altaCritica } from "./helpers";
 
@@ -8,7 +9,7 @@ test.describe("flujos reales contra API + DB de test", () => {
   test.skip(!runRealFlows, "Set E2E_REAL=1 para ejecutar flujos reales contra API + DB de test");
 
   test("real/login", async ({ page }) => {
-    const loginResponse = await page.request.post("http://localhost:4000/auth/login", {
+    const loginResponse = await page.request.post(`${API_BASE_URL}/auth/login`, {
       data: { email: "admin@demo.local", password: "secret" },
     });
     expect(loginResponse.ok()).toBeTruthy();

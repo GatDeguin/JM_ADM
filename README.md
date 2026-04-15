@@ -11,7 +11,7 @@ Si estás viendo esta documentación publicada en GitHub Pages y querés entrar 
 Para entorno local:
 
 - Web: `http://localhost:3000/inicio`
-- API: `http://localhost:4000`
+- API: `http://localhost:3001`
 
 Usuarios demo disponibles:
 
@@ -34,9 +34,11 @@ Incluye soporte nativo de **alias/homologación/merge/pending_homologation** par
 ## Stack tecnológico
 
 ### Monorepo
+
 - `pnpm` workspaces
 
 ### Frontend (apps/web)
+
 - Next.js 15 (App Router)
 - TypeScript
 - Tailwind CSS
@@ -46,18 +48,21 @@ Incluye soporte nativo de **alias/homologación/merge/pending_homologation** par
 - Componentes UI reutilizables internos
 
 ### Backend (apps/api)
+
 - NestJS (modular monolith)
 - TypeScript
 - Arquitectura por capas (presentation/application/domain/infrastructure)
 - DTO/validaciones consistentes
 
 ### Datos e infraestructura
+
 - PostgreSQL + Prisma
 - Redis + BullMQ (colas de importación)
 - MinIO (S3 compatible para adjuntos)
 - Docker Compose
 
 ### Calidad
+
 - Vitest (unit/integration)
 - Playwright (E2E web)
 - ESLint + Prettier
@@ -67,6 +72,7 @@ Incluye soporte nativo de **alias/homologación/merge/pending_homologation** par
 ## Arquitectura
 
 ### Módulos backend
+
 - `auth`
 - `users`
 - `roles_permissions`
@@ -94,6 +100,7 @@ Incluye soporte nativo de **alias/homologación/merge/pending_homologation** par
 Contrato canónico actual: **`v1`** con prefijo lógico `/api/v1` para todas las rutas operativas nuevas.
 
 Dominios normalizados del contrato objetivo:
+
 - `auth`
 - `catalog`
 - `production`
@@ -108,12 +115,14 @@ Dominios normalizados del contrato objetivo:
 #### Endpoints v1 incorporados / normalizados
 
 **Finance (`/api/v1/finance`)**
+
 - `POST /adjustments/register`
 - `POST /treasury/transfers/register`
 - `POST /bank-reconciliation/register`
 - `GET /cash-flow?period=YYYY-MM`
 
 **Production (`/api/v1/production`)**
+
 - `POST /:id/register-consumption`
 - `POST /:id/reserve-materials`
 - `POST /:id/start-batch`
@@ -121,18 +130,22 @@ Dominios normalizados del contrato objetivo:
 - `POST /:id/release-batch`
 
 **Stock (`/api/v1/inventory`)**
+
 - `POST /internal-transfers`
 - `POST /transfers/register`
 
 **Quality (`/api/v1/quality`)**
+
 - `POST /qc-records/:id/quality-decision`
 
 **Payables & Treasury (`/api/v1/payables_treasury`)**
+
 - `POST /payments/register`
 - `POST /treasury/transfers/register`
 - `POST /bank-reconciliations/register`
 
 ### Eventos de dominio implementados
+
 - `formula.approved`
 - `product.sku.created`
 - `purchase.received`
@@ -171,7 +184,6 @@ Dominios normalizados del contrato objetivo:
 
 ---
 
-
 ## Despliegue completo en GitHub
 
 El repo ya incluye dos pipelines para publicar desde GitHub Actions:
@@ -188,6 +200,7 @@ El repo ya incluye dos pipelines para publicar desde GitHub Actions:
 ### 2) Publicar bundle completo de la app en GitHub Releases
 
 Cada push a `main`/`master`/`work` (o ejecución manual) genera:
+
 - build completo de workspaces (`pnpm build`)
 - artefacto `.tar.gz` con API, web, prisma, scripts y archivos raíz
 - release automática con tag `deploy-<run_number>`
@@ -206,6 +219,7 @@ pnpm start
 > Recomendación: usar `docker compose up --build -d` en producción si querés levantar servicios dependientes (PostgreSQL/Redis/MinIO) en el mismo host.
 
 ---
+
 ## Variables de entorno
 
 Crear `.env` desde `.env.example`:
@@ -215,15 +229,18 @@ cp .env.example .env
 ```
 
 Variables típicas:
+
 - `DATABASE_URL`
 - `REDIS_URL`
 - `JWT_SECRET`
-- `JWT_REFRESH_SECRET`
-- `MINIO_ENDPOINT`
-- `MINIO_ACCESS_KEY`
-- `MINIO_SECRET_KEY`
-- `MINIO_BUCKET`
 - `NEXT_PUBLIC_API_URL`
+- `STORAGE_ENDPOINT`
+- `STORAGE_BUCKET`
+- `STORAGE_ACCESS_KEY`
+- `STORAGE_SECRET_KEY`
+- `STORAGE_REGION`
+- `STORAGE_FORCE_PATH_STYLE`
+- `STORAGE_PUBLIC_BASE_URL`
 
 > Para local con Docker Compose, los defaults de `.env.example` ya están alineados con los servicios del compose.
 
@@ -247,7 +264,7 @@ pnpm dev
 ```
 
 - Web: `http://localhost:3000`
-- API: `http://localhost:4000`
+- API: `http://localhost:3001`
 
 ---
 
@@ -256,6 +273,8 @@ pnpm dev
 Desde raíz del monorepo:
 
 - `pnpm dev`
+- `pnpm dev:web`
+- `pnpm dev:api`
 - `pnpm build`
 - `pnpm start`
 - `pnpm lint`
@@ -271,10 +290,13 @@ Desde raíz del monorepo:
 ## Base de datos y seeds
 
 ### Prisma
+
 - Esquema relacional completo con entidades de seguridad, maestros, catálogo, fórmulas, producción, calidad, inventario, compras, comercial, finanzas, analítica e importaciones.
 
 ### Seed inteligente
+
 Incluye:
+
 - usuarios demo por rol
 - familias, líneas, variantes, unidades y presentaciones
 - productos base, SKUs y packaging
@@ -299,13 +321,16 @@ Incluye:
 ## UX/UI implementada
 
 Principios:
+
 - estética premium, limpia, Apple-like
 - mobile-first
 - sidebar desktop + bottom tabs mobile
 - componentes reutilizables para flujos transaccionales
 
 ### Biblioteca UI interna
+
 Incluye, entre otros:
+
 - `AppShell`, `Sidebar`, `Topbar`, `BottomTabs`
 - `PageHeader`, `KPIStatCard`, `StatusBadge`, `EntityChip`
 - `SmartSelector` (búsqueda por canónico/alias/código + alta contextual)
@@ -337,6 +362,7 @@ Se encuentran implementadas en `apps/web/app`:
 ## API (resumen)
 
 Controladores por módulo para:
+
 - Auth (`login`, `refresh`, `logout`, `me`)
 - Catálogo (`families`, `product-bases`, `presentations`, `skus`, `aliases`, `packaging`)
 - Fórmulas (`list`, `detail`, `create`, `version`, `approve`, `obsolete`, `compare`)
@@ -352,6 +378,7 @@ Controladores por módulo para:
 ## Importaciones
 
 Flujo completo:
+
 1. upload/source
 2. mapping editable
 3. validación
@@ -360,6 +387,7 @@ Flujo completo:
 6. warnings + log detallado
 
 Importadores incluidos:
+
 - fórmulas
 - diarios de producción
 - clientes
@@ -374,16 +402,19 @@ Importadores incluidos:
 ## Testing
 
 ### Unit + integración
+
 ```bash
 pnpm test
 ```
 
 ### E2E web
+
 ```bash
 pnpm test:e2e
 ```
 
 ### Build/Lint
+
 ```bash
 pnpm lint
 pnpm build
@@ -394,6 +425,7 @@ pnpm build
 ## Pantallas y demo
 
 La app entrega navegación real en todas las rutas de operación clave, con estados, tablas, formularios, acciones y auditoría visible. Para documentación visual:
+
 - correr `pnpm dev`
 - navegar rutas críticas (dashboard, catálogo, fórmulas, producción, stock, comercial, finanzas)
 - opcionalmente capturar screenshots del flujo en entorno local/CI.
@@ -423,6 +455,7 @@ La app entrega navegación real en todas las rutas de operación clave, con esta
 ## GitHub Pages (frontend estático)
 
 `apps/web/next.config.js` soporta static export y ajuste automático de `basePath/assetPrefix` para:
+
 - project pages (`/<repo>`)
 - user/org pages (`/`)
 
