@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { HttpStatus, Injectable } from "@nestjs/common";
+import { throwDomainError } from "../../../common/domain-rules/domain-errors";
 import { PrismaService } from "../../../infrastructure/prisma/prisma.service";
 import { ActionAccountsReceivableInput, CreateAccountsReceivableInput, AccountsReceivableDto, UpdateAccountsReceivableInput } from "../domain/receivables.types";
 
@@ -38,7 +39,7 @@ export class ReceivablesRepository {
   async runAction(payload: ActionAccountsReceivableInput): Promise<{ receiptId: string; receivables: AccountsReceivableDto[] }> {
     const allocationTotal = payload.allocations.reduce((sum, allocation) => sum + allocation.amount, 0);
     if (allocationTotal > payload.amount) {
-      throw new BadRequestException("Las imputaciones no pueden exceder el monto del recibo");
+      throwDomainError("RULE_RECEIVABLES_ALLOCATION_TOTAL", "Las imputaciones no pueden exceder el monto del recibo.", HttpStatus.BAD_REQUEST, "R-RV-002");
     }
 
     return this.prisma.$transaction(async (tx: any) => {
@@ -48,8 +49,13 @@ export class ReceivablesRepository {
       });
 
       const receivables: AccountsReceivableDto[] = [];
+      const customerIds = new Set<string>();
       for (const allocation of payload.allocations) {
         const receivable = await tx.accountsReceivable.findUniqueOrThrow({ where: { id: allocation.receivableId } });
+        customerIds.add(receivable.customerId);
+        if (allocation.amount > Number(receivable.balance)) {
+          throwDomainError("RULE_RECEIVABLES_ALLOCATION_BALANCE", "La imputación no puede superar el saldo pendiente de la cuenta a cobrar.", HttpStatus.CONFLICT, "R-RV-004");
+        }
         await tx.receiptAllocation.create({ data: { receiptId: receipt.id, receivableId: receivable.id, amount: allocation.amount } });
         const nextBalance = Number(receivable.balance) - allocation.amount;
         const updated = await tx.accountsReceivable.update({
@@ -57,6 +63,10 @@ export class ReceivablesRepository {
           data: { balance: { decrement: allocation.amount as never }, status: resolveAccountStatus(nextBalance, receivable.dueDate, Number(receivable.amount)) },
         });
         receivables.push(updated as AccountsReceivableDto);
+      }
+
+      if (customerIds.size > 1) {
+        throwDomainError("RULE_RECEIVABLES_SINGLE_CUSTOMER", "Todas las imputaciones del recibo deben pertenecer al mismo cliente.", HttpStatus.CONFLICT, "R-RV-003");
       }
 
       return { receiptId: receipt.id, receivables };

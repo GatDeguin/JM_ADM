@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { HttpStatus, Injectable } from "@nestjs/common";
+import { throwDomainError } from "../../../common/domain-rules/domain-errors";
 import { PrismaService } from "../../../infrastructure/prisma/prisma.service";
 import { ActionAccountsPayableInput, CreateAccountsPayableInput, AccountsPayableDto, ReconcileBankInput, TransferFundsInput, UpdateAccountsPayableInput } from "../domain/payables_treasury.types";
 import { AuditTrailService } from "../../audit/application/audit-trail.service";
@@ -54,16 +55,21 @@ export class PayablesTreasuryRepository {
   async runAction(payload: ActionAccountsPayableInput): Promise<{ paymentId: string; payables: AccountsPayableDto[] }> {
     const allocationTotal = payload.allocations.reduce((sum, allocation) => sum + allocation.amount, 0);
     if (allocationTotal > payload.amount) {
-      throw new BadRequestException("Las imputaciones no pueden exceder el importe pagado");
+      throwDomainError("RULE_PAYABLES_ALLOCATION_TOTAL", "Las imputaciones no pueden exceder el importe pagado.", HttpStatus.BAD_REQUEST, "R-PT-002");
     }
 
     return this.prisma.$transaction(async (tx: any) => {
       const first = await tx.accountsPayable.findUniqueOrThrow({ where: { id: payload.allocations[0]?.payableId } });
       const payment = await tx.payment.create({ data: { code: payload.code, supplierId: first.supplierId, cashAccountId: payload.cashAccountId, amount: payload.amount } });
       const payables: AccountsPayableDto[] = [];
+      const supplierIds = new Set<string>();
 
       for (const allocation of payload.allocations) {
         const payable = await tx.accountsPayable.findUniqueOrThrow({ where: { id: allocation.payableId } });
+        supplierIds.add(payable.supplierId);
+        if (allocation.amount > Number(payable.balance)) {
+          throwDomainError("RULE_PAYABLES_ALLOCATION_BALANCE", "La imputación no puede superar el saldo pendiente de la cuenta a pagar.", HttpStatus.CONFLICT, "R-PT-004");
+        }
         await tx.paymentAllocation.create({ data: { paymentId: payment.id, payableId: payable.id, amount: allocation.amount } });
         const nextBalance = Number(payable.balance) - allocation.amount;
         const updated = await tx.accountsPayable.update({
@@ -72,6 +78,10 @@ export class PayablesTreasuryRepository {
           include: accountsPayableInclude,
         }) as AccountsPayableDto;
         payables.push(updated);
+      }
+
+      if (supplierIds.size > 1) {
+        throwDomainError("RULE_PAYABLES_SINGLE_SUPPLIER", "Todas las imputaciones del pago deben pertenecer al mismo proveedor.", HttpStatus.CONFLICT, "R-PT-003");
       }
 
       await tx.treasuryMovement.create({ data: { cashAccountId: payload.cashAccountId, type: "outflow", amount: payload.amount, reference: payment.code } });

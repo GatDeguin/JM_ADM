@@ -28,6 +28,13 @@ export function NewProductionPage() {
     defaultValues: { code: "", productBaseId: "", formulaVersionId: "", plannedQty: 1 }
   });
 
+  const preWarnings = [
+    !form.watch("productBaseId") ? "Seleccioná producto base para crear la OP." : null,
+    !form.watch("formulaVersionId") ? "Seleccioná versión de fórmula aprobada." : null,
+    Number(form.watch("plannedQty") ?? 0) <= 0 ? "La cantidad planificada debe ser mayor a 0." : null,
+  ].filter((warning): warning is string => Boolean(warning));
+  const canSubmit = preWarnings.length === 0 && !loading;
+
   const onSubmit = form.handleSubmit(async (values) => {
     setError(null);
     setSuccess(null);
@@ -95,10 +102,11 @@ export function NewProductionPage() {
           />
         </div>
 
+        {preWarnings.length ? <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">{preWarnings.map((warning) => <p key={warning}>⚠ {warning}</p>)}</div> : null}
         {error ? <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
         {success ? <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{success}</p> : null}
 
-        <button className="btn-primary" type="submit" disabled={loading}>
+        <button className="btn-primary" type="submit" disabled={!canSubmit}>
           {loading ? "Creando..." : "Crear orden"}
         </button>
       </form>

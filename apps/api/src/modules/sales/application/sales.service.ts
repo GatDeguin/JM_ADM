@@ -1,4 +1,5 @@
-import { BadRequestException, ConflictException, Injectable } from "@nestjs/common";
+import { BadRequestException, ConflictException, HttpStatus, Injectable } from "@nestjs/common";
+import { throwDomainError } from "../../../common/domain-rules/domain-errors";
 import {
   assertRequiredText,
   assertSalesTotalAllowed,
@@ -21,7 +22,10 @@ export class SalesService {
     assertRequiredText(customerId, "el cliente");
     assertRequiredText(priceListId, "la lista de precios");
     if (!items.length) {
-      throw new BadRequestException("El pedido debe incluir al menos un ítem");
+      throwDomainError("RULE_SALES_ITEMS_REQUIRED", "El pedido debe incluir al menos un ítem.", HttpStatus.BAD_REQUEST, "R-SA-001");
+    }
+    if (!Number.isFinite(total) || total <= 0) {
+      throwDomainError("RULE_SALES_TOTAL_POSITIVE", "El pedido no se puede confirmar con total menor o igual a 0.", HttpStatus.FORBIDDEN, "R-SA-002");
     }
     assertSalesTotalAllowed(total);
 
@@ -74,6 +78,10 @@ export class SalesService {
     const exploded: Array<{ skuId: string; qty: number }> = [];
 
     for (const item of items) {
+      if (!Number.isFinite(item.qty) || item.qty <= 0) {
+        throw new BadRequestException("Cada ítem debe tener cantidad mayor a 0");
+      }
+
       if (item.skuId) {
         exploded.push({ skuId: item.skuId, qty: item.qty });
         continue;
