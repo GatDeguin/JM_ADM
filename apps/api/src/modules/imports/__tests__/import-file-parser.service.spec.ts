@@ -13,13 +13,14 @@ describe("ImportFileParserService", () => {
   const service = new ImportFileParserService();
 
   it("parsea tablas de texto", async () => {
-    const rows = await service.parse({ fileName: "formulas.txt", contentBase64: Buffer.from("codigo;nombre\nF-1;Formula Uno").toString("base64") });
-    expect(rows).toEqual([{ codigo: "F-1", nombre: "Formula Uno" }]);
+    const result = await service.parse({ fileName: "formulas.txt", contentBase64: Buffer.from("codigo;nombre\nF-1;Formula Uno").toString("base64") });
+    expect(result.rows).toEqual([{ codigo: "F-1", nombre: "Formula Uno" }]);
+    expect(result.detectedColumns).toEqual(["codigo", "nombre"]);
   });
 
   it("parsea csv", async () => {
-    const rows = await service.parse({ fileName: "customers.csv", contentBase64: Buffer.from("codigo,cliente\nC-1,Cliente Uno").toString("base64") });
-    expect(rows[0].codigo).toBe("C-1");
+    const result = await service.parse({ fileName: "customers.csv", contentBase64: Buffer.from("codigo,cliente\nC-1,Cliente Uno").toString("base64") });
+    expect(result.rows[0].codigo).toBe("C-1");
   });
 
   it("parsea xlsx", async () => {
@@ -28,13 +29,13 @@ describe("ImportFileParserService", () => {
     utils.book_append_sheet(workbook, worksheet, "sheet1");
     const buffer = write(workbook, { type: "buffer", bookType: "xlsx" });
 
-    const rows = await service.parse({ fileName: "suppliers.xlsx", contentBase64: buffer.toString("base64") });
-    expect(rows[0].codigo).toBe("S-1");
+    const result = await service.parse({ fileName: "suppliers.xlsx", contentBase64: buffer.toString("base64") });
+    expect(result.rows[0].codigo).toBe("S-1");
   });
 
   it("parsea docx usando extractor de texto", async () => {
-    const rows = await service.parse({ fileName: "formulas.docx", contentBase64: Buffer.from("fake").toString("base64") });
+    const result = await service.parse({ fileName: "formulas.docx", contentBase64: Buffer.from("fake").toString("base64") });
     expect(mammoth.extractRawText).toHaveBeenCalled();
-    expect(rows[0].codigo).toBe("F-1");
+    expect(result.rows[0].codigo).toBe("F-1");
   });
 });
