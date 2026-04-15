@@ -230,6 +230,7 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
         title={`Tabla ${domain}`}
         loading={loading}
         error={error}
+        emptyMessage={`No hay registros cargados en ${domain} todavía.`}
         successMessage={success}
         columns={[
           { key: "name", header: "Nombre" },
