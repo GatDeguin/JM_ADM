@@ -13,7 +13,8 @@
     "format:check": "prettier --check \"{package.json,tsconfig.json,playwright.config.ts}\" \"tests/**/*.{ts,tsx}\"",
     "test:e2e:smoke": "playwright test --project=smoke-mocked",
     "test:e2e:real": "E2E_REAL=1 playwright test --project=real-api-db",
-    "test:e2e:all": "playwright test"
+    "test:e2e:all": "playwright test",
+    "test:e2e:critical": "E2E_REAL=1 playwright test --project=real-api-db --grep 'real/critical'"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.59.0",

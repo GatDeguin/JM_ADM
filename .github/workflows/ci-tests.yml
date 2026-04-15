@@ -47,8 +47,11 @@ jobs:
       - name: Frontend e2e smoke (mocked)
         run: pnpm --filter web test:e2e:smoke --reporter=line,html,junit
 
-      - name: Frontend e2e real layer (API + DB test) - optional in CI
-        run: pnpm --filter web test:e2e:all --project=real-api-db --reporter=line
+      - name: Frontend e2e real layer crítica (API + DB test) - obligatorio
+        run: pnpm --filter web test:e2e:critical --reporter=line
+
+      - name: Build workspace
+        run: pnpm build
 
       - name: Upload test artifacts
         if: always()

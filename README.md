@@ -427,6 +427,14 @@ pnpm test
 pnpm test:e2e
 ```
 
+Suite crítica obligatoria (API + DB real):
+
+```bash
+pnpm test:e2e:critical
+```
+
+> La pipeline de CI bloquea `lint`, `test`, `test:e2e:critical` y `build` si la suite crítica no pasa.
+
 ### Build/Lint
 
 ```bash
@@ -435,6 +443,19 @@ pnpm build
 ```
 
 ---
+
+## Matriz de cobertura por módulo
+
+| Módulo                       | Unit/Integración API                                                           | E2E smoke mockeado             | E2E real crítica (`real-api-db`)              |
+| ---------------------------- | ------------------------------------------------------------------------------ | ------------------------------ | --------------------------------------------- |
+| Auth                         | ✅ `apps/api/src/modules/auth/__tests__`                                       | ✅ login mockeado              | ✅ login real                                 |
+| Catálogo                     | ✅ `apps/api/src/modules/catalog/__tests__`                                    | ✅ altas contextuales          | ✅ creación catálogo contextual               |
+| Fórmulas                     | ✅ `apps/api/src/modules/formulas/__tests__`                                   | ✅ alta crítica draft          | ✅ fórmula versionada/aprobada                |
+| Producción                   | ✅ `apps/api/src/modules/production/__tests__`                                 | ✅ OP + lote + fraccionamiento | ✅ OP + cierre lote + fraccionamiento         |
+| Comercial (ventas/despachos) | ✅ `apps/api/src/modules/sales/__tests__`                                      | ✅ venta                       | ✅ venta + despacho                           |
+| Finanzas (cobranzas/pagos)   | ✅ `apps/api/src/modules/receivables/__tests__`, `payables_treasury/__tests__` | ✅ cobranza + pago             | ✅ cobranza + pago                            |
+| Importaciones                | ✅ `apps/api/src/modules/imports/__tests__`                                    | ✅ import mockeado             | ✅ import demo con persistencia + auditoría   |
+| Auditoría                    | ✅ `apps/api/src/modules/audit/__tests__`                                      | ➖                             | ✅ validación visible en `/sistema/auditoria` |
 
 ## Pantallas y demo
 
