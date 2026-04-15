@@ -4,9 +4,8 @@ import { API_ENV } from "./config/env";
 import {
   API_ENDPOINT_CONTRACT,
   API_GLOBAL_PREFIX,
-  mapLegacyPath,
-  mapNormalizedPathToLegacy,
 } from "./config/api-routes";
+import { apiPathMappingMiddleware } from "./middleware/api-path-mapping.middleware";
 
 async function bootstrap() {
   if (API_ENV.APP_ROLE === "worker") {
@@ -18,32 +17,7 @@ async function bootstrap() {
   app.enableCors({ origin: true, credentials: true });
   app.setGlobalPrefix(API_GLOBAL_PREFIX);
 
-  app.use((req: any, res: any, next: () => void) => {
-    const originalPath = req.path as string;
-    const prefixedRoot = `/${API_GLOBAL_PREFIX}`;
-
-    if (!originalPath.startsWith(prefixedRoot)) {
-      const normalized = mapLegacyPath(originalPath) ?? originalPath;
-      return res.redirect(308, `${prefixedRoot}${normalized}`);
-    }
-
-    const internalPath = originalPath.slice(prefixedRoot.length) || "/";
-    const mappedInternalPath = mapLegacyPath(internalPath);
-
-    if (mappedInternalPath) {
-      res.setHeader("Deprecation", "true");
-      res.setHeader("Sunset", "Wed, 31 Dec 2026 23:59:59 GMT");
-      res.setHeader("Link", `<${prefixedRoot}${mappedInternalPath}>; rel=\"successor-version\"`);
-      return res.redirect(308, `${prefixedRoot}${mappedInternalPath}`);
-    }
-
-    const legacyRouteForExecution = mapNormalizedPathToLegacy(internalPath);
-    if (legacyRouteForExecution) {
-      req.url = `${prefixedRoot}${legacyRouteForExecution}`;
-    }
-
-    return next();
-  });
+  app.use(apiPathMappingMiddleware);
 
   const express = app.getHttpAdapter().getInstance();
   express.get(`/${API_GLOBAL_PREFIX}/openapi.json`, (_req: any, res: any) => {
