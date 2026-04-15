@@ -1,7 +1,20 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UsePipes } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UsePipes } from "@nestjs/common";
 import { ZodValidationPipe } from "../../../common/validation/zod-validation.pipe";
 import { InventoryService } from "../application/inventory.service";
-import { createInventoryAdjustmentSchema, CreateInventoryAdjustmentDto, inventoryAdjustmentActionSchema, InventoryAdjustmentActionDto, updateInventoryAdjustmentSchema, UpdateInventoryAdjustmentDto } from "./inventory.dto";
+import {
+  createCountSchema,
+  CreateCountDto,
+  createInternalTransferSchema,
+  CreateInternalTransferDto,
+  createInventoryAdjustmentSchema,
+  CreateInventoryAdjustmentDto,
+  inventoryAdjustmentActionSchema,
+  InventoryAdjustmentActionDto,
+  movementTraceabilityQuerySchema,
+  MovementTraceabilityQueryDto,
+  updateInventoryAdjustmentSchema,
+  UpdateInventoryAdjustmentDto,
+} from "./inventory.dto";
 
 @Controller("inventory")
 export class InventoryController {
@@ -27,4 +40,30 @@ export class InventoryController {
   @Post("inventory-adjustments/:id/action")
   @UsePipes(new ZodValidationPipe(inventoryAdjustmentActionSchema))
   runAction(@Param("id") id: string, @Body() payload: InventoryAdjustmentActionDto) { return this.service.runAction(id, payload); }
+
+  @Get("balances")
+  getBalances(@Query("itemId") itemId?: string, @Query("warehouseId") warehouseId?: string, @Query("locationId") locationId?: string) {
+    return this.service.getBalances({ itemId, warehouseId, locationId });
+  }
+
+  @Get("stock-availability")
+  getStockAvailability(@Query("itemId") itemId?: string) { return this.service.getStockAvailability(itemId); }
+
+  @Post("internal-transfers")
+  @UsePipes(new ZodValidationPipe(createInternalTransferSchema))
+  createInternalTransfer(@Body() payload: CreateInternalTransferDto) { return this.service.createInternalTransfer(payload); }
+
+  @Get("cycle-counts")
+  listCycleCounts() { return this.service.listCounts("cycle"); }
+
+  @Get("physical-inventories")
+  listPhysicalInventories() { return this.service.listCounts("physical"); }
+
+  @Post("counts")
+  @UsePipes(new ZodValidationPipe(createCountSchema))
+  createCount(@Body() payload: CreateCountDto) { return this.service.createCount(payload); }
+
+  @Get("movements/traceability")
+  @UsePipes(new ZodValidationPipe(movementTraceabilityQuerySchema))
+  movementTraceability(@Query() query: MovementTraceabilityQueryDto) { return this.service.getMovementTraceability(query); }
 }
