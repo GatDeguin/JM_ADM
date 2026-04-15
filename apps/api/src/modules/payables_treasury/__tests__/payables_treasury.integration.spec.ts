@@ -2,9 +2,11 @@ import { describe, expect, it, vi } from "vitest";
 import { PayablesTreasuryRepository } from "../infrastructure/payables_treasury.repository";
 import { PayablesTreasuryController } from "../presentation/payables_treasury.controller";
 import { PayablesTreasuryService } from "../application/payables_treasury.service";
+import { DOMAIN_EVENT_NAMES } from "../../../common/events/domain-event-contract";
 
 describe("payables treasury transactional integrity", () => {
   it("ejecuta todas las operaciones dentro de una transacción", async () => {
+    const emitted: unknown[] = [];
     const tx = {
       accountsPayable: {
         findUniqueOrThrow: vi.fn(async () => ({ id: "ap-1", supplierId: "sup-1" })),
@@ -13,13 +15,18 @@ describe("payables treasury transactional integrity", () => {
       payment: { create: vi.fn(async () => ({ id: "pay-1", code: "P-1" })) },
       paymentAllocation: { create: vi.fn(async () => ({ id: "pa-1" })) },
       treasuryMovement: { create: vi.fn(async () => ({ id: "tm-1" })) },
+      auditLog: { create: vi.fn(async () => ({ id: "audit-1" })) },
     };
 
     const prisma = {
       $transaction: vi.fn(async (cb: (arg: typeof tx) => Promise<unknown>) => cb(tx)),
     };
 
-    const repository = new PayablesTreasuryRepository(prisma as never);
+    const repository = new PayablesTreasuryRepository(
+      prisma as never,
+      { logCreate: async () => undefined, logUpdate: async () => undefined, logTransactionalAction: async () => undefined } as never,
+      { emit: (event: unknown) => emitted.push(event), on: () => undefined } as never,
+    );
     await repository.runAction({ code: "P-1", cashAccountId: "cash-1", amount: 30, allocations: [{ payableId: "ap-1", amount: 30 }] });
 
     expect(prisma.$transaction).toHaveBeenCalledTimes(1);
@@ -27,6 +34,10 @@ describe("payables treasury transactional integrity", () => {
     expect(tx.paymentAllocation.create).toHaveBeenCalledTimes(1);
     expect(tx.treasuryMovement.create).toHaveBeenCalledTimes(1);
     expect(tx.accountsPayable.update).toHaveBeenCalledTimes(1);
+    expect(emitted[0]).toMatchObject({
+      name: DOMAIN_EVENT_NAMES.paymentRegistered,
+      payload: { paymentId: "pay-1", cashAccountId: "cash-1", amount: 30 },
+    });
   });
 
   it("propaga error y evita update final cuando falla una operación intermedia", async () => {

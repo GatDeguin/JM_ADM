@@ -1,5 +1,7 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { throwDomainError } from "../../../common/domain-rules/domain-errors";
+import { buildDomainEvent, DOMAIN_EVENT_NAMES } from "../../../common/events/domain-event-contract";
+import { DomainEventsService } from "../../../common/events/domain-events.service";
 import { PrismaService } from "../../../infrastructure/prisma/prisma.service";
 import { ActionAccountsPayableInput, CreateAccountsPayableInput, AccountsPayableDto, ReconcileBankInput, TransferFundsInput, UpdateAccountsPayableInput } from "../domain/payables_treasury.types";
 import { AuditTrailService } from "../../audit/application/audit-trail.service";
@@ -13,6 +15,7 @@ const noopAuditTrail = {
   logUpdate: async () => undefined,
   logTransactionalAction: async () => undefined,
 };
+const noopDomainEvents = { emit: () => undefined, on: () => undefined } as unknown as DomainEventsService;
 
 function resolveAccountStatus(balance: number, dueDate: Date, amount: number): "open" | "partial" | "paid" | "overdue" {
   if (balance <= 0) return "paid";
@@ -25,6 +28,7 @@ export class PayablesTreasuryRepository {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditTrailService: Pick<AuditTrailService, "logCreate" | "logUpdate" | "logTransactionalAction"> = noopAuditTrail,
+    private readonly domainEvents: DomainEventsService = noopDomainEvents,
   ) {}
 
   list(): Promise<AccountsPayableDto[]> {
@@ -95,6 +99,21 @@ export class PayablesTreasuryRepository {
         },
         tx,
       );
+      const event = buildDomainEvent(DOMAIN_EVENT_NAMES.paymentRegistered, {
+        paymentId: payment.id,
+        cashAccountId: payload.cashAccountId,
+        amount: payload.amount,
+      });
+      this.domainEvents.emit(event);
+      await tx.auditLog.create({
+        data: {
+          entity: "DomainEvent",
+          entityId: payment.id,
+          action: "emit",
+          origin: "payables.runAction",
+          after: event,
+        },
+      });
 
       return { paymentId: payment.id, payables };
     });

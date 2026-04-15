@@ -1,4 +1,6 @@
 import { Injectable } from "@nestjs/common";
+import { buildDomainEvent, DOMAIN_EVENT_NAMES } from "../../../common/events/domain-event-contract";
+import { DomainEventsService } from "../../../common/events/domain-events.service";
 import { PrismaService } from "../../../infrastructure/prisma/prisma.service";
 
 type CreateOrderInput = {
@@ -14,7 +16,10 @@ type ReturnInput = { code: string; salesOrderId: string; reason: string };
 
 @Injectable()
 export class SalesRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly domainEvents: DomainEventsService,
+  ) {}
 
   listOrders() {
     return this.prisma.salesOrder.findMany({ orderBy: { code: "desc" }, include: { SalesOrderItem: true } });
@@ -81,16 +86,33 @@ export class SalesRepository {
   }
 
   createDispatch(payload: DispatchInput) {
-    return this.prisma.dispatchOrder.create({
-      data: {
-        code: payload.code,
-        salesOrderId: payload.salesOrderId,
-        status: "dispatched",
-        DispatchItem: {
-          create: payload.items.map((item) => ({ skuId: item.skuId, qty: item.qty })),
+    return this.prisma.$transaction(async (tx: any) => {
+      const dispatch = await tx.dispatchOrder.create({
+        data: {
+          code: payload.code,
+          salesOrderId: payload.salesOrderId,
+          status: "dispatched",
+          DispatchItem: {
+            create: payload.items.map((item) => ({ skuId: item.skuId, qty: item.qty })),
+          },
         },
-      },
-      include: { DispatchItem: true },
+        include: { DispatchItem: true },
+      });
+      const event = buildDomainEvent(DOMAIN_EVENT_NAMES.dispatchRegistered, {
+        dispatchId: dispatch.id,
+        salesOrderId: dispatch.salesOrderId,
+      });
+      this.domainEvents.emit(event);
+      await tx.auditLog.create({
+        data: {
+          entity: "DomainEvent",
+          entityId: dispatch.id,
+          action: "emit",
+          origin: "sales.createDispatch",
+          after: event,
+        },
+      });
+      return dispatch;
     });
   }
 

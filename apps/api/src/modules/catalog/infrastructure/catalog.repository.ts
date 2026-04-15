@@ -1,9 +1,14 @@
 import { Injectable } from "@nestjs/common";
+import { buildDomainEvent, DOMAIN_EVENT_NAMES } from "../../../common/events/domain-event-contract";
+import { DomainEventsService } from "../../../common/events/domain-events.service";
 import { PrismaService } from "../../../infrastructure/prisma/prisma.service";
 
 @Injectable()
 export class CatalogRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly domainEvents: DomainEventsService,
+  ) {}
 
   findFamilies() {
     return this.prisma.family.findMany({ orderBy: { name: "asc" } });
@@ -47,7 +52,21 @@ export class CatalogRepository {
     barcode?: string;
     status?: "draft" | "active" | "inactive" | "pending_homologation" | "archived";
   }) {
-    return this.prisma.sKU.create({ data });
+    return this.prisma.$transaction(async (tx: any) => {
+      const created = await tx.sKU.create({ data });
+      const event = buildDomainEvent(DOMAIN_EVENT_NAMES.skuCreated, { skuId: created.id, code: created.code });
+      this.domainEvents.emit(event);
+      await tx.auditLog.create({
+        data: {
+          entity: "DomainEvent",
+          entityId: created.id,
+          action: "emit",
+          origin: "catalog.createSku",
+          after: event,
+        },
+      });
+      return created;
+    });
   }
 
   findPackagingSpecs() {

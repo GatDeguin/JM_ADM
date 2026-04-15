@@ -1,5 +1,7 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { throwDomainError } from "../../../common/domain-rules/domain-errors";
+import { buildDomainEvent, DOMAIN_EVENT_NAMES } from "../../../common/events/domain-event-contract";
+import { DomainEventsService } from "../../../common/events/domain-events.service";
 import { PrismaService } from "../../../infrastructure/prisma/prisma.service";
 import { ActionAccountsReceivableInput, CreateAccountsReceivableInput, AccountsReceivableDto, UpdateAccountsReceivableInput } from "../domain/receivables.types";
 
@@ -11,7 +13,10 @@ function resolveAccountStatus(balance: number, dueDate: Date, amount: number): "
 
 @Injectable()
 export class ReceivablesRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly domainEvents: DomainEventsService,
+  ) {}
 
   async list(): Promise<AccountsReceivableDto[]> {
     const rows = await this.prisma.accountsReceivable.findMany({ orderBy: { dueDate: "asc" } });
@@ -68,6 +73,22 @@ export class ReceivablesRepository {
       if (customerIds.size > 1) {
         throwDomainError("RULE_RECEIVABLES_SINGLE_CUSTOMER", "Todas las imputaciones del recibo deben pertenecer al mismo cliente.", HttpStatus.CONFLICT, "R-RV-003");
       }
+
+      const event = buildDomainEvent(DOMAIN_EVENT_NAMES.receiptRegistered, {
+        receiptId: receipt.id,
+        cashAccountId: payload.cashAccountId,
+        amount: payload.amount,
+      });
+      this.domainEvents.emit(event);
+      await tx.auditLog.create({
+        data: {
+          entity: "DomainEvent",
+          entityId: receipt.id,
+          action: "emit",
+          origin: "receivables.runAction",
+          after: event,
+        },
+      });
 
       return { receiptId: receipt.id, receivables };
     });

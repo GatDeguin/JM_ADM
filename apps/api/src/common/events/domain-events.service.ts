@@ -1,23 +1,16 @@
 import { Injectable } from "@nestjs/common";
 import { EventEmitter } from "node:events";
-
-type DomainEventPayload = {
-  name: string;
-  entity: string;
-  entityId: string;
-  occurredAt: string;
-  metadata?: Record<string, unknown>;
-};
+import { DomainEventEnvelope } from "./domain-event-contract";
 
 @Injectable()
 export class DomainEventsService {
   private readonly emitter = new EventEmitter();
 
-  emit(payload: DomainEventPayload) {
+  emit(payload: DomainEventEnvelope | ({ name: string } & Record<string, unknown>)) {
     this.emitter.emit(payload.name, payload);
   }
 
-  on(name: string, listener: (payload: DomainEventPayload) => void) {
+  on(name: string, listener: (payload: DomainEventEnvelope | ({ name: string } & Record<string, unknown>)) => void) {
     this.emitter.on(name, listener);
   }
 }
