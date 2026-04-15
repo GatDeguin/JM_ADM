@@ -1,18 +1,16 @@
 const githubRepository = process.env.GITHUB_REPOSITORY || "";
 const repositoryName = githubRepository.split("/")[1] || "";
-const isProjectPage = Boolean(process.env.GITHUB_PAGES && repositoryName);
+const isPagesBuild = process.env.GITHUB_PAGES === "true";
+const isProjectPage = Boolean(isPagesBuild && repositoryName);
 const basePath = isProjectPage ? `/${repositoryName}` : "";
 
-const requiredWebEnvKeys = ["NEXT_PUBLIC_API_URL"];
-const missingWebEnvKeys = requiredWebEnvKeys.filter((key) => !process.env[key]);
-
-if (missingWebEnvKeys.length > 0) {
-  throw new Error(`Missing required web environment variables: ${missingWebEnvKeys.join(", ")}`);
+if (!process.env.NEXT_PUBLIC_API_URL) {
+  process.env.NEXT_PUBLIC_API_URL = "http://localhost:3001";
 }
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "export",
+  output: isPagesBuild ? "export" : undefined,
   images: {
     unoptimized: true,
   },

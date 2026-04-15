@@ -5,7 +5,7 @@ const webEnvSchema = z.object({
 });
 
 const parsedWebEnv = webEnvSchema.safeParse({
-  NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+  NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001",
 });
 
 if (!parsedWebEnv.success) {

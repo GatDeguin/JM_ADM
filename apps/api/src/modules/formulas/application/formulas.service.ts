@@ -9,6 +9,10 @@ const noopAuditTrail = {
   logUpdate: async () => undefined,
 };
 
+type FormulaVersionListItem = { id: string; status: string };
+type FormulaComponentDiffItem = { itemId: string; qty: number; unitId: string };
+type FormulaStepDiffItem = { stepNo: number; instruction: string };
+
 type NewVersionInput = {
   warning?: string;
   components: Array<{ itemId: string; qty: number; unitId: string }>;
@@ -87,7 +91,7 @@ export class FormulasService {
     }
 
     const units = await this.formulasRepository.findUnits(payload.components.map((component) => component.unitId));
-    const unitMap = new Map(units.map((unit) => [unit.id, unit.status]));
+    const unitMap = new Map(units.map((unit: { id: string; status: string }) => [unit.id, unit.status]));
 
     const missingUnit = payload.components.find((component) => !unitMap.has(component.unitId));
     if (missingUnit) {
@@ -143,7 +147,8 @@ export class FormulasService {
   async obsoleteVersion(id: string, versionId?: string) {
     const template = await this.detail(id);
     const targetVersion =
-      versionId ?? template.FormulaVersion.find((version) => version.status === "approved")?.id;
+      versionId ??
+      template.FormulaVersion.find((version: FormulaVersionListItem) => version.status === "approved")?.id;
 
     if (!targetVersion) {
       throw new ConflictException("No existe una versión aprobada para volver obsoleta.");
@@ -176,8 +181,12 @@ export class FormulasService {
       throw new NotFoundException("No se pudieron cargar ambas versiones para comparar.");
     }
 
-    const leftComponents = new Map(left.FormulaComponent.map((component) => [component.itemId, component]));
-    const rightComponents = new Map(right.FormulaComponent.map((component) => [component.itemId, component]));
+    const leftComponents = new Map<string, FormulaComponentDiffItem>(
+      left.FormulaComponent.map((component: FormulaComponentDiffItem) => [component.itemId, component]),
+    );
+    const rightComponents = new Map<string, FormulaComponentDiffItem>(
+      right.FormulaComponent.map((component: FormulaComponentDiffItem) => [component.itemId, component]),
+    );
     const allItems = Array.from(new Set([...leftComponents.keys(), ...rightComponents.keys()]));
 
     const components = allItems.map((itemId) => {
@@ -194,8 +203,8 @@ export class FormulasService {
     const maxStep = Math.max(left.FormulaStep.length, right.FormulaStep.length);
     const steps = Array.from({ length: maxStep }).map((_, index) => {
       const stepNo = index + 1;
-      const l = left.FormulaStep.find((step) => step.stepNo === stepNo);
-      const r = right.FormulaStep.find((step) => step.stepNo === stepNo);
+      const l = left.FormulaStep.find((step: FormulaStepDiffItem) => step.stepNo === stepNo);
+      const r = right.FormulaStep.find((step: FormulaStepDiffItem) => step.stepNo === stepNo);
       return {
         stepNo,
         status: !l ? "added" : !r ? "removed" : l.instruction !== r.instruction ? "changed" : "same",

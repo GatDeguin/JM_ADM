@@ -3,8 +3,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "next build",
-    "export": "next build",
+    "build": "GITHUB_PAGES=false next build",
+    "export": "GITHUB_PAGES=true next build",
     "start": "next start -p 3000",
     "lint": "eslint . --ext .ts,.tsx",
     "test": "vitest run",
