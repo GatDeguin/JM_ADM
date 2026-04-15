@@ -14,6 +14,7 @@ const uploadFileSchema = z.object({
   fileName: z.string().optional(),
   mimeType: z.string().optional(),
   contentBase64: z.string().optional(),
+  forcePendingHomologation: z.boolean().optional(),
 });
 
 const defineMappingSchema = z.object({
@@ -38,7 +39,13 @@ export class ImportsController {
       fileName: body.fileName,
       mimeType: body.mimeType,
       contentBase64: body.contentBase64,
+      forcePendingHomologation: body.forcePendingHomologation,
     });
+  }
+
+  @Get("jobs/:id")
+  getJob(@Param("id") id: string) {
+    return this.importsService.getJob(id);
   }
 
   @Post("jobs/:id/mapping")

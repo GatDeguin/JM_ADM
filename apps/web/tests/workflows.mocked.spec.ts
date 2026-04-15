@@ -62,6 +62,75 @@ test("smoke/importación (mock puntual)", async ({ page }) => {
   await expect(page.getByText("⚠", { exact: false })).toBeVisible();
 });
 
+test("e2e/import wizard punta a punta con preview y bitácora", async ({ page }) => {
+  await mockJson(page, "**/imports/jobs", "POST", { id: "imp-wizard-1" }, 201);
+  await mockJson(
+    page,
+    "**/imports/jobs/imp-wizard-1/file",
+    "POST",
+    {
+      id: "imp-wizard-1",
+      detectedColumns: ["codigo", "cliente", "homologacion"],
+      rowFeedback: [{ rowNumber: 2, level: "warning", message: "Cantidad de columnas inconsistente." }],
+    },
+  );
+  await mockJson(page, "**/imports/jobs/imp-wizard-1/mapping", "POST", { id: "imp-wizard-1", status: "validating" });
+  await mockJson(
+    page,
+    "**/imports/jobs/imp-wizard-1/prevalidate",
+    "POST",
+    {
+      warnings: ["Fila 2: falta code"],
+      summary: { total: 2, invalid: 1, pendingHomologation: 1 },
+      rows: [
+        {
+          key: "c-1",
+          canonicalValue: { code: "c-1", name: "cliente uno" },
+          warnings: [],
+          suggestions: [],
+          duplicate: false,
+          valid: true,
+          pendingHomologation: false,
+        },
+        {
+          key: "c-2",
+          canonicalValue: { name: "cliente sin codigo", pending_homologation: true },
+          warnings: ["Fila 2: falta code"],
+          suggestions: ["Si el valor existe en otro maestro, registrar alias y reintentar"],
+          duplicate: false,
+          valid: false,
+          pendingHomologation: true,
+        },
+      ],
+    },
+  );
+  await mockJson(page, "**/imports/jobs/imp-wizard-1/confirm", "POST", { event: "import.started", queued: false });
+  await mockJson(page, "**/audit", "POST", { ok: true }, 201);
+  await mockJson(
+    page,
+    "**/audit/audit-logs/timeline/ImportBatch/imp-wizard-1?limit=50",
+    "GET",
+    [{ id: "a1", action: "import.confirmed", origin: "imports.confirm", createdAt: "2026-04-15T12:00:00.000Z", after: { queued: false } }],
+  );
+
+  await page.goto("/sistema/importaciones");
+  await page.getByLabel("Archivo").setInputFiles({
+    name: "customers.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from("codigo,cliente,homologacion\nC-1,Cliente Uno,no\n,Cliente Dos,si"),
+  });
+
+  await page.getByRole("button", { name: "Subir y detectar columnas" }).click();
+  await expect(page.getByText("Mapeo editable")).toBeVisible();
+  await page.getByRole("button", { name: "Ejecutar prevalidación" }).click();
+  await expect(page.getByText("Preview paginado con sugerencias")).toBeVisible();
+  await expect(page.getByText("pending_homologation")).toBeVisible();
+  await page.getByRole("button", { name: "Continuar a confirmación" }).click();
+  await page.getByRole("button", { name: "Confirmar importación" }).click();
+  await expect(page.getByText("Bitácora de importación")).toBeVisible();
+  await expect(page.getByText("import.confirmed")).toBeVisible();
+});
+
 test("smoke/fórmula con alta crítica (mock puntual)", async ({ page }) => {
   await mockJson(page, "**/formulas", "GET", [
     { id: "frm-1", name: "Formula QA", code: "F-QA", status: "draft" },

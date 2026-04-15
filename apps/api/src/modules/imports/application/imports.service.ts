@@ -33,26 +33,41 @@ export class ImportsService {
     return job;
   }
 
-  async uploadFile(id: string, sourceName: string, payload: ImportUploadPayload) {
+  async uploadFile(id: string, sourceName: string, payload: ImportUploadPayload & { forcePendingHomologation?: boolean }) {
     await this.ensureJob(id);
 
     assertRequiredText(sourceName, "el nombre de archivo");
-    const rows = await this.importFileParserService.parse(payload);
+    const parseResult = await this.importFileParserService.parse(payload);
+    const rows = payload.forcePendingHomologation
+      ? parseResult.rows.map((row) => ({ ...row, pending_homologation: true }))
+      : parseResult.rows;
     assertImportRowsPresent(rows);
+    const parseWarnings = parseResult.feedback.map((item) => `Fila ${item.rowNumber}: ${item.message}`);
 
     const updated = await this.importsRepository.updateJob(id, {
       sourceName,
       originals: rows,
       status: "mapping",
+      summary: {
+        parsing: {
+          detectedColumns: parseResult.detectedColumns,
+          feedback: parseResult.feedback,
+        },
+      },
+      warnings: parseWarnings,
     });
 
     await this.importsRepository.appendAudit({
       entityId: id,
       action: "import.file.uploaded",
       origin: "imports.uploadFile",
-      after: { rows: rows.length, sourceName },
+      after: { rows: rows.length, sourceName, detectedColumns: parseResult.detectedColumns, parseWarnings: parseResult.feedback.length },
     });
-    return updated;
+    return {
+      ...updated,
+      detectedColumns: parseResult.detectedColumns,
+      rowFeedback: parseResult.feedback,
+    };
   }
 
   async defineMapping(id: string, mapping: Record<string, string>) {
@@ -144,6 +159,10 @@ export class ImportsService {
       });
       throw error;
     }
+  }
+
+  async getJob(id: string) {
+    return this.ensureJob(id);
   }
 
   private async ensureJob(id: string) {

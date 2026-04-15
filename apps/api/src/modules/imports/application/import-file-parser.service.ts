@@ -9,11 +9,27 @@ export type ImportUploadPayload = {
   contentBase64?: string;
 };
 
+export type ImportParseFeedback = {
+  rowNumber: number;
+  level: "warning" | "error";
+  message: string;
+};
+
+export type ImportParseResult = {
+  rows: Record<string, unknown>[];
+  detectedColumns: string[];
+  feedback: ImportParseFeedback[];
+};
+
 @Injectable()
 export class ImportFileParserService {
-  async parse(payload: ImportUploadPayload): Promise<Record<string, unknown>[]> {
+  async parse(payload: ImportUploadPayload): Promise<ImportParseResult> {
     if (Array.isArray(payload.rows) && payload.rows.length > 0) {
-      return payload.rows;
+      return {
+        rows: payload.rows,
+        detectedColumns: Object.keys(payload.rows[0] ?? {}),
+        feedback: [],
+      };
     }
 
     const buffer = this.decodeBase64(payload.contentBase64);
@@ -51,20 +67,25 @@ export class ImportFileParserService {
     return fileName.split(".").pop()?.toLowerCase() ?? "";
   }
 
-  private parseSpreadsheet(buffer: Buffer, csv = false): Record<string, unknown>[] {
+  private parseSpreadsheet(buffer: Buffer, csv = false): ImportParseResult {
     const workbook = read(buffer, { type: "buffer", raw: false, codepage: csv ? 65001 : undefined });
     const sheetName = workbook.SheetNames[0];
     if (!sheetName) {
-      return [];
+      return { rows: [], detectedColumns: [], feedback: [{ rowNumber: 0, level: "error", message: "No se encontraron hojas para importar." }] };
     }
 
-    return utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[sheetName], {
+    const rows = utils.sheet_to_json<Record<string, unknown>>(workbook.Sheets[sheetName], {
       defval: "",
       raw: false,
     });
+    return {
+      rows,
+      detectedColumns: Object.keys(rows[0] ?? {}),
+      feedback: [],
+    };
   }
 
-  private parseTextTable(content: string): Record<string, unknown>[] {
+  private parseTextTable(content: string): ImportParseResult {
     const lines = content
       .split(/\r?\n/)
       .map((line) => line.trim())
@@ -72,7 +93,11 @@ export class ImportFileParserService {
       .filter((line) => !/^[-|\s]+$/.test(line));
 
     if (!lines.length) {
-      return [];
+      return {
+        rows: [],
+        detectedColumns: [],
+        feedback: [{ rowNumber: 0, level: "error", message: "El archivo no contiene filas legibles." }],
+      };
     }
 
     const separator = lines[0].includes("|") ? "|" : /\t/.test(lines[0]) ? "\t" : ";";
@@ -84,11 +109,20 @@ export class ImportFileParserService {
 
     const headers = splitLine(lines[0]);
     const rows: Record<string, unknown>[] = [];
+    const feedback: ImportParseFeedback[] = [];
 
-    for (const line of lines.slice(1)) {
+    for (const [index, line] of lines.slice(1).entries()) {
       const values = splitLine(line);
       if (!values.length) {
         continue;
+      }
+
+      if (values.length !== headers.length) {
+        feedback.push({
+          rowNumber: index + 2,
+          level: "warning",
+          message: `Cantidad de columnas inconsistente (esperadas: ${headers.length}, recibidas: ${values.length}).`,
+        });
       }
 
       const row: Record<string, unknown> = {};
@@ -98,6 +132,10 @@ export class ImportFileParserService {
       rows.push(row);
     }
 
-    return rows;
+    return {
+      rows,
+      detectedColumns: headers,
+      feedback,
+    };
   }
 }
