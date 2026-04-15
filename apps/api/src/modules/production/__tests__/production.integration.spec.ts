@@ -6,6 +6,7 @@ import { integrationFixtures } from "../../../test-data/integration-fixtures";
 describe("production integration", () => {
   it("bloquea creación con fórmula obsoleta", async () => {
     const service = new ProductionService({
+      findProductBase: async () => ({ id: integrationFixtures.production.productBaseId, activeFormulaVersionId: integrationFixtures.formulas.obsoleteFormulaId }),
       findFormulaVersion: async () => ({ id: integrationFixtures.formulas.obsoleteFormulaId, status: "obsolete" }),
     } as never);
 
@@ -21,6 +22,7 @@ describe("production integration", () => {
 
   it("crea OP válida y calcula materiales teóricos", async () => {
     const repositoryStub = {
+      findProductBase: vi.fn(async () => ({ id: "pb-1", activeFormulaVersionId: "frm-active-v1" })),
       findFormulaVersion: vi.fn(async () => ({ id: "frm-active-v1", status: "approved" })),
       createOrder: vi.fn(async () => ({ id: "op-1", code: "OP-1", status: "planned" })),
       calculateTheoreticalMaterials: vi.fn(async () => undefined),

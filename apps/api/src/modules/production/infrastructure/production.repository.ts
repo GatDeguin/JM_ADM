@@ -25,6 +25,10 @@ export class ProductionRepository {
     return this.prisma.productionOrder.findUnique({ where: { id } });
   }
 
+  findProductBase(id: string) {
+    return this.prisma.productBase.findUnique({ where: { id }, select: { id: true, activeFormulaVersionId: true } });
+  }
+
   findFormulaVersion(id: string) {
     return this.prisma.formulaVersion.findUnique({ where: { id }, select: { id: true, status: true } });
   }
