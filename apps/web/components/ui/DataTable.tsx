@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeletons } from "@/components/ui/Skeletons";
 import { useWarmupState } from "@/components/ui/useWarmupState";
@@ -23,6 +23,7 @@ type DataTableProps<T extends Record<string, unknown>> = {
   onCreate?: () => void;
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
+  onRowSelect?: (row: T) => void;
   getRowClassName?: (row: T) => string | undefined;
 };
 
@@ -38,9 +39,12 @@ export function DataTable<T extends Record<string, unknown>>({
   onCreate,
   onEdit,
   onDelete,
+  onRowSelect,
   getRowClassName
 }: DataTableProps<T>) {
   const [query, setQuery] = useState("");
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const [activeRowIndex, setActiveRowIndex] = useState(0);
 
   const filtered = useMemo(() => {
     if (!query.trim()) return rows;
@@ -54,6 +58,53 @@ export function DataTable<T extends Record<string, unknown>>({
   const showSkeleton = loadingPhase === "loading";
   const isBusy = loadingPhase !== "idle";
   const tableColumns = columns.length + (onEdit || onDelete ? 1 : 0);
+  const filteredRows = useMemo(() => filtered.map((row) => ({ id: rowId(row), row })), [filtered, rowId]);
+
+  useEffect(() => {
+    if (filteredRows.length === 0) {
+      setActiveRowIndex(0);
+      return;
+    }
+
+    setActiveRowIndex((current) => Math.min(current, filteredRows.length - 1));
+  }, [filteredRows]);
+
+  useEffect(() => {
+    if (!selectedRowId) return;
+    if (!filteredRows.some((item) => item.id === selectedRowId)) {
+      setSelectedRowId(null);
+    }
+  }, [filteredRows, selectedRowId]);
+
+  const selectRow = (row: T, index: number) => {
+    setSelectedRowId(rowId(row));
+    setActiveRowIndex(index);
+    onRowSelect?.(row);
+  };
+
+  const handleTableKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (filteredRows.length === 0) return;
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setActiveRowIndex((current) => Math.min(current + 1, filteredRows.length - 1));
+      return;
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setActiveRowIndex((current) => Math.max(current - 1, 0));
+      return;
+    }
+
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const active = filteredRows[activeRowIndex];
+      if (!active) return;
+      setSelectedRowId(active.id);
+      onRowSelect?.(active.row);
+    }
+  };
 
   return (
     <section className="card-base space-y-4">
@@ -114,7 +165,12 @@ export function DataTable<T extends Record<string, unknown>>({
           ) : null}
 
           {!error && filtered.length > 0 ? (
-            <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800" tabIndex={0} aria-label="Tabla de resultados">
+            <div
+              className="overflow-x-auto rounded-xl border border-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/80 dark:border-zinc-800"
+              tabIndex={0}
+              aria-label="Tabla de resultados"
+              onKeyDown={handleTableKeyDown}
+            >
               <table className="min-w-full border-collapse text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 bg-zinc-50 text-left dark:border-zinc-800 dark:bg-zinc-900/60">
@@ -127,21 +183,48 @@ export function DataTable<T extends Record<string, unknown>>({
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((row) => (
-                    <tr key={rowId(row)} className={`border-b border-zinc-200 last:border-b-0 motion-state dark:border-zinc-800 ${getRowClassName?.(row) ?? ""}`}>
-                      {columns.map((col) => {
+                  {filteredRows.map(({ id, row }, index) => {
+                    const rowClassName = getRowClassName?.(row) ?? "";
+                    const isSelected = selectedRowId === id;
+                    const isActive = activeRowIndex === index;
+
+                    return (
+                    <tr
+                      key={id}
+                      className={`cursor-pointer border-b border-zinc-200 last:border-b-0 motion-state dark:border-zinc-800 ${rowClassName} ${isActive && !isSelected ? "outline outline-1 -outline-offset-1 outline-zinc-300 dark:outline-zinc-600" : ""}`}
+                      aria-selected={isSelected}
+                      onClick={() => selectRow(row, index)}
+                    >
+                      {columns.map((col, colIndex) => {
                         const value = row[col.key];
+                        const cellSelectionClass = isSelected
+                          ? `bg-cyan-500/10 dark:bg-cyan-400/15 ${colIndex === 0 ? "shadow-[inset_4px_0_0_0_rgba(34,211,238,0.95)]" : ""}`
+                          : "";
+
                         return (
-                          <td key={String(col.key)} className="px-3 py-2 text-zinc-700 dark:text-zinc-200">
+                          <td key={String(col.key)} className={`px-3 py-2 text-zinc-700 dark:text-zinc-200 ${cellSelectionClass}`}>
                             {col.render ? col.render(value, row) : String(value ?? "-")}
                           </td>
                         );
                       })}
                       {onEdit || onDelete ? (
-                        <td className="px-3 py-2">
+                        <td
+                          className={`px-3 py-2 ${
+                            isSelected
+                              ? "bg-cyan-500/10 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.2)] dark:bg-cyan-400/15"
+                              : ""
+                          }`}
+                        >
                           <div className="flex flex-wrap gap-2">
                             {onEdit ? (
-                              <button className="btn-secondary" type="button" onClick={() => onEdit(row)}>
+                              <button
+                                className="btn-secondary"
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  onEdit(row);
+                                }}
+                              >
                                 Editar
                               </button>
                             ) : null}
@@ -149,7 +232,10 @@ export function DataTable<T extends Record<string, unknown>>({
                               <button
                                 className="rounded-lg border border-red-300 px-2 py-1 text-red-700 hover:bg-red-50 dark:border-red-900/80 dark:text-red-300 dark:hover:bg-red-950/40"
                                 type="button"
-                                onClick={() => onDelete(row)}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  onDelete(row);
+                                }}
                               >
                                 Eliminar
                               </button>
@@ -158,7 +244,7 @@ export function DataTable<T extends Record<string, unknown>>({
                         </td>
                       ) : null}
                     </tr>
-                  ))}
+                  );})}
                 </tbody>
               </table>
             </div>
