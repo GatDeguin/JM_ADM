@@ -54,6 +54,14 @@ export const API_ENDPOINT_CONTRACT: EndpointContract[] = [
   { method: "GET", path: "/finance/payables-treasury/accounts-payable", summary: "Cuentas por pagar.", response: { items: "AccountPayable[]" }, deprecatedLegacyPath: "/payables_treasury/accounts-payable" },
   { method: "GET", path: "/reporting/dashboard", summary: "Dashboard consolidado.", response: { kpis: "Record<string, number>", widgets: "unknown[]" } },
   { method: "POST", path: "/system/imports/jobs", summary: "Crea job de importación.", request: { importType: "string", fileName: "string" }, response: { id: "string", status: "DRAFT | READY | ERROR" }, deprecatedLegacyPath: "/imports/jobs" },
+  {
+    method: "POST",
+    path: "/audit/audit-logs",
+    summary: "Registra auditoría contextual de operaciones frontend.",
+    request: { entity: "string", entityId: "string", action: "string", origin: "string" },
+    response: { id: "string", createdAt: "string" },
+    deprecatedLegacyPath: "/system/audit",
+  },
 ];
 
 function remapPath(pathname: string, mapping: Record<string, string>): string | null {

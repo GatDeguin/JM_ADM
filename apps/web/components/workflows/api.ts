@@ -8,6 +8,8 @@ type ApiErrorPayload = {
   type?: string;
 };
 
+export const ORIGIN_AUDIT_ERROR_EVENT = "origin-audit:error";
+
 export async function apiRequest<T>(path: string, options?: RequestOptions): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
@@ -43,11 +45,19 @@ export async function logOriginAudit(params: {
   origin: string;
 }) {
   try {
-    await apiRequest("/system/audit", {
+    await apiRequest("/audit/audit-logs", {
       method: "POST",
       body: JSON.stringify(params),
     });
-  } catch {
+  } catch (error) {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent(ORIGIN_AUDIT_ERROR_EVENT, {
+          detail: { params, error: error instanceof Error ? error.message : String(error) },
+        }),
+      );
+    }
+    console.error("No se pudo registrar auditoría contextual", error);
     // El flujo principal no debe fallar por errores de auditoría.
   }
 }
