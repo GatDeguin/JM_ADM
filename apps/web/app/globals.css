@@ -57,6 +57,56 @@ body {
 }
 
 @layer utilities {
+  .motion-route-stack {
+    position: relative;
+  }
+
+  .motion-route-layer {
+    will-change: opacity, transform;
+  }
+
+  .motion-route-exit {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    animation-duration: var(--motion-fast);
+    animation-fill-mode: both;
+    animation-timing-function: var(--ease-premium);
+  }
+
+  .motion-route-enter {
+    position: relative;
+    z-index: 1;
+    animation-duration: var(--motion-base);
+    animation-fill-mode: both;
+    animation-timing-function: var(--ease-premium);
+  }
+
+  .motion-route-soft-fade.motion-route-enter {
+    animation-name: route-soft-fade-enter;
+  }
+
+  .motion-route-soft-fade.motion-route-exit {
+    animation-name: route-soft-fade-exit;
+  }
+
+  .motion-route-elevate-in.motion-route-enter {
+    animation-name: route-elevate-in-enter;
+  }
+
+  .motion-route-elevate-in.motion-route-exit {
+    animation-name: route-elevate-in-exit;
+  }
+
+  .motion-route-section-slide.motion-route-enter {
+    animation-name: route-section-slide-enter;
+  }
+
+  .motion-route-section-slide.motion-route-exit {
+    animation-name: route-section-slide-exit;
+  }
+
   .motion-hover {
     transition-duration: var(--motion-fast);
     transition-timing-function: var(--ease-premium);
@@ -110,6 +160,68 @@ body {
   }
 }
 
+@keyframes route-soft-fade-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes route-soft-fade-exit {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes route-elevate-in-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes route-elevate-in-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.997);
+  }
+}
+
+@keyframes route-section-slide-enter {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes route-section-slide-exit {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+}
+
 @keyframes skeleton-shimmer {
   0% {
     background-position: 200% 0;
@@ -146,5 +258,12 @@ body {
   }
   100% {
     box-shadow: inset 0 0 0 999px rgba(14, 165, 233, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-route-enter,
+  .motion-route-exit {
+    animation: none !important;
   }
 }

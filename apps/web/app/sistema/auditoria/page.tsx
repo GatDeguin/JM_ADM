@@ -6,7 +6,7 @@ import { fetchGlobalAuditFeed } from "@/lib/audit";
 export default async function Page() {
   const events = await fetchGlobalAuditFeed().catch(() => []);
   return (
-    <Layout title="Sistema · Auditoría">
+    <Layout title="Sistema · Auditoría" transitionPreset="section-slide">
       <PageHeader title="Sistema · Auditoría" subtitle="Feed global de eventos de auditoría del sistema" />
       <AuditTimeline events={events} />
     </Layout>

@@ -13,7 +13,7 @@ export default async function FormulaDetail({ params }: { params: Promise<{ id: 
   const { id } = await params;
   const events = await fetchEntityTimeline("FormulaTemplate", id).catch(() => []);
   return (
-    <Layout title="Ficha fórmula">
+    <Layout title="Ficha fórmula" transitionPreset="section-slide">
       <PageHeader title={`Fórmula ${id}`} subtitle="Versiones, componentes, aprobación y homologación" />
       <AuditTimeline events={events} />
     </Layout>

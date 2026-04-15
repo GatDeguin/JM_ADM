@@ -210,7 +210,7 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
   const contextualEntityType = contextualEntityByDomain[domain];
 
   return (
-    <Layout title={title}>
+    <Layout title={title} transitionPreset="elevate-in">
       <PageHeader title={title} subtitle={subtitle} />
       <section className="grid gap-3 md:grid-cols-3" aria-label="Resumen del dominio">
         <KPIStatCard label="Registros" value={records.length} />
