@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { ORIGIN_AUDIT_ERROR_EVENT } from "@/components/workflows/api";
 
 type ToastTone = "success" | "error" | "info" | "processing";
 
@@ -275,6 +276,20 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     },
     [scheduleAutoclose]
   );
+
+  useEffect(() => {
+    const onAuditError = () => {
+      pushToast({
+        title: "No se pudo registrar auditoría contextual",
+        description: "La operación principal se completó, pero la trazabilidad quedó pendiente.",
+        tone: "error",
+        groupKey: "origin-audit-error",
+      });
+    };
+
+    window.addEventListener(ORIGIN_AUDIT_ERROR_EVENT, onAuditError);
+    return () => window.removeEventListener(ORIGIN_AUDIT_ERROR_EVENT, onAuditError);
+  }, [pushToast]);
 
   const getToastsByAnchor = useCallback(
     (anchorId: string) => toasts.filter((toast) => toast.anchorId === anchorId),
