@@ -29,7 +29,7 @@ export function Layout({ title, children }: { title: string; children: React.Rea
 
   return (
     <>
-      <BrandIntro />
+      <BrandIntro mode="once-per-session" />
       <AppShell>
         <Sidebar />
         <main id="main-content" className="flex-1">
