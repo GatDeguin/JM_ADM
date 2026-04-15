@@ -10,7 +10,7 @@ import { DataTable } from "@/components/ui/DataTable";
 import { SmartSelector, type ContextualEntityType, type SmartSelectorOption } from "@/components/ui/SmartSelector";
 import { MergeComparePanel } from "@/components/ui/MergeComparePanel";
 import { Skeletons } from "@/components/ui/Skeletons";
-import { useToasts } from "@/components/ui/Toasts";
+import { ToastAnchor, useToasts } from "@/components/ui/Toasts";
 import { useWarmupState } from "@/components/ui/useWarmupState";
 
 const formSchema = z.object({
@@ -111,6 +111,7 @@ const contextualEntityByDomain: Partial<Record<string, ContextualEntityType>> = 
 };
 
 export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps) {
+  const contextualToastAnchor = `${domain}-contextual-toast`;
   const [records, setRecords] = useState<DomainRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error] = useState<string | null>(null);
@@ -178,6 +179,14 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
     }
 
     setSaveState("saving");
+    pushToast({
+      title: "Procesando cambios",
+      description: "Estamos validando y guardando el registro.",
+      tone: "processing",
+      durationMs: 5000,
+      anchorId: contextualToastAnchor,
+      groupKey: `${domain}:save-processing`
+    });
     await new Promise((resolve) => setTimeout(resolve, 450));
 
     const currentDate = new Date().toISOString().slice(0, 10);
@@ -189,7 +198,13 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
       setSuccess("Registro actualizado correctamente.");
       setSelected(updated.id);
       markRow(updated.id, "updated");
-      pushToast({ title: "Registro actualizado", description: updated.name, tone: "success" });
+      pushToast({
+        title: "Registro actualizado",
+        description: updated.name,
+        tone: "success",
+        anchorId: contextualToastAnchor,
+        groupKey: `${domain}:record-updated`
+      });
     } else {
       const created: DomainRecord = {
         id: `${domain}-${Date.now()}`,
@@ -202,7 +217,13 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
       setSelected(created.id);
       setSuccess("Registro guardado correctamente.");
       markRow(created.id, "new");
-      pushToast({ title: "Registro guardado", description: parsed.data.name, tone: "success" });
+      pushToast({
+        title: "Registro guardado",
+        description: parsed.data.name,
+        tone: "success",
+        anchorId: contextualToastAnchor,
+        groupKey: `${domain}:record-created`
+      });
     }
 
     setSaveState("success");
@@ -240,7 +261,8 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
             <KPIStatCard label="Dominio" value={domain} />
           </section>
 
-          <div className="grid gap-4 lg:grid-cols-[1.1fr_2fr]">
+          <div className="relative grid gap-4 lg:grid-cols-[1.1fr_2fr]">
+            <ToastAnchor anchorId={contextualToastAnchor} />
             <SmartSelector
               label={`Selector de ${domain}`}
               options={options}
@@ -260,7 +282,13 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
                 setRecords((prev) => [created, ...prev]);
                 markRow(created.id, "new");
                 setSuccess("Alta rápida creada correctamente.");
-                pushToast({ title: "Alta rápida creada", description: created.name, tone: "success" });
+                pushToast({
+                  title: "Alta rápida creada",
+                  description: created.name,
+                  tone: "success",
+                  anchorId: contextualToastAnchor,
+                  groupKey: `${domain}:quick-create`
+                });
                 return { id: created.id, label: created.name, meta: created.code };
               }}
             />
@@ -360,12 +388,25 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
           form.reset({ name: row.name, code: row.code, status: row.status });
           setSelected(row.id);
           setSuccess("Registro cargado para edición.");
-          pushToast({ title: "Edición lista", description: row.name, tone: "info" });
+          pushToast({
+            title: "Edición lista",
+            description: row.name,
+            tone: "processing",
+            durationMs: 2200,
+            anchorId: contextualToastAnchor,
+            groupKey: `${domain}:edit-ready`
+          });
         }}
         onDelete={(row) => {
           setRecords((prev) => prev.filter((r) => r.id !== row.id));
           setSuccess("Registro eliminado correctamente.");
-          pushToast({ title: "Registro eliminado", description: row.name, tone: "info" });
+          pushToast({
+            title: "Registro eliminado",
+            description: row.name,
+            tone: "info",
+            anchorId: contextualToastAnchor,
+            groupKey: `${domain}:record-deleted`
+          });
         }}
       />
 
@@ -385,7 +426,12 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
           setRecords((prev) => prev.filter((r) => r.id !== remove));
           setSelected(keep);
           setSuccess("Registros fusionados correctamente.");
-          pushToast({ title: "Registros fusionados", tone: "success" });
+          pushToast({
+            title: "Registros fusionados",
+            tone: "success",
+            anchorId: contextualToastAnchor,
+            groupKey: `${domain}:record-merged`
+          });
         }}
       />
     </Layout>

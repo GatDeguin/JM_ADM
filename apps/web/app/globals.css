@@ -428,6 +428,15 @@ body {
   }
 }
 
+@keyframes processing-indeterminate {
+  0% {
+    transform: translateX(-140%);
+  }
+  100% {
+    transform: translateX(360%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .motion-route-enter,
   .motion-route-exit {
