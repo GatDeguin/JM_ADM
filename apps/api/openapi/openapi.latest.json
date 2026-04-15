@@ -1,0 +1,3307 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "JM ADM API",
+    "version": "1.0.0",
+    "description": "Contrato unificado de endpoints con request/response y rutas legadas deprecadas."
+  },
+  "servers": [
+    {
+      "url": "/api/v1"
+    }
+  ],
+  "paths": {
+    "/attachments/upload": {
+      "post": {
+        "summary": "POST /attachments/upload",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audit/audit-logs": {
+      "get": {
+        "summary": "GET /audit/audit-logs",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /audit/audit-logs",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audit/audit-logs/{id}": {
+      "delete": {
+        "summary": "DELETE /audit/audit-logs/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "GET /audit/audit-logs/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "PATCH /audit/audit-logs/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audit/audit-logs/{id}/action": {
+      "post": {
+        "summary": "POST /audit/audit-logs/{id}/action",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audit/audit-logs/timeline/{entity}/{entityId}": {
+      "get": {
+        "summary": "GET /audit/audit-logs/timeline/{entity}/{entityId}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "POST /auth/login",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "summary": "POST /auth/logout",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "summary": "GET /auth/me",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "summary": "POST /auth/refresh",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalog/aliases": {
+      "get": {
+        "summary": "GET /catalog/aliases",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /catalog/aliases",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalog/aliases/homologate": {
+      "post": {
+        "summary": "POST /catalog/aliases/homologate",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalog/combos": {
+      "get": {
+        "summary": "GET /catalog/combos",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /catalog/combos",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalog/contextual/upsert": {
+      "post": {
+        "summary": "POST /catalog/contextual/upsert",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalog/families": {
+      "get": {
+        "summary": "GET /catalog/families",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /catalog/families",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalog/merge": {
+      "post": {
+        "summary": "POST /catalog/merge",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalog/packaging-specs": {
+      "get": {
+        "summary": "GET /catalog/packaging-specs",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /catalog/packaging-specs",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalog/presentations": {
+      "get": {
+        "summary": "GET /catalog/presentations",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /catalog/presentations",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalog/product-bases": {
+      "get": {
+        "summary": "GET /catalog/product-bases",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /catalog/product-bases",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalog/search": {
+      "get": {
+        "summary": "GET /catalog/search",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalog/skus": {
+      "get": {
+        "summary": "GET /catalog/skus",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /catalog/skus",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/costing/monthly-closes": {
+      "get": {
+        "summary": "GET /costing/monthly-closes",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /costing/monthly-closes",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/costing/monthly-closes/{id}": {
+      "delete": {
+        "summary": "DELETE /costing/monthly-closes/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "GET /costing/monthly-closes/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "PATCH /costing/monthly-closes/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/costing/monthly-closes/{id}/action": {
+      "post": {
+        "summary": "POST /costing/monthly-closes/{id}/action",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customers": {
+      "get": {
+        "summary": "GET /customers",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /customers",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customers/{id}": {
+      "delete": {
+        "summary": "DELETE /customers/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "GET /customers/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "PATCH /customers/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customers/{id}/action": {
+      "post": {
+        "summary": "POST /customers/{id}/action",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/expenses": {
+      "get": {
+        "summary": "GET /expenses",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /expenses",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/expenses/{id}": {
+      "delete": {
+        "summary": "DELETE /expenses/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "GET /expenses/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "PATCH /expenses/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/expenses/{id}/action": {
+      "post": {
+        "summary": "POST /expenses/{id}/action",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/adjustments/register": {
+      "post": {
+        "summary": "POST /finance/adjustments/register",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/bank-reconciliation/register": {
+      "post": {
+        "summary": "POST /finance/bank-reconciliation/register",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/cash-flow": {
+      "get": {
+        "summary": "GET /finance/cash-flow",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/treasury/transfers/register": {
+      "post": {
+        "summary": "POST /finance/treasury/transfers/register",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/formulas": {
+      "get": {
+        "summary": "GET /formulas",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /formulas",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/formulas/{id}": {
+      "get": {
+        "summary": "GET /formulas/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/formulas/{id}/approve": {
+      "post": {
+        "summary": "POST /formulas/{id}/approve",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/formulas/{id}/obsolete": {
+      "post": {
+        "summary": "POST /formulas/{id}/obsolete",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/formulas/{id}/version": {
+      "post": {
+        "summary": "POST /formulas/{id}/version",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/formulas/compare": {
+      "get": {
+        "summary": "GET /formulas/compare",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/imports/jobs": {
+      "post": {
+        "summary": "POST /imports/jobs",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/imports/jobs/{id}": {
+      "get": {
+        "summary": "GET /imports/jobs/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/imports/jobs/{id}/confirm": {
+      "post": {
+        "summary": "POST /imports/jobs/{id}/confirm",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/imports/jobs/{id}/file": {
+      "post": {
+        "summary": "POST /imports/jobs/{id}/file",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/imports/jobs/{id}/mapping": {
+      "post": {
+        "summary": "POST /imports/jobs/{id}/mapping",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/imports/jobs/{id}/prevalidate": {
+      "post": {
+        "summary": "POST /imports/jobs/{id}/prevalidate",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/imports/jobs/{id}/preview": {
+      "get": {
+        "summary": "GET /imports/jobs/{id}/preview",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/balances": {
+      "get": {
+        "summary": "GET /inventory/balances",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/counts": {
+      "post": {
+        "summary": "POST /inventory/counts",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/cycle-counts": {
+      "get": {
+        "summary": "GET /inventory/cycle-counts",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/internal-transfers": {
+      "post": {
+        "summary": "POST /inventory/internal-transfers",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/inventory-adjustments": {
+      "get": {
+        "summary": "GET /inventory/inventory-adjustments",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /inventory/inventory-adjustments",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/inventory-adjustments/{id}": {
+      "delete": {
+        "summary": "DELETE /inventory/inventory-adjustments/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "GET /inventory/inventory-adjustments/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "PATCH /inventory/inventory-adjustments/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/inventory-adjustments/{id}/action": {
+      "post": {
+        "summary": "POST /inventory/inventory-adjustments/{id}/action",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/movements/traceability": {
+      "get": {
+        "summary": "GET /inventory/movements/traceability",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/physical-inventories": {
+      "get": {
+        "summary": "GET /inventory/physical-inventories",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/stock-availability": {
+      "get": {
+        "summary": "GET /inventory/stock-availability",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory/transfers/register": {
+      "post": {
+        "summary": "POST /inventory/transfers/register",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/masters/contextual/entities/{entityType}": {
+      "post": {
+        "summary": "POST /masters/contextual/entities/{entityType}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/masters/contextual/entities/{entityType}/options": {
+      "get": {
+        "summary": "GET /masters/contextual/entities/{entityType}/options",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/masters/units": {
+      "get": {
+        "summary": "GET /masters/units",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /masters/units",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/masters/units/{id}": {
+      "delete": {
+        "summary": "DELETE /masters/units/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "GET /masters/units/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "PATCH /masters/units/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/masters/units/{id}/action": {
+      "post": {
+        "summary": "POST /masters/units/{id}/action",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packaging/packaging-orders": {
+      "get": {
+        "summary": "GET /packaging/packaging-orders",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /packaging/packaging-orders",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packaging/packaging-orders/{id}": {
+      "delete": {
+        "summary": "DELETE /packaging/packaging-orders/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "GET /packaging/packaging-orders/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "PATCH /packaging/packaging-orders/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/packaging/packaging-orders/{id}/action": {
+      "post": {
+        "summary": "POST /packaging/packaging-orders/{id}/action",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payables_treasury/accounts-payable": {
+      "get": {
+        "summary": "GET /payables_treasury/accounts-payable",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /payables_treasury/accounts-payable",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payables_treasury/accounts-payable/{id}": {
+      "delete": {
+        "summary": "DELETE /payables_treasury/accounts-payable/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "GET /payables_treasury/accounts-payable/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "PATCH /payables_treasury/accounts-payable/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payables_treasury/bank-reconciliation": {
+      "post": {
+        "summary": "POST /payables_treasury/bank-reconciliation",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payables_treasury/bank-reconciliations/register": {
+      "post": {
+        "summary": "POST /payables_treasury/bank-reconciliations/register",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payables_treasury/payments/apply": {
+      "post": {
+        "summary": "POST /payables_treasury/payments/apply",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payables_treasury/payments/register": {
+      "post": {
+        "summary": "POST /payables_treasury/payments/register",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payables_treasury/treasury/transfers": {
+      "post": {
+        "summary": "POST /payables_treasury/treasury/transfers",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payables_treasury/treasury/transfers/register": {
+      "post": {
+        "summary": "POST /payables_treasury/treasury/transfers/register",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pricing/price-lists": {
+      "get": {
+        "summary": "GET /pricing/price-lists",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /pricing/price-lists",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pricing/price-lists/{id}": {
+      "delete": {
+        "summary": "DELETE /pricing/price-lists/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "GET /pricing/price-lists/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "PATCH /pricing/price-lists/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pricing/price-lists/{id}/action": {
+      "post": {
+        "summary": "POST /pricing/price-lists/{id}/action",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/production/{id}/close-batch": {
+      "post": {
+        "summary": "POST /production/{id}/close-batch",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/production/{id}/fractionate": {
+      "post": {
+        "summary": "POST /production/{id}/fractionate",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/production/{id}/register-consumption": {
+      "post": {
+        "summary": "POST /production/{id}/register-consumption",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/production/{id}/release-batch": {
+      "post": {
+        "summary": "POST /production/{id}/release-batch",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/production/{id}/reserve-materials": {
+      "post": {
+        "summary": "POST /production/{id}/reserve-materials",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/production/{id}/start-batch": {
+      "post": {
+        "summary": "POST /production/{id}/start-batch",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/production/batches/{id}/fractionation-order": {
+      "post": {
+        "summary": "POST /production/batches/{id}/fractionation-order",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/production/batches/{id}/timeline": {
+      "get": {
+        "summary": "GET /production/batches/{id}/timeline",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/production/batches/{id}/validate-parent": {
+      "get": {
+        "summary": "GET /production/batches/{id}/validate-parent",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/production/packaging-orders/{id}/execute-fractionation": {
+      "post": {
+        "summary": "POST /production/packaging-orders/{id}/execute-fractionation",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/production/packaging-orders/{id}/validate-components": {
+      "post": {
+        "summary": "POST /production/packaging-orders/{id}/validate-components",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/production/production-orders": {
+      "get": {
+        "summary": "GET /production/production-orders",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /production/production-orders",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/purchasing/goods-receipts": {
+      "get": {
+        "summary": "GET /purchasing/goods-receipts",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /purchasing/goods-receipts",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/purchasing/goods-receipts/{id}": {
+      "get": {
+        "summary": "GET /purchasing/goods-receipts/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/purchasing/purchase-orders": {
+      "get": {
+        "summary": "GET /purchasing/purchase-orders",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /purchasing/purchase-orders",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/purchasing/purchase-orders/{id}": {
+      "delete": {
+        "summary": "DELETE /purchasing/purchase-orders/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "GET /purchasing/purchase-orders/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "PATCH /purchasing/purchase-orders/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/purchasing/purchase-orders/{id}/action": {
+      "post": {
+        "summary": "POST /purchasing/purchase-orders/{id}/action",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/purchasing/purchase-requests": {
+      "get": {
+        "summary": "GET /purchasing/purchase-requests",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /purchasing/purchase-requests",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/purchasing/purchase-requests/{id}": {
+      "get": {
+        "summary": "GET /purchasing/purchase-requests/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "PATCH /purchasing/purchase-requests/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/purchasing/purchase-requests/{id}/approve": {
+      "post": {
+        "summary": "POST /purchasing/purchase-requests/{id}/approve",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/quality/checklists/by-batch/{batchId}": {
+      "get": {
+        "summary": "GET /quality/checklists/by-batch/{batchId}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/quality/qc-records": {
+      "get": {
+        "summary": "GET /quality/qc-records",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /quality/qc-records",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/quality/qc-records/{id}": {
+      "delete": {
+        "summary": "DELETE /quality/qc-records/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "GET /quality/qc-records/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "PATCH /quality/qc-records/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/quality/qc-records/{id}/action": {
+      "post": {
+        "summary": "POST /quality/qc-records/{id}/action",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/quality/qc-records/{id}/quality-decision": {
+      "post": {
+        "summary": "POST /quality/qc-records/{id}/quality-decision",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/receivables/accounts-receivable": {
+      "get": {
+        "summary": "GET /receivables/accounts-receivable",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /receivables/accounts-receivable",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/receivables/accounts-receivable/{id}": {
+      "delete": {
+        "summary": "DELETE /receivables/accounts-receivable/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "GET /receivables/accounts-receivable/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "PATCH /receivables/accounts-receivable/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/receivables/accounts-receivable/aging-agenda": {
+      "get": {
+        "summary": "GET /receivables/accounts-receivable/aging-agenda",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/receivables/receipts/apply": {
+      "post": {
+        "summary": "POST /receivables/receipts/apply",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reporting/dashboard": {
+      "get": {
+        "summary": "GET /reporting/dashboard",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reporting/data-quality": {
+      "get": {
+        "summary": "GET /reporting/data-quality",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reporting/data-quality/lists": {
+      "get": {
+        "summary": "GET /reporting/data-quality/lists",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reporting/finance": {
+      "get": {
+        "summary": "GET /reporting/finance",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reporting/margins": {
+      "get": {
+        "summary": "GET /reporting/margins",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reporting/production": {
+      "get": {
+        "summary": "GET /reporting/production",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reporting/quality": {
+      "get": {
+        "summary": "GET /reporting/quality",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reporting/sales": {
+      "get": {
+        "summary": "GET /reporting/sales",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reporting/snapshots/generate": {
+      "post": {
+        "summary": "POST /reporting/snapshots/generate",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reporting/stock": {
+      "get": {
+        "summary": "GET /reporting/stock",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/roles_permissions/roles": {
+      "get": {
+        "summary": "GET /roles_permissions/roles",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /roles_permissions/roles",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/roles_permissions/roles/{id}": {
+      "delete": {
+        "summary": "DELETE /roles_permissions/roles/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "GET /roles_permissions/roles/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "PATCH /roles_permissions/roles/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/roles_permissions/roles/{id}/action": {
+      "post": {
+        "summary": "POST /roles_permissions/roles/{id}/action",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sales/dispatch-orders": {
+      "post": {
+        "summary": "POST /sales/dispatch-orders",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sales/sales-orders": {
+      "get": {
+        "summary": "GET /sales/sales-orders",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /sales/sales-orders",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sales/sales-returns": {
+      "post": {
+        "summary": "POST /sales/sales-returns",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "summary": "GET /users",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "POST /users",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{id}": {
+      "delete": {
+        "summary": "DELETE /users/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "GET /users/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "PATCH /users/{id}",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{id}/action": {
+      "post": {
+        "summary": "POST /users/{id}/action",
+        "deprecated": false,
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "example": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "x-legacyRoutes": []
+}
