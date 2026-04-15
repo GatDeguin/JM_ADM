@@ -57,7 +57,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {toasts.map((toast) => (
           <article
             key={toast.id}
-            className={`pointer-events-auto rounded-xl border p-3 shadow-lg backdrop-blur ${toneStyles[toast.tone ?? "info"]}`}
+            className={`pointer-events-auto rounded-xl border p-3 shadow-lg backdrop-blur transition-all motion-overlay ${toneStyles[toast.tone ?? "info"]}`}
           >
             <div className="flex items-start gap-3">
               <div className="min-w-0 flex-1">
@@ -67,7 +67,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               <button
                 type="button"
                 onClick={() => removeToast(toast.id)}
-                className="rounded-md px-2 py-1 text-xs font-medium hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2 dark:hover:bg-white/10 dark:focus-visible:ring-zinc-100"
+                className="rounded-md px-2 py-1 text-xs font-medium transition-colors motion-hover hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2 dark:hover:bg-white/10 dark:focus-visible:ring-zinc-100"
                 aria-label="Cerrar notificación"
               >
                 Cerrar

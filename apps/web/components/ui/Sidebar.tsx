@@ -30,7 +30,7 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
-              className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
+              className={`block rounded-lg px-3 py-2 text-sm transition-colors motion-state ${
                 active
                   ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
                   : "text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"

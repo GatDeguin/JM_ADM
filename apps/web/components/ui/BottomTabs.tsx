@@ -18,7 +18,7 @@ export function BottomTabs() {
   return (
     <nav
       aria-label="Navegación móvil"
-      className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-zinc-200 bg-white/95 text-xs shadow-[0_-4px_20px_rgba(0,0,0,0.08)] backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/95 md:hidden"
+      className="glass-bg shadow-soft fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-zinc-200 text-xs backdrop-blur motion-overlay dark:border-zinc-800 md:hidden"
     >
       {items.map((item) => {
         const active = pathname.startsWith(item.href);
@@ -27,7 +27,7 @@ export function BottomTabs() {
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
-            className={`px-2 py-3 text-center transition-colors ${
+            className={`px-2 py-3 text-center transition-colors motion-state ${
               active ? "font-semibold text-zinc-900 dark:text-zinc-100" : "text-zinc-600 dark:text-zinc-400"
             }`}
           >
