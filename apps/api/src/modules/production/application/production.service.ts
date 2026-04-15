@@ -1,4 +1,5 @@
-import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { ConflictException, HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
+import { throwDomainError } from "../../../common/domain-rules/domain-errors";
 import {
   assertBatchCanBeFractionated,
   assertPositiveNumber,
@@ -84,6 +85,9 @@ export class ProductionService {
     if (!order) {
       throw new NotFoundException("Orden de producción no encontrada");
     }
+    if (order.status !== "planned") {
+      throwDomainError("RULE_PRODUCTION_STATUS_TRANSITION", "Sólo se puede reservar material para órdenes en estado planned.", HttpStatus.CONFLICT, "R-PD-001");
+    }
     await this.productionRepository.reserveMaterials(id);
 
     await this.auditTrail.logTransactionalAction({
@@ -107,6 +111,9 @@ export class ProductionService {
     const order = await this.productionRepository.findOrder(id);
     if (!order) {
       throw new NotFoundException("Orden de producción no encontrada");
+    }
+    if (order.status !== "reserved") {
+      throwDomainError("RULE_PRODUCTION_STATUS_TRANSITION", "Sólo se puede iniciar una orden en estado reserved.", HttpStatus.CONFLICT, "R-PD-002");
     }
     const batch = await this.productionRepository.startBatch(id);
 
@@ -148,6 +155,10 @@ export class ProductionService {
     const before = await this.productionRepository.findBatch(id);
     if (!before) {
       throw new NotFoundException("Batch no encontrado");
+    }
+
+    if (before.status !== "in_process") {
+      throwDomainError("RULE_PRODUCTION_STATUS_TRANSITION", "Sólo se puede cerrar un lote en estado in_process.", HttpStatus.CONFLICT, "R-PD-003");
     }
 
     const outputQty = payload.outputs.reduce((acc, output) => acc + output.qty, 0);

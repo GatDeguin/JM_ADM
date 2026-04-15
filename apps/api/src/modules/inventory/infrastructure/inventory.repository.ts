@@ -1,4 +1,5 @@
-import { Injectable } from "@nestjs/common";
+import { HttpStatus, Injectable } from "@nestjs/common";
+import { throwDomainError } from "../../../common/domain-rules/domain-errors";
 import { PrismaService } from "../../../infrastructure/prisma/prisma.service";
 import {
   ActionInventoryAdjustmentInput,
@@ -180,7 +181,14 @@ export class InventoryRepository {
         },
       });
       const sourceQty = Number(source?.qty ?? 0);
-      if (sourceQty < payload.qty) throw new Error("Stock insuficiente para transferencia interna");
+      if (sourceQty < payload.qty) {
+        throwDomainError(
+          "RULE_INVENTORY_TRANSFER_STOCK_AVAILABLE",
+          "Stock insuficiente para transferencia interna.",
+          HttpStatus.CONFLICT,
+          "R-IV-004",
+        );
+      }
 
       await this.adjustBalance(tx, {
         itemId: payload.itemId,

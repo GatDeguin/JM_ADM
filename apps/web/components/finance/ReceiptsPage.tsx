@@ -29,6 +29,15 @@ export function ReceiptsPage() {
     defaultValues: { code: "", cashAccountId: "", amount: 1, receivableId: "", allocatedAmount: 1 }
   });
 
+  const amount = Number(form.watch("amount") ?? 0);
+  const allocatedAmount = Number(form.watch("allocatedAmount") ?? 0);
+  const preWarnings = [
+    !form.watch("receivableId") ? "Seleccioná al menos una cuenta a cobrar." : null,
+    allocatedAmount > amount ? "La imputación no puede superar el importe recibido." : null,
+    !form.watch("cashAccountId") ? "Debés seleccionar cuenta de caja/banco." : null,
+  ].filter((warning): warning is string => Boolean(warning));
+  const canSubmit = preWarnings.length === 0 && !loading;
+
   const submit = form.handleSubmit(async (values) => {
     setError(null);
     setSuccess(null);
@@ -106,10 +115,11 @@ export function ReceiptsPage() {
           contextualConfig={{ entityType: "cuenta", originFlow: "finanzas/cobranzas" }}
         />
 
+        {preWarnings.length ? <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">{preWarnings.map((warning) => <p key={warning}>⚠ {warning}</p>)}</div> : null}
         {error ? <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
         {success ? <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{success}</p> : null}
 
-        <button className="btn-primary" type="submit" disabled={loading}>
+        <button className="btn-primary" type="submit" disabled={!canSubmit}>
           {loading ? "Aplicando..." : "Registrar cobranza"}
         </button>
       </form>

@@ -33,7 +33,7 @@ describe("sales integration", () => {
         integrationFixtures.sales.total,
         [],
       ),
-    ).rejects.toBeInstanceOf(BadRequestException);
+    ).rejects.toMatchObject({ response: expect.objectContaining({ code: "RULE_SALES_ITEMS_REQUIRED" }) });
   });
 
   it("bloquea venta con lista inválida", async () => {
