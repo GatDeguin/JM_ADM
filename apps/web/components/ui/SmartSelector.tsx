@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/lib/env";
 import { QuickCreateSheet } from "@/components/ui/QuickCreateSheet";
+import { logOriginAudit } from "@/components/workflows/api";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeletons } from "@/components/ui/Skeletons";
 
@@ -54,7 +55,6 @@ export function SmartSelector({
   const [query, setQuery] = useState("");
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [contextualOptions, setContextualOptions] = useState<SmartSelectorOption[]>([]);
   const [contextualError, setContextualError] = useState<string | null>(null);
 
@@ -93,24 +93,30 @@ export function SmartSelector({
     if (!response.ok) throw new Error(await response.text());
     const created = (await response.json()) as SmartSelectorOption;
     setContextualOptions((prev) => [created, ...prev]);
+    await logOriginAudit({
+      entity: contextualConfig.entityType,
+      entityId: created.id,
+      action: "contextual-create",
+      origin: contextualConfig.originFlow ?? "nested-flow",
+    });
     return created;
   };
 
 
 
   useEffect(() => {
-    if (!contextualConfig) return;
-    const selectedType = searchParams.get("contextualEntityType");
-    const selectedId = searchParams.get("contextualEntityId");
+    if (!contextualConfig || typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const selectedType = params.get("contextualEntityType");
+    const selectedId = params.get("contextualEntityId");
     if (selectedType !== contextualConfig.entityType || !selectedId) return;
 
     onChange(selectedId);
-    const next = new URLSearchParams(searchParams.toString());
-    next.delete("contextualEntityType");
-    next.delete("contextualEntityId");
-    const query = next.toString();
+    params.delete("contextualEntityType");
+    params.delete("contextualEntityId");
+    const query = params.toString();
     router.replace(query ? `${pathname}?${query}` : pathname);
-  }, [contextualConfig, onChange, pathname, router, searchParams]);
+  }, [contextualConfig, onChange, pathname, router]);
   const sourceOptions = contextualConfig
     ? [
         ...contextualOptions,

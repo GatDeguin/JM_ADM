@@ -1,5 +1,5 @@
-import { PaymentsPage } from "@/components/finance/PaymentsPage";
+import { PagosPage } from "@/components/finanzas/PagosPage";
 
 export default function Page() {
-  return <PaymentsPage />;
+  return <PagosPage />;
 }

@@ -1,5 +1,5 @@
-import { CriticalDomainCrudView } from "@/components/ui/CriticalDomainCrudView";
+import { LotesPage } from "@/components/stock/LotesPage";
 
 export default function Page() {
-  return <CriticalDomainCrudView domain="lote" />;
+  return <LotesPage />;
 }
