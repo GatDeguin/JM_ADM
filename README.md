@@ -465,17 +465,39 @@ pnpm test
 
 ### E2E web
 
+Comando principal de aceptación (API + DB real, flujo crítico):
+
 ```bash
 pnpm test:e2e
 ```
 
-Suite crítica obligatoria (API + DB real):
+Smoke rápido (mockeado, útil para feedback temprano, no señal principal de aceptación):
+
+```bash
+pnpm test:e2e:smoke
+```
+
+Suite real crítica explícita:
 
 ```bash
 pnpm test:e2e:critical
 ```
 
-> La pipeline de CI bloquea `lint`, `test`, `test:e2e:critical` y `build` si la suite crítica no pasa.
+Suite real completa:
+
+```bash
+pnpm test:e2e:all
+```
+
+### Matriz mínima requerida para DoD
+
+| Capa de validación      | Objetivo                                    | Comando                                    | ¿Bloquea aceptación en rama principal? |
+| ----------------------- | ------------------------------------------- | ------------------------------------------ | -------------------------------------- |
+| Mocked (smoke)          | Feedback rápido de UI/flujo básico          | `pnpm test:e2e:smoke`                      | No                                     |
+| Real crítico (API + DB) | Validar recorrido operacional mínimo real   | `pnpm test:e2e` o `pnpm test:e2e:critical` | Sí                                     |
+| Real completo           | Regresión E2E extendida con cobertura total | `pnpm test:e2e:all` y/o `pnpm test:dod`    | Recomendado (según release)            |
+
+> En CI, la rama principal exige al menos la suite real crítica para aprobar cambios.
 
 ### Build/Lint
 

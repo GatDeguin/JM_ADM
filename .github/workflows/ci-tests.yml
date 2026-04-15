@@ -4,8 +4,65 @@ on:
   push:
     branches: ["**"]
   pull_request:
+    branches: ["main"]
 
 jobs:
+  e2e-real-critical:
+    name: E2E real critical (required on main)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.base_ref == 'main'
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: jmadm_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d jmadm_ci"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Bootstrap full dataset (critical baseline)
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/jmadm_ci
+        run: pnpm bootstrap:full
+
+      - name: Install Playwright browsers
+        run: pnpm --filter web exec playwright install --with-deps chromium
+
+      - name: Run critical real e2e suite
+        run: pnpm test:e2e:critical --reporter=line,html,junit
+
+      - name: Upload critical suite artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-critical
+          path: |
+            apps/web/playwright-report
+            apps/web/test-results
+
   test:
     runs-on: ubuntu-latest
     services:
