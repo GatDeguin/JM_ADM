@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { BalancePage } from "@/components/stock/BalancePage";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Stock · Balance"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="stock-balance"
-    />
-  );
+  return <BalancePage />;
 }

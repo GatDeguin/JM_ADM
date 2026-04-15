@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { InventariosPage } from "@/components/stock/InventariosPage";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Stock · Inventarios"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="stock-inventarios"
-    />
-  );
+  return <InventariosPage />;
 }

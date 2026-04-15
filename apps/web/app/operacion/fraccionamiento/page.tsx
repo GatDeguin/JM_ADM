@@ -1,5 +1,5 @@
-import { FractionationPage } from "@/components/production/FractionationPage";
+import { FraccionamientoPage } from "@/components/operacion/FraccionamientoPage";
 
 export default function Page() {
-  return <FractionationPage />;
+  return <FraccionamientoPage />;
 }

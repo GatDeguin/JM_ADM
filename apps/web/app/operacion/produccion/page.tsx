@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { ProduccionPage } from "@/components/operacion/ProduccionPage";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Operacion · Produccion"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="operacion-produccion"
-    />
-  );
+  return <ProduccionPage />;
 }

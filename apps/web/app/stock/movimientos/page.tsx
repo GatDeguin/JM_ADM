@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { MovimientosPage } from "@/components/stock/MovimientosPage";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Stock · Movimientos"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="stock-movimientos"
-    />
-  );
+  return <MovimientosPage />;
 }

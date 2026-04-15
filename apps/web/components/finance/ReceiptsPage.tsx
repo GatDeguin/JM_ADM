@@ -1,55 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Layout } from "@/components/layout";
+import { DataTable } from "@/components/ui/DataTable";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SmartSelector } from "@/components/ui/SmartSelector";
 import { apiRequest, logOriginAudit } from "@/components/workflows/api";
 
-const schema = z.object({
-  code: z.string().min(2, "Código requerido"),
-  cashAccountId: z.string().min(1, "Cuenta de cobro requerida"),
-  amount: z.coerce.number().positive("Importe inválido"),
-  receivableId: z.string().min(1, "Cuenta a cobrar requerida"),
-  allocatedAmount: z.coerce.number().positive("Importe de imputación inválido")
-});
-
+const schema = z.object({ code: z.string().min(2), cashAccountId: z.string().min(1), amount: z.coerce.number().positive(), receivableId: z.string().min(1), allocatedAmount: z.coerce.number().positive() });
 type Values = z.infer<typeof schema>;
-
 type ReceiptResponse = { id?: string; code: string };
+type ReceivableRow = { id: string; code: string; customerId: string; status: string; balance: number };
 
 export function ReceiptsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [rows, setRows] = useState<ReceivableRow[]>([]);
 
-  const form = useForm<Values>({
-    defaultValues: { code: "", cashAccountId: "", amount: 1, receivableId: "", allocatedAmount: 1 }
-  });
+  const form = useForm<Values>({ defaultValues: { code: "", cashAccountId: "", amount: 1, receivableId: "", allocatedAmount: 1 } });
 
-  const amount = Number(form.watch("amount") ?? 0);
-  const allocatedAmount = Number(form.watch("allocatedAmount") ?? 0);
-  const preWarnings = [
-    !form.watch("receivableId") ? "Seleccioná al menos una cuenta a cobrar." : null,
-    allocatedAmount > amount ? "La imputación no puede superar el importe recibido." : null,
-    !form.watch("cashAccountId") ? "Debés seleccionar cuenta de caja/banco." : null,
-  ].filter((warning): warning is string => Boolean(warning));
-  const canSubmit = preWarnings.length === 0 && !loading;
+  const loadRows = async () => {
+    try {
+      const payload = await apiRequest<Array<Record<string, unknown>>>("/receivables/accounts-receivable");
+      setRows(payload.map((row) => ({ id: String(row.id ?? ""), code: String(row.code ?? "-"), customerId: String(row.customerId ?? "-"), status: String(row.status ?? "open"), balance: Number(row.balance ?? row.amount ?? 0) })));
+    } catch {
+      // no romper el formulario si falla la tabla
+    }
+  };
+
+  useEffect(() => { void loadRows(); }, []);
 
   const submit = form.handleSubmit(async (values) => {
     setError(null);
     setSuccess(null);
 
     const parsed = schema.safeParse(values);
-    if (!parsed.success) {
-      parsed.error.issues.forEach((issue) => {
-        const field = issue.path[0] as keyof Values;
-        form.setError(field, { message: issue.message });
-      });
-      return;
-    }
+    if (!parsed.success) return;
 
     try {
       setLoading(true);
@@ -60,17 +49,13 @@ export function ReceiptsPage() {
 
       const created = await apiRequest<ReceiptResponse>("/receivables/receipts/apply", {
         method: "POST",
-        body: JSON.stringify({
-          code: parsed.data.code,
-          cashAccountId: parsed.data.cashAccountId,
-          amount: parsed.data.amount,
-          allocations: [{ receivableId: parsed.data.receivableId, amount: parsed.data.allocatedAmount }]
-        })
+        body: JSON.stringify({ code: parsed.data.code, cashAccountId: parsed.data.cashAccountId, amount: parsed.data.amount, allocations: [{ receivableId: parsed.data.receivableId, amount: parsed.data.allocatedAmount }] })
       });
 
       await logOriginAudit({ entity: "receipt", entityId: created.id ?? parsed.data.code, action: "apply", origin: "finanzas/cobranzas" });
       setSuccess(`Cobranza ${created.code} registrada.`);
       form.reset({ code: "", cashAccountId: "", amount: 1, receivableId: "", allocatedAmount: 1 });
+      await loadRows();
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "No se pudo registrar la cobranza");
     } finally {
@@ -83,46 +68,17 @@ export function ReceiptsPage() {
       <PageHeader title="Cobranza" subtitle="Aplicación de recibos con validación de imputaciones y cuenta de caja/banco." />
       <form className="card-base space-y-4" onSubmit={submit}>
         <div className="grid gap-3 md:grid-cols-2">
-          <label className="space-y-1 text-sm">
-            <span className="font-medium">Código de recibo</span>
-            <input className="input-base w-full" {...form.register("code")} placeholder="RC-2026-001" />
-            {form.formState.errors.code ? <p className="text-xs text-red-600">{form.formState.errors.code.message}</p> : null}
-          </label>
-          <label className="space-y-1 text-sm">
-            <span className="font-medium">Importe recibido</span>
-            <input className="input-base w-full" type="number" min={0.01} step="0.01" {...form.register("amount")} />
-            {form.formState.errors.amount ? <p className="text-xs text-red-600">{form.formState.errors.amount.message}</p> : null}
-          </label>
-          <SmartSelector
-            label="Cuenta por cobrar"
-            value={form.watch("receivableId")}
-            onChange={(value) => form.setValue("receivableId", value, { shouldValidate: true })}
-            options={[]}
-            contextualConfig={{ entityType: "cuenta_cobrar", originFlow: "finanzas/cobranzas" }}
-          />
-          <label className="space-y-1 text-sm">
-            <span className="font-medium">Importe a imputar</span>
-            <input className="input-base w-full" type="number" min={0.01} step="0.01" {...form.register("allocatedAmount")} />
-            {form.formState.errors.allocatedAmount ? <p className="text-xs text-red-600">{form.formState.errors.allocatedAmount.message}</p> : null}
-          </label>
+          <input className="input-base w-full" {...form.register("code")} placeholder="Código" />
+          <input className="input-base w-full" type="number" min={0.01} step="0.01" {...form.register("amount")} placeholder="Importe" />
+          <SmartSelector label="Cuenta por cobrar" value={form.watch("receivableId")} onChange={(value) => form.setValue("receivableId", value, { shouldValidate: true })} options={[]} contextualConfig={{ entityType: "cuenta_cobrar", originFlow: "finanzas/cobranzas" }} />
+          <input className="input-base w-full" type="number" min={0.01} step="0.01" {...form.register("allocatedAmount")} placeholder="Importe a imputar" />
         </div>
-
-        <SmartSelector
-          label="Cuenta caja/banco"
-          value={form.watch("cashAccountId")}
-          onChange={(value) => form.setValue("cashAccountId", value, { shouldValidate: true })}
-          options={[]}
-          contextualConfig={{ entityType: "cuenta", originFlow: "finanzas/cobranzas" }}
-        />
-
-        {preWarnings.length ? <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">{preWarnings.map((warning) => <p key={warning}>⚠ {warning}</p>)}</div> : null}
-        {error ? <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
-        {success ? <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{success}</p> : null}
-
-        <button className="btn-primary" type="submit" disabled={!canSubmit}>
-          {loading ? "Aplicando..." : "Registrar cobranza"}
-        </button>
+        <SmartSelector label="Cuenta caja/banco" value={form.watch("cashAccountId")} onChange={(value) => form.setValue("cashAccountId", value, { shouldValidate: true })} options={[]} contextualConfig={{ entityType: "cuenta", originFlow: "finanzas/cobranzas" }} />
+        {error ? <p className="text-sm text-red-700">{error}</p> : null}
+        {success ? <p className="text-sm text-emerald-700">{success}</p> : null}
+        <button className="btn-primary" type="submit" disabled={loading}>{loading ? "Aplicando..." : "Registrar cobranza"}</button>
       </form>
+      <div className="mt-4"><DataTable title="Cuentas por cobrar" columns={[{ key: "code", header: "Código" }, { key: "customerId", header: "Cliente" }, { key: "status", header: "Estado" }, { key: "balance", header: "Saldo" }]} rows={rows} rowId={(row) => row.id} /></div>
     </Layout>
   );
 }
