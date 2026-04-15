@@ -24,8 +24,8 @@ export function InventariosPage() {
     setLoading(true);
     try {
       const [cycle, physical] = await Promise.all([
-        apiRequest<Array<Record<string, unknown>>>("/inventory/cycle-counts"),
-        apiRequest<Array<Record<string, unknown>>>("/inventory/physical-inventories"),
+        apiRequest<Array<Record<string, unknown>>>("/stock/cycle-counts"),
+        apiRequest<Array<Record<string, unknown>>>("/stock/physical-inventories"),
       ]);
       const mapped = [...cycle, ...physical].map((r, index) => ({ id: String(r.id ?? `count-${index}`), type: String(r.type ?? "-"), itemId: String(r.itemId ?? "-"), countedQty: Number(r.countedQty ?? 0), warehouseId: String(r.warehouseId ?? "-"), locationId: String(r.locationId ?? "-") }));
       setRows(mapped);
@@ -40,7 +40,7 @@ export function InventariosPage() {
     const parsed = schema.safeParse(values);
     if (!parsed.success) return;
     try {
-      const created = await apiRequest<{ id: string }>("/inventory/counts", { method: "POST", body: JSON.stringify(parsed.data) });
+      const created = await apiRequest<{ id: string }>("/stock/counts", { method: "POST", body: JSON.stringify(parsed.data) });
       await logOriginAudit({ entity: "inventory-count", entityId: created.id, action: "create", origin: "stock/inventarios" });
       setSuccess("Conteo registrado.");
       form.reset({ type: "cycle", itemId: "", warehouseId: "", locationId: "", countedQty: 0, note: "" });

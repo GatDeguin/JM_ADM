@@ -35,7 +35,7 @@ export function PedidosPage() {
   const loadRows = async () => {
     setLoading(true);
     try {
-      const payload = await apiRequest<Array<Record<string, unknown>>>("/sales/sales-orders");
+      const payload = await apiRequest<Array<Record<string, unknown>>>("/commercial/sales/sales-orders");
       setRows(
         payload.map((row) => ({
           id: String(row.id ?? ""),
@@ -71,7 +71,7 @@ export function PedidosPage() {
     }
 
     try {
-      const created = await apiRequest<{ id: string; code: string }>("/sales/sales-orders", {
+      const created = await apiRequest<{ id: string; code: string }>("/commercial/sales/sales-orders", {
         method: "POST",
         body: JSON.stringify({
           code: parsed.data.code,

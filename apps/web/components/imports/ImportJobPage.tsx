@@ -59,26 +59,26 @@ export function ImportJobPage() {
 
     try {
       setLoading(true);
-      const job = await apiRequest<ImportJob>("/imports/jobs", {
+      const job = await apiRequest<ImportJob>("/system/imports/jobs", {
         method: "POST",
         body: JSON.stringify({ type: parsed.data.type, sourceName: parsed.data.sourceName })
       });
 
-      await apiRequest(`/imports/jobs/${job.id}/file`, {
+      await apiRequest(`/system/imports/jobs/${job.id}/file`, {
         method: "POST",
         body: JSON.stringify({ sourceName: parsed.data.sourceName, rows })
       });
 
-      await apiRequest(`/imports/jobs/${job.id}/mapping`, {
+      await apiRequest(`/system/imports/jobs/${job.id}/mapping`, {
         method: "POST",
         body: JSON.stringify({ mapping })
       });
 
-      const prevalidation = await apiRequest<ImportJob>(`/imports/jobs/${job.id}/prevalidate`, { method: "POST" });
+      const prevalidation = await apiRequest<ImportJob>(`/system/imports/jobs/${job.id}/prevalidate`, { method: "POST" });
       const prevalidationWarnings = prevalidation?.warnings ?? [];
       setWarnings(prevalidationWarnings);
 
-      await apiRequest(`/imports/jobs/${job.id}/confirm`, { method: "POST" });
+      await apiRequest(`/system/imports/jobs/${job.id}/confirm`, { method: "POST" });
 
       await logOriginAudit({ entity: "import-job", entityId: job.id, action: "confirm", origin: "sistema/importaciones" });
       setSuccess(`Importación ${job.id} confirmada${prevalidationWarnings.length ? " con advertencias" : ""}.`);

@@ -24,7 +24,7 @@ export function PaymentsPage() {
 
   const loadRows = async () => {
     try {
-      const payload = await apiRequest<Array<Record<string, unknown>>>("/payables_treasury/accounts-payable");
+      const payload = await apiRequest<Array<Record<string, unknown>>>("/finance/payables-treasury/accounts-payable");
       setRows(payload.map((row) => ({ id: String(row.id ?? ""), code: String(row.code ?? "-"), supplierId: String(row.supplierId ?? "-"), status: String(row.status ?? "open"), balance: Number(row.balance ?? row.amount ?? 0) })));
     } catch {
       // no romper el formulario si falla la tabla
@@ -47,7 +47,7 @@ export function PaymentsPage() {
         return;
       }
 
-      const created = await apiRequest<PaymentResponse>("/payables_treasury/payments/apply", {
+      const created = await apiRequest<PaymentResponse>("/finance/payables-treasury/payments/apply", {
         method: "POST",
         body: JSON.stringify({ code: parsed.data.code, cashAccountId: parsed.data.cashAccountId, amount: parsed.data.amount, allocations: [{ payableId: parsed.data.payableId, amount: parsed.data.allocatedAmount }] })
       });

@@ -24,7 +24,7 @@ export function ReceiptsPage() {
 
   const loadRows = async () => {
     try {
-      const payload = await apiRequest<Array<Record<string, unknown>>>("/receivables/accounts-receivable");
+      const payload = await apiRequest<Array<Record<string, unknown>>>("/finance/receivables/accounts-receivable");
       setRows(payload.map((row) => ({ id: String(row.id ?? ""), code: String(row.code ?? "-"), customerId: String(row.customerId ?? "-"), status: String(row.status ?? "open"), balance: Number(row.balance ?? row.amount ?? 0) })));
     } catch {
       // no romper el formulario si falla la tabla
@@ -47,7 +47,7 @@ export function ReceiptsPage() {
         return;
       }
 
-      const created = await apiRequest<ReceiptResponse>("/receivables/receipts/apply", {
+      const created = await apiRequest<ReceiptResponse>("/finance/receivables/receipts/apply", {
         method: "POST",
         body: JSON.stringify({ code: parsed.data.code, cashAccountId: parsed.data.cashAccountId, amount: parsed.data.amount, allocations: [{ receivableId: parsed.data.receivableId, amount: parsed.data.allocatedAmount }] })
       });

@@ -95,7 +95,7 @@ export function NewSaleWizardPage() {
 
     try {
       setLoading(true);
-      const created = await apiRequest<SalesResponse>("/sales/sales-orders", {
+      const created = await apiRequest<SalesResponse>("/commercial/sales/sales-orders", {
         method: "POST",
         body: JSON.stringify({
           code: parsed.data.code,
