@@ -89,6 +89,49 @@ Incluye soporte nativo de **alias/homologación/merge/pending_homologation** par
 - `imports`
 - `audit`
 
+### Contrato API consolidado (versionado)
+
+Contrato canónico actual: **`v1`** con prefijo lógico `/api/v1` para todas las rutas operativas nuevas.
+
+Dominios normalizados del contrato objetivo:
+- `auth`
+- `catalog`
+- `production`
+- `fractionation`
+- `stock`
+- `purchasing`
+- `commercial`
+- `finance`
+- `reporting`
+- `system`
+
+#### Endpoints v1 incorporados / normalizados
+
+**Finance (`/api/v1/finance`)**
+- `POST /adjustments/register`
+- `POST /treasury/transfers/register`
+- `POST /bank-reconciliation/register`
+- `GET /cash-flow?period=YYYY-MM`
+
+**Production (`/api/v1/production`)**
+- `POST /:id/register-consumption`
+- `POST /:id/reserve-materials`
+- `POST /:id/start-batch`
+- `POST /:id/close-batch`
+- `POST /:id/release-batch`
+
+**Stock (`/api/v1/inventory`)**
+- `POST /internal-transfers`
+- `POST /transfers/register`
+
+**Quality (`/api/v1/quality`)**
+- `POST /qc-records/:id/quality-decision`
+
+**Payables & Treasury (`/api/v1/payables_treasury`)**
+- `POST /payments/register`
+- `POST /treasury/transfers/register`
+- `POST /bank-reconciliations/register`
+
 ### Eventos de dominio implementados
 - `formula.approved`
 - `product.sku.created`

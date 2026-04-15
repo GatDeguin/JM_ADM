@@ -14,6 +14,7 @@ type BatchExecutionInput = {
   wastes: Array<{ reason: string; qty: number }>;
   outputs: Array<{ itemId: string; qty: number }>;
 };
+type BatchConsumptionInput = BatchExecutionInput["consumptions"];
 
 @Injectable()
 export class ProductionService {
@@ -157,6 +158,35 @@ export class ProductionService {
     });
 
     return { event: "production.batch.closed", id, status: "qc_pending" };
+  }
+
+  async registerConsumption(id: string, consumptions: BatchConsumptionInput) {
+    const batch = await this.productionRepository.findBatch(id);
+    if (!batch) {
+      throw new NotFoundException("Batch no encontrado");
+    }
+    if (batch.status !== "in_process") {
+      throw new ConflictException("Sólo se permite registrar consumos con el lote en proceso.");
+    }
+    if (!consumptions.length) {
+      throw new ConflictException("Debes informar al menos un consumo para registrar.");
+    }
+
+    for (const consumption of consumptions) {
+      assertPositiveNumber(consumption.actualQty, "El consumo real");
+      assertPositiveNumber(consumption.plannedQty, "El consumo teórico");
+      assertRequiredText(consumption.itemId, "el item consumido");
+    }
+
+    this.domainEvents.emit({
+      name: "production.batch.consumption.registered",
+      entity: "batch",
+      entityId: id,
+      occurredAt: new Date().toISOString(),
+      metadata: { lines: consumptions.length },
+    });
+
+    return { event: "production.batch.consumption.registered", id, consumptions };
   }
 
   async releaseBatch(id: string) {

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { InventoryService } from "../application/inventory.service";
+import { InventoryController } from "../presentation/inventory.controller";
 
 describe("inventory integration", () => {
   it("propaga la acción de ajuste al repositorio", async () => {
@@ -51,5 +52,24 @@ describe("inventory integration", () => {
     expect(repo.listCounts).toHaveBeenCalledWith("cycle");
     expect(repo.createCount).toHaveBeenCalledWith({ warehouseId: "wh-1", type: "physical" });
     expect(repo.getMovementTraceability).toHaveBeenCalledWith({ itemId: "item-1" });
+  });
+
+  it("expone endpoint explícito de register transfer", async () => {
+    const service = {
+      createInternalTransfer: vi.fn(async () => ({ id: "transfer-1", event: "inventory.transfer.registered" })),
+    } as unknown as InventoryService;
+    const controller = new InventoryController(service);
+
+    const payload = {
+      itemId: "item-1",
+      qty: 10,
+      fromWarehouseId: "wh-1",
+      toWarehouseId: "wh-2",
+      reason: "Reubicación interna",
+    };
+    const result = await controller.registerTransfer(payload);
+
+    expect(result.id).toBe("transfer-1");
+    expect(service.createInternalTransfer).toHaveBeenCalledWith(payload);
   });
 });

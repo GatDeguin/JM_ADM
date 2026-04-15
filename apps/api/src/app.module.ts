@@ -26,29 +26,37 @@ import { AttachmentsModule } from "./modules/attachments/attachments.module";
 
 @Module({
   imports: [
+    // sistema
     PrismaModule,
     AuthModule,
     UsersModule,
     RolesPermissionsModule,
+    // catálogo
     MastersModule,
     CatalogModule,
     FormulasModule,
+    // producción y fraccionamiento
     ProductionModule,
     PackagingModule,
     QualityModule,
+    // stock y compras
     InventoryModule,
     PurchasingModule,
+    // comercial
     ExpensesModule,
     CustomersModule,
     PricingModule,
     SalesModule,
+    // finanzas
     ReceivablesModule,
     PayablesTreasuryModule,
+    FinanceModule,
+    // reportes
     CostingModule,
     ReportingModule,
+    // sistema / soporte
     ImportsModule,
     AuditModule,
-    FinanceModule,
     AttachmentsModule,
   ],
 })

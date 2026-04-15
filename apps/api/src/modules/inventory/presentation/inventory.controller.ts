@@ -53,6 +53,10 @@ export class InventoryController {
   @UsePipes(new ZodValidationPipe(createInternalTransferSchema))
   createInternalTransfer(@Body() payload: CreateInternalTransferDto) { return this.service.createInternalTransfer(payload); }
 
+  @Post("transfers/register")
+  @UsePipes(new ZodValidationPipe(createInternalTransferSchema))
+  registerTransfer(@Body() payload: CreateInternalTransferDto) { return this.service.createInternalTransfer(payload); }
+
   @Get("cycle-counts")
   listCycleCounts() { return this.service.listCounts("cycle"); }
 

@@ -127,6 +127,17 @@ describe("production integration", () => {
     await expect(service.reserveMaterials("op-missing")).rejects.toBeInstanceOf(NotFoundException);
   });
 
+  it("registra consumo explícito cuando el lote está en proceso", async () => {
+    const service = new ProductionService({
+      findBatch: vi.fn(async () => ({ id: "batch-1", status: "in_process" })),
+    } as never);
+
+    const result = await service.registerConsumption("batch-1", [{ itemId: "rm-1", plannedQty: 20, actualQty: 19.5 }]);
+
+    expect(result.event).toBe("production.batch.consumption.registered");
+    expect(result.consumptions).toHaveLength(1);
+  });
+
   it("genera orden de fraccionamiento si lote madre no está retenido", async () => {
     const repositoryStub = {
       findBatch: vi.fn(async () => ({ id: "batch-1", status: "released" })),

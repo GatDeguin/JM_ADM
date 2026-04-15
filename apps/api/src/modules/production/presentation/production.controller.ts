@@ -31,6 +31,9 @@ const createFractionationOrderSchema = z.object({
 const executeFractionationSchema = z.object({
   childLots: z.array(z.object({ lotCode: z.string().min(2), qty: z.number().positive() })).min(1),
 });
+const registerConsumptionSchema = z.object({
+  consumptions: z.array(z.object({ itemId: z.string().min(1), plannedQty: z.number().positive(), actualQty: z.number().positive() })).min(1),
+});
 
 @Controller("production")
 export class ProductionController {
@@ -55,6 +58,12 @@ export class ProductionController {
   @Post(":id/start-batch")
   start(@Param("id") id: string) {
     return this.productionService.start(id);
+  }
+
+  @Post(":id/register-consumption")
+  @UsePipes(new ZodValidationPipe(registerConsumptionSchema))
+  registerConsumption(@Param("id") id: string, @Body() body: z.infer<typeof registerConsumptionSchema>) {
+    return this.productionService.registerConsumption(id, body.consumptions);
   }
 
   @Post(":id/close-batch")
