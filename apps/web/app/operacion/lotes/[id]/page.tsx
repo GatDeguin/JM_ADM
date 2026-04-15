@@ -11,7 +11,7 @@ export function generateStaticParams() {
 export default async function BatchDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   return (
-    <Layout title="Lote">
+    <Layout title="Lote" transitionPreset="section-slide">
       <PageHeader title={`Lote ${id}`} subtitle="Trazabilidad end-to-end" />
       <TraceTimeline
         nodes={[

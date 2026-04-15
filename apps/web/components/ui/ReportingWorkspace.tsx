@@ -98,7 +98,7 @@ export function ReportingWorkspace({ title, subtitle, mode }: Props) {
   );
 
   return (
-    <Layout title={title}>
+    <Layout title={title} transitionPreset="soft-fade">
       <PageHeader title={title} subtitle={subtitle} />
 
       <section className="card-base">

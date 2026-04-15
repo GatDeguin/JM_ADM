@@ -266,7 +266,7 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
   const selectedRecord = records.find((r) => r.id === selected) ?? null;
 
   return (
-    <Layout title={config.title}>
+    <Layout title={config.title} transitionPreset="elevate-in">
       <PageHeader title={config.title} subtitle={config.subtitle} />
 
       <div className="mb-4 grid gap-3 md:grid-cols-3">
