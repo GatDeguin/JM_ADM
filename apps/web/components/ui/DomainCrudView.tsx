@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Layout } from "@/components/layout";
@@ -38,6 +38,10 @@ type DomainRuleConfig = {
   warnings: string[];
   blockReason?: string;
 };
+
+type SaveState = "idle" | "saving" | "success";
+
+type HighlightKind = "new" | "updated";
 
 const domainRuleMap: Record<string, DomainRuleConfig> = {
   "operacion-produccion": {
@@ -113,10 +117,22 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
   const { pushToast } = useToasts();
   const [leftId, setLeftId] = useState<string>("");
   const [rightId, setRightId] = useState<string>("");
+  const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [highlights, setHighlights] = useState<Record<string, HighlightKind>>({});
+  const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const form = useForm<FormValues>({
     defaultValues: { name: "", code: "", status: "draft" }
   });
+
+  useEffect(
+    () => () => {
+      if (successTimeoutRef.current) {
+        clearTimeout(successTimeoutRef.current);
+      }
+    },
+    []
+  );
 
   const options: SmartSelectorOption[] = useMemo(() => records.map((r) => ({ id: r.id, label: r.name, meta: `${r.code} · ${r.status}` })), [records]);
 
@@ -125,9 +141,20 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
   const currentWarning = currentRules.disabledStatuses.includes(selectedStatus)
     ? `Estado bloqueado para ${domain}: corregí el registro para poder guardar.`
     : currentRules.blockReason;
-  const saveBlocked = Boolean(currentWarning);
+  const saveBlocked = Boolean(currentWarning) || saveState === "saving";
 
-  const onSubmit = form.handleSubmit((values) => {
+  const markRow = (id: string, kind: HighlightKind) => {
+    setHighlights((prev) => ({ ...prev, [id]: kind }));
+    setTimeout(() => {
+      setHighlights((prev) => {
+        const clone = { ...prev };
+        delete clone[id];
+        return clone;
+      });
+    }, 1700);
+  };
+
+  const onSubmit = form.handleSubmit(async (values) => {
     setSuccess(null);
     const parsed = formSchema.safeParse(values);
     if (!parsed.success) {
@@ -140,17 +167,42 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
       return;
     }
 
-    const newRecord: DomainRecord = {
-      id: `${domain}-${Date.now()}`,
-      name: parsed.data.name,
-      code: parsed.data.code,
-      status: parsed.data.status,
-      updatedAt: new Date().toISOString().slice(0, 10)
-    };
-    setRecords((prev) => [newRecord, ...prev]);
-    setSelected(newRecord.id);
-    setSuccess("Registro guardado correctamente.");
-    pushToast({ title: "Registro guardado", description: parsed.data.name, tone: "success" });
+    setSaveState("saving");
+    await new Promise((resolve) => setTimeout(resolve, 450));
+
+    const currentDate = new Date().toISOString().slice(0, 10);
+    const editing = selected ? records.find((record) => record.id === selected) : null;
+
+    if (editing) {
+      const updated: DomainRecord = { ...editing, ...parsed.data, updatedAt: currentDate };
+      setRecords((prev) => prev.map((item) => (item.id === editing.id ? updated : item)));
+      setSuccess("Registro actualizado correctamente.");
+      setSelected(updated.id);
+      markRow(updated.id, "updated");
+      pushToast({ title: "Registro actualizado", description: updated.name, tone: "success" });
+    } else {
+      const created: DomainRecord = {
+        id: `${domain}-${Date.now()}`,
+        name: parsed.data.name,
+        code: parsed.data.code,
+        status: parsed.data.status,
+        updatedAt: currentDate
+      };
+      setRecords((prev) => [created, ...prev]);
+      setSelected(created.id);
+      setSuccess("Registro guardado correctamente.");
+      markRow(created.id, "new");
+      pushToast({ title: "Registro guardado", description: parsed.data.name, tone: "success" });
+    }
+
+    setSaveState("success");
+    if (successTimeoutRef.current) {
+      clearTimeout(successTimeoutRef.current);
+    }
+    successTimeoutRef.current = setTimeout(() => {
+      setSaveState("idle");
+      successTimeoutRef.current = null;
+    }, 1300);
     form.reset({ name: "", code: "", status: "draft" });
   });
 
@@ -184,6 +236,7 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
               updatedAt: new Date().toISOString().slice(0, 10)
             };
             setRecords((prev) => [created, ...prev]);
+            markRow(created.id, "new");
             setSuccess("Alta rápida creada correctamente.");
             pushToast({ title: "Alta rápida creada", description: created.name, tone: "success" });
             return { id: created.id, label: created.name, meta: created.code };
@@ -202,26 +255,51 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
           <div className="grid gap-3 md:grid-cols-2">
             <label htmlFor="domain-name">
               <span className="mb-1 block text-sm font-medium">Nombre</span>
-              <input id="domain-name" className="input-base w-full" {...form.register("name")} />
+              <input
+                id="domain-name"
+                className={`input-base focus-premium w-full ${form.formState.errors.name ? "border-red-300" : ""}`}
+                {...form.register("name")}
+              />
+              {form.formState.errors.name ? <p className="mt-1 text-sm text-red-600 animate-inline-status">{form.formState.errors.name.message}</p> : null}
             </label>
             <label htmlFor="domain-code">
               <span className="mb-1 block text-sm font-medium">Código</span>
-              <input id="domain-code" className="input-base w-full" {...form.register("code")} />
+              <input
+                id="domain-code"
+                className={`input-base focus-premium w-full ${form.formState.errors.code ? "border-red-300" : ""}`}
+                {...form.register("code")}
+              />
+              {form.formState.errors.code ? <p className="mt-1 text-sm text-red-600 animate-inline-status">{form.formState.errors.code.message}</p> : null}
             </label>
             <label htmlFor="domain-status">
               <span className="mb-1 block text-sm font-medium">Estado</span>
-              <select id="domain-status" className="input-base w-full" {...form.register("status")}>
+              <select
+                id="domain-status"
+                className={`input-base focus-premium w-full ${form.formState.errors.status ? "border-red-300" : ""}`}
+                {...form.register("status")}
+              >
                 <option value="draft">Borrador</option>
                 <option value="active">Activo</option>
                 <option value="blocked">Bloqueado</option>
               </select>
+              {form.formState.errors.status ? <p className="mt-1 text-sm text-red-600 animate-inline-status">{form.formState.errors.status.message}</p> : null}
             </label>
           </div>
-          {form.formState.errors.name ? <p className="mt-2 text-sm text-red-600">{form.formState.errors.name.message}</p> : null}
-          {form.formState.errors.status ? <p className="mt-2 text-sm text-red-600">{form.formState.errors.status.message}</p> : null}
-          {currentWarning ? <p className="mt-2 text-sm text-amber-700">⛔ {currentWarning}</p> : null}
-          <button className="btn-primary mt-3" type="submit" disabled={saveBlocked}>
-            Guardar
+          {currentWarning ? <p className="mt-2 text-sm text-amber-700 animate-inline-status">⛔ {currentWarning}</p> : null}
+          <button className="btn-primary mt-3 inline-flex items-center gap-2 focus-premium" type="submit" disabled={saveBlocked}>
+            {saveState === "saving" ? (
+              <>
+                <svg className="h-4 w-4 animate-spin text-white dark:text-zinc-900" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" className="opacity-30" stroke="currentColor" strokeWidth="3" />
+                  <path d="M12 3a9 9 0 0 1 9 9" className="opacity-100" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                </svg>
+                Guardando...
+              </>
+            ) : saveState === "success" ? (
+              <span className="animate-inline-status">✓ Guardado</span>
+            ) : (
+              "Guardar"
+            )}
           </button>
         </form>
       </div>
@@ -240,6 +318,13 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
         ]}
         rows={records}
         rowId={(r) => r.id}
+        getRowClassName={(row) =>
+          highlights[row.id] === "new"
+            ? "animate-row-highlight-new bg-emerald-50/70 dark:bg-emerald-950/20"
+            : highlights[row.id] === "updated"
+              ? "animate-row-highlight-updated bg-sky-50/70 dark:bg-sky-950/20"
+              : ""
+        }
         onCreate={() => form.setFocus("name")}
         onEdit={(row) => {
           form.reset({ name: row.name, code: row.code, status: row.status });
