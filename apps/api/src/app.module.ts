@@ -22,6 +22,7 @@ import { ReportingModule } from "./modules/reporting/reporting.module";
 import { ImportsModule } from "./modules/imports/imports.module";
 import { AuditModule } from "./modules/audit/audit.module";
 import { FinanceModule } from "./modules/finance/finance.module";
+import { AttachmentsModule } from "./modules/attachments/attachments.module";
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { FinanceModule } from "./modules/finance/finance.module";
     ImportsModule,
     AuditModule,
     FinanceModule,
+    AttachmentsModule,
   ],
 })
 export class AppModule {}

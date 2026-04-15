@@ -1094,3 +1094,23 @@ model ImportJob {
   @@index([status])
   @@index([createdAt])
 }
+
+
+model Attachment {
+  id         String   @id @default(cuid())
+  entityType String
+  entityId   String
+  fileName   String
+  mimeType   String
+  size       Int
+  bucket     String
+  objectKey  String
+  etag       String?
+  url        String
+  status     String   @default("uploaded")
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
