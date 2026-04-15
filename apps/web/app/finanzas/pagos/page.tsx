@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { PaymentsPage } from "@/components/finance/PaymentsPage";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Finanzas · Pagos"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="finanzas-pagos"
-    />
-  );
+  return <PaymentsPage />;
 }

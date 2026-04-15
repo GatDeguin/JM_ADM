@@ -1,5 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { NewSalePage } from "@/components/sales/NewSalePage";
 
 export default function Page() {
-  return <DomainCrudView title="Ventas · Pedido" subtitle="Pedido con validación cliente/lista/SKU" domain="ventas-pedido-validacion" />;
+  return <NewSalePage />;
 }
