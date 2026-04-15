@@ -30,20 +30,31 @@ export class ProductionService {
 
   async create(code: string, productBaseId: string, formulaVersionId: string, plannedQty: number) {
     assertPositiveNumber(plannedQty, "La cantidad planificada");
-    const formulaVersion = await this.productionRepository.findFormulaVersion(formulaVersionId);
+
+    const productBase = await this.productionRepository.findProductBase(productBaseId);
+    if (!productBase) {
+      throw new NotFoundException("Producto base no encontrado.");
+    }
+
+    const activeFormulaVersionId = productBase.activeFormulaVersionId ?? formulaVersionId;
+    if (!activeFormulaVersionId) {
+      throw new ConflictException("El producto base no tiene una versión de fórmula activa.");
+    }
+
+    const formulaVersion = await this.productionRepository.findFormulaVersion(activeFormulaVersionId);
     if (!formulaVersion || formulaVersion.status !== "approved") {
       throw new ConflictException("La OP sólo puede crearse con una fórmula vigente y aprobada.");
     }
 
     try {
-      const order = await this.productionRepository.createOrder(code, productBaseId, formulaVersionId, plannedQty);
+      const order = await this.productionRepository.createOrder(code, productBaseId, activeFormulaVersionId, plannedQty);
       await this.productionRepository.calculateTheoreticalMaterials(order.id);
 
       await this.auditTrail.logTransactionalAction({
         entity: "production_order",
         entityId: order.id,
         origin: "production.create",
-        after: { code: order.code, status: order.status, formulaVersionId, plannedQty },
+        after: { code: order.code, status: order.status, formulaVersionId: activeFormulaVersionId, plannedQty },
       });
       this.domainEvents.emit({
         name: "production.order.created",

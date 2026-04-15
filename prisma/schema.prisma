@@ -270,22 +270,25 @@ model Item {
 }
 
 model ProductBase {
-  id              String            @id @default(cuid())
-  code            String            @unique
-  name            String
-  familyId        String?
-  variantId       String?
-  lineId          String?
-  status          EntityStatus      @default(active)
-  family          Family?           @relation(fields: [familyId], references: [id])
-  variant         Variant?          @relation(fields: [variantId], references: [id])
-  line            Line?             @relation(fields: [lineId], references: [id])
-  SKU             SKU[]
-  ProductionOrder ProductionOrder[]
+  id                     String            @id @default(cuid())
+  code                   String            @unique
+  name                   String
+  familyId               String?
+  variantId              String?
+  lineId                 String?
+  activeFormulaVersionId String?
+  status                 EntityStatus      @default(active)
+  family                 Family?           @relation(fields: [familyId], references: [id])
+  variant                Variant?          @relation(fields: [variantId], references: [id])
+  line                   Line?             @relation(fields: [lineId], references: [id])
+  activeFormulaVersion   FormulaVersion?   @relation("ProductBaseActiveFormula", fields: [activeFormulaVersionId], references: [id])
+  SKU                    SKU[]
+  ProductionOrder        ProductionOrder[]
 
   @@index([familyId])
   @@index([lineId])
   @@index([variantId])
+  @@index([activeFormulaVersionId])
   @@index([status])
 }
 
@@ -375,16 +378,17 @@ model FormulaTemplate {
 }
 
 model FormulaVersion {
-  id               String             @id @default(cuid())
-  templateId       String
-  version          Int
-  status           FormulaStatus      @default(draft)
-  warning          String?
-  template         FormulaTemplate    @relation(fields: [templateId], references: [id])
-  FormulaComponent FormulaComponent[]
-  FormulaStep      FormulaStep[]
-  FormulaApproval  FormulaApproval[]
-  ProductionOrder  ProductionOrder[]
+  id                      String             @id @default(cuid())
+  templateId              String
+  version                 Int
+  status                  FormulaStatus      @default(draft)
+  warning                 String?
+  template                FormulaTemplate    @relation(fields: [templateId], references: [id])
+  FormulaComponent        FormulaComponent[]
+  FormulaStep             FormulaStep[]
+  FormulaApproval         FormulaApproval[]
+  ProductionOrder         ProductionOrder[]
+  ProductBaseActiveFor    ProductBase[]      @relation("ProductBaseActiveFormula")
 
   @@unique([templateId, version])
   @@index([templateId, status])
