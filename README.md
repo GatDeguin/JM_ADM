@@ -258,7 +258,7 @@ docker compose up --build api worker web
 
 Flujo recomendado para demo:
 
-1. `bootstrap` espera PostgreSQL/Redis/MinIO, ejecuta migraciones (`prisma migrate deploy`) y seed inicial.
+1. `bootstrap` espera PostgreSQL/Redis/MinIO y ejecuta el flujo reproducible `pnpm bootstrap:full` (`db:migrate:deploy` + `db:seed` + `import:demo` + `bootstrap-check`).
 2. `api` levanta NestJS sin worker BullMQ embebido.
 3. `worker` levanta NestJS en modo worker (`APP_ROLE=worker`) para procesar la cola de importaciones.
 4. `web` se inicia cuando la API está healthy.
@@ -298,6 +298,30 @@ Desde raíz del monorepo:
 - `pnpm db:seed`
 - `pnpm db:reset`
 - `pnpm import:demo`
+- `pnpm bootstrap:check`
+- `pnpm bootstrap:full`
+
+### Bootstrap reproducible (full)
+
+Para reconstruir el dataset de onboarding/demo de punta a punta:
+
+```bash
+pnpm bootstrap:full
+```
+
+Este comando corre secuencialmente:
+
+1. `pnpm db:migrate:deploy`
+2. `pnpm db:seed`
+3. `pnpm import:demo`
+4. `pnpm bootstrap:check`
+
+`bootstrap:check` valida:
+
+- usuarios demo requeridos,
+- catálogo mínimo (familias, variantes, presentaciones),
+- alias obligatorios preservando `originalValue`,
+- transacciones demo críticas (`OP-2026-0001`, `LOT-BAL-OR-260401`, `OV-2026-0001`, `REC-2026-0001`, `PAG-2026-0001`).
 
 ---
 
