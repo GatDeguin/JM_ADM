@@ -1,0 +1,6 @@
+node_modules/
+.pnpm-store/
+apps/web/.next/
+apps/api/dist/
+playwright-report/
+test-results/
