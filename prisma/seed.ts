@@ -11,6 +11,17 @@ import {
 const prisma = new PrismaClient();
 
 const DEMO_PASSWORD = "demo1234";
+const MODULES = [
+  "catalog",
+  "technical",
+  "operations",
+  "inventory",
+  "procurement",
+  "commercial",
+  "finance",
+  "reporting",
+  "system",
+] as const;
 
 async function upsertByName<T extends { name: string }>(
   data: T[],
@@ -18,6 +29,118 @@ async function upsertByName<T extends { name: string }>(
 ) {
   for (const row of data) {
     await upsert(row.name);
+  }
+}
+
+async function runSeedChecks() {
+  const mandatoryFamilies = [
+    "Shampoo",
+    "Acondicionador / Bálsamo",
+    "Baño de crema",
+    "Líquidos",
+    "Cremas",
+    "Máscara",
+    "Tratamiento en crema",
+    "Protector térmico / Leave-in",
+    "Crema de peinar",
+    "Ampolla",
+    "Aceite / Sérum",
+    "Perfume capilar",
+    "Coloración",
+  ];
+  const mandatoryVariants = ["Oro", "Cherry", "Rejuvelac", "Purple Plex"];
+  const mandatoryProductBases = ["PB-BCR-OR", "PB-PTL-OR", "PB-AMP-RJ", "PB-SHA-OR", "PB-TRC-OR"];
+  const mandatoryPresentations = ["granel", "1L", "500ML", "250ML", "120ml", "30ML"];
+  const mandatoryAliases = [
+    "ORO CREMA",
+    "ORO LIQUIDO",
+    "REJUVELAC",
+    "SH OR",
+    "SH OR 500",
+    "AÇAÍ",
+    "ORQUIDEA",
+  ];
+
+  const [families, variants, productBases, presentations, aliases] = await Promise.all([
+    prisma.family.findMany({ select: { name: true } }),
+    prisma.variant.findMany({ select: { name: true } }),
+    prisma.productBase.findMany({ select: { code: true } }),
+    prisma.presentation.findMany({ select: { name: true } }),
+    prisma.entityAlias.findMany({ select: { alias: true, status: true } }),
+  ]);
+
+  const assertContains = (scope: string, needed: string[], existing: string[]) => {
+    const missing = needed.filter((entry) => !existing.includes(entry));
+    if (missing.length > 0) {
+      throw new Error(`[seed-check] Faltan ${scope}: ${missing.join(", ")}`);
+    }
+  };
+
+  assertContains(
+    "familias",
+    mandatoryFamilies,
+    families.map((x) => x.name),
+  );
+  assertContains(
+    "variantes",
+    mandatoryVariants,
+    variants.map((x) => x.name),
+  );
+  assertContains(
+    "productos base",
+    mandatoryProductBases,
+    productBases.map((x) => x.code),
+  );
+  assertContains(
+    "presentaciones",
+    mandatoryPresentations,
+    presentations.map((x) => x.name),
+  );
+  assertContains(
+    "alias obligatorios",
+    mandatoryAliases,
+    aliases.map((x) => x.alias),
+  );
+
+  const pendingAmbiguousAliases = aliases.filter(
+    (x) => x.status === EntityStatus.pending_homologation,
+  );
+  if (pendingAmbiguousAliases.length < 5) {
+    throw new Error(
+      `[seed-check] Se esperaban al menos 5 alias ambiguos pending_homologation y hay ${pendingAmbiguousAliases.length}`,
+    );
+  }
+
+  const [
+    productionOrder,
+    batch,
+    packagingOrder,
+    stockMovement,
+    salesOrder,
+    receipt,
+    payment,
+    costSnapshot,
+    marginSnapshot,
+  ] = await Promise.all([
+    prisma.productionOrder.findFirst({ where: { code: "OP-2026-0001" } }),
+    prisma.batch.findFirst({ where: { code: "LOT-BAL-OR-260401" } }),
+    prisma.packagingOrder.findFirst({ where: { code: "OFR-2026-0001" } }),
+    prisma.stockMovement.findFirst({ where: { id: "SMOV-001" } }),
+    prisma.salesOrder.findFirst({ where: { code: "OV-2026-0001" } }),
+    prisma.receipt.findFirst({ where: { code: "REC-2026-0001" } }),
+    prisma.payment.findFirst({ where: { code: "PAG-2026-0001" } }),
+    prisma.costSnapshot.findFirst({ where: { key: "demo_e2e_costs_2026_04" } }),
+    prisma.marginSnapshot.findFirst({ where: { key: "demo_e2e_margins_2026_04" } }),
+  ]);
+
+  if (!productionOrder || !batch || !packagingOrder || !stockMovement) {
+    throw new Error("[seed-check] Flujo de operación/stock incompleto.");
+  }
+  if (!salesOrder || !receipt || !payment) {
+    throw new Error("[seed-check] Flujo comercial/finanzas incompleto.");
+  }
+  if (!costSnapshot || !marginSnapshot) {
+    throw new Error("[seed-check] Faltan snapshots de costos/reportes.");
   }
 }
 
@@ -43,6 +166,83 @@ async function main() {
       where: { email: user.email },
       update: { name: user.name, status: user.status },
       create: user,
+    });
+  }
+
+  const permissions = [
+    ...MODULES.map((module) => `${module}:read`),
+    ...MODULES.map((module) => `${module}:write`),
+    "users:manage",
+    "roles:manage",
+    "imports:manage",
+    "reports:export",
+  ];
+  for (const key of permissions) {
+    await prisma.permission.upsert({
+      where: { key },
+      update: {},
+      create: { key },
+    });
+  }
+
+  const roleByName = new Map((await prisma.role.findMany()).map((x) => [x.name, x.id]));
+  const permissionByKey = new Map((await prisma.permission.findMany()).map((x) => [x.key, x.id]));
+  const rolePermissionMatrix: Record<string, string[]> = {
+    admin: permissions,
+    direccion: [...MODULES.map((module) => `${module}:read`), "reporting:write", "reports:export"],
+    produccion: [
+      "catalog:read",
+      "technical:read",
+      "technical:write",
+      "operations:read",
+      "operations:write",
+      "inventory:read",
+      "inventory:write",
+      "reporting:read",
+    ],
+    comercial: [
+      "catalog:read",
+      "commercial:read",
+      "commercial:write",
+      "inventory:read",
+      "finance:read",
+      "reporting:read",
+      "reports:export",
+    ],
+    finanzas: [
+      "commercial:read",
+      "procurement:read",
+      "finance:read",
+      "finance:write",
+      "reporting:read",
+      "reporting:write",
+      "reports:export",
+    ],
+  };
+
+  for (const [roleName, permissionKeys] of Object.entries(rolePermissionMatrix)) {
+    const roleId = roleByName.get(roleName)!;
+    for (const permissionKey of permissionKeys) {
+      await prisma.rolePermission.upsert({
+        where: {
+          roleId_permissionId: { roleId, permissionId: permissionByKey.get(permissionKey)! },
+        },
+        update: {},
+        create: {
+          roleId,
+          permissionId: permissionByKey.get(permissionKey)!,
+        },
+      });
+    }
+  }
+
+  for (const user of users) {
+    const roleId = roleByName.get(user.name)!;
+    const userRow = await prisma.user.findUniqueOrThrow({ where: { email: user.email } });
+    await prisma.userRole.upsert({
+      where: { userId_roleId: { userId: userRow.id, roleId } },
+      update: {},
+      create: { userId: userRow.id, roleId },
     });
   }
 
@@ -171,15 +371,9 @@ async function main() {
       }),
   );
 
-  const familyByName = new Map(
-    (await prisma.family.findMany()).map((x) => [x.name, x.id]),
-  );
-  const lineByName = new Map(
-    (await prisma.line.findMany()).map((x) => [x.name, x.id]),
-  );
-  const variantByName = new Map(
-    (await prisma.variant.findMany()).map((x) => [x.name, x.id]),
-  );
+  const familyByName = new Map((await prisma.family.findMany()).map((x) => [x.name, x.id]));
+  const lineByName = new Map((await prisma.line.findMany()).map((x) => [x.name, x.id]));
+  const variantByName = new Map((await prisma.variant.findMany()).map((x) => [x.name, x.id]));
 
   const productBases = [
     ["PB-SHA-CH", "Shampoo Cherry", "Shampoo", "Cherry", "Cherry"],
@@ -192,44 +386,16 @@ async function main() {
       "Vainilla & Coco",
       "Vainilla y Coco",
     ],
-    [
-      "PB-MAS-PP",
-      "Máscara Purple Plex",
-      "Máscara",
-      "Purple Plex",
-      "Purple Plex",
-    ],
-    [
-      "PB-TRC-BX",
-      "Tratamiento Botox en Crema",
-      "Tratamiento en crema",
-      "Botox",
-      "Botox",
-    ],
-    [
-      "PB-PTL-OR",
-      "Protector Térmico Oro Líquido",
-      "Protector térmico / Leave-in",
-      "Oro",
-      "Oro",
-    ],
+    ["PB-MAS-PP", "Máscara Purple Plex", "Máscara", "Purple Plex", "Purple Plex"],
+    ["PB-TRC-BX", "Tratamiento Botox en Crema", "Tratamiento en crema", "Botox", "Botox"],
+    ["PB-PTL-OR", "Protector Térmico Oro Líquido", "Protector térmico / Leave-in", "Oro", "Oro"],
+    ["PB-TRC-OR", "Tratamiento Oro en Crema", "Tratamiento en crema", "Oro", "Oro"],
+    ["PB-SHA-OR", "Shampoo Oro", "Shampoo", "Oro", "Oro"],
     ["PB-CPN-SV", "Crema de Peinar Savia", "Crema de peinar", "Savia", "Savia"],
     ["PB-AMP-RJ", "Ampolla Rejuvelac", "Ampolla", "Rejuvelac", "Rejuvelac"],
     ["PB-ACE-CV", "Aceite Caviar Puntas", "Aceite / Sérum", "Caviar", "Caviar"],
-    [
-      "PB-ACE-AM",
-      "Sérum Almendras",
-      "Aceite / Sérum",
-      "Almendras",
-      "Almendras",
-    ],
-    [
-      "PB-PFC-GU",
-      "Perfume Capilar Glow Up",
-      "Perfume capilar",
-      "Glow Up",
-      "Glow Up",
-    ],
+    ["PB-ACE-AM", "Sérum Almendras", "Aceite / Sérum", "Almendras", "Almendras"],
+    ["PB-PFC-GU", "Perfume Capilar Glow Up", "Perfume capilar", "Glow Up", "Glow Up"],
     [
       "PB-PFC-JM",
       "Perfume Capilar Jazmín & Miel",
@@ -238,64 +404,16 @@ async function main() {
       "Jazmín y Miel",
     ],
     ["PB-LIQ-AR", "Líquido Capilar Argán", "Líquidos", "Argán", "Argán"],
-    [
-      "PB-LIQ-RM",
-      "Loción Romero & Ortiga",
-      "Líquidos",
-      "Romero & Ortiga",
-      "Romero y Ortiga",
-    ],
-    [
-      "PB-CRE-MD",
-      "Crema Capilar Macadamia",
-      "Cremas",
-      "Macadamia",
-      "Macadamia",
-    ],
-    [
-      "PB-CRE-CM",
-      "Crema Capilar Células Madre",
-      "Cremas",
-      "Células Madre",
-      "Células Madre",
-    ],
+    ["PB-LIQ-RM", "Loción Romero & Ortiga", "Líquidos", "Romero & Ortiga", "Romero y Ortiga"],
+    ["PB-CRE-MD", "Crema Capilar Macadamia", "Cremas", "Macadamia", "Macadamia"],
+    ["PB-CRE-CM", "Crema Capilar Células Madre", "Cremas", "Células Madre", "Células Madre"],
     ["PB-BRB-BK", "Shampoo Barber Black", "Barber", "Barber", "Black"],
     ["PB-SHA-AC", "Shampoo Açaí", "Shampoo", "Açaí", "Açaí"],
-    [
-      "PB-SHA-AL",
-      "Shampoo Aloe & Palta",
-      "Shampoo",
-      "Aloe & Palta",
-      "Aloe y Palta",
-    ],
-    [
-      "PB-SHA-RS",
-      "Shampoo Restructure",
-      "Shampoo",
-      "Restructure",
-      "Restructure",
-    ],
-    [
-      "PB-COL-PP",
-      "Matizador Purple Plex",
-      "Coloración",
-      "Purple Plex",
-      "Purple Plex",
-    ],
-    [
-      "PB-COL-BS",
-      "Baño de Seda Matizador",
-      "Coloración",
-      "Baño de Seda",
-      "Baño de Seda",
-    ],
-    [
-      "PB-ACT-AH",
-      "Activo Ácido Hialurónico",
-      "Activos",
-      "Ácido Hialurónico",
-      "Ácido",
-    ],
+    ["PB-SHA-AL", "Shampoo Aloe & Palta", "Shampoo", "Aloe & Palta", "Aloe y Palta"],
+    ["PB-SHA-RS", "Shampoo Restructure", "Shampoo", "Restructure", "Restructure"],
+    ["PB-COL-PP", "Matizador Purple Plex", "Coloración", "Purple Plex", "Purple Plex"],
+    ["PB-COL-BS", "Baño de Seda Matizador", "Coloración", "Baño de Seda", "Baño de Seda"],
+    ["PB-ACT-AH", "Activo Ácido Hialurónico", "Activos", "Ácido Hialurónico", "Ácido"],
     ["PB-FRA-NE", "Fragancia Neutral", "Fragancias", "Neutral", "Neutral"],
     ["PB-INS-NB", "Base Neutra", "Insumos base", "Neutral", "Neutral"],
   ] as const;
@@ -321,9 +439,7 @@ async function main() {
     });
   }
 
-  const unitByCode = new Map(
-    (await prisma.unit.findMany()).map((x) => [x.code, x.id]),
-  );
+  const unitByCode = new Map((await prisma.unit.findMany()).map((x) => [x.code, x.id]));
   const presentations = [
     ["granel", "KG", "1"],
     ["5L", "L", "5"],
@@ -357,12 +473,8 @@ async function main() {
     });
   }
 
-  const userByEmail = new Map(
-    (await prisma.user.findMany()).map((x) => [x.email, x.id]),
-  );
-  const pbByCode = new Map(
-    (await prisma.productBase.findMany()).map((x) => [x.code, x.id]),
-  );
+  const userByEmail = new Map((await prisma.user.findMany()).map((x) => [x.email, x.id]));
+  const pbByCode = new Map((await prisma.productBase.findMany()).map((x) => [x.code, x.id]));
   const presentationByName = new Map(
     (await prisma.presentation.findMany()).map((x) => [x.name, x.id]),
   );
@@ -372,6 +484,8 @@ async function main() {
     ["SKU-SHA-CH-1000", "PB-SHA-CH", "1L", "7790000000030"],
     ["SKU-BAL-OR-500", "PB-BAL-OR", "500ML", "7790000000011"],
     ["SKU-BCR-OR-1000", "PB-BCR-OR", "1L", "7790000000012"],
+    ["SKU-SHA-OR-500", "PB-SHA-OR", "500ML", "7790000000043"],
+    ["SKU-TRC-OR-250", "PB-TRC-OR", "250ML", "7790000000044"],
     ["SKU-BCR-VC-1000", "PB-BCR-VC", "1L", "7790000000031"],
     ["SKU-MAS-PP-250", "PB-MAS-PP", "250ML", "7790000000013"],
     ["SKU-TRC-BX-250", "PB-TRC-BX", "250ML", "7790000000014"],
@@ -430,10 +544,7 @@ async function main() {
     (await prisma.variant.findMany()).map((x) => [x.name.toUpperCase(), x.id]),
   );
   const presentationByNormalized = new Map(
-    (await prisma.presentation.findMany()).map((x) => [
-      x.name.toUpperCase(),
-      x.id,
-    ]),
+    (await prisma.presentation.findMany()).map((x) => [x.name.toUpperCase(), x.id]),
   );
   const skuByNormalized = new Map(
     (await prisma.sKU.findMany()).map((x) => [x.code.toUpperCase(), x.id]),
@@ -448,14 +559,7 @@ async function main() {
       EntityStatus.active,
       "ENJUAGUE",
     ],
-    [
-      "family",
-      "LIQUIDO",
-      "Líquidos",
-      "Líquidos",
-      EntityStatus.active,
-      "LIQUIDO",
-    ],
+    ["family", "LIQUIDO", "Líquidos", "Líquidos", EntityStatus.active, "LIQUIDO"],
     [
       "family",
       "TRATAMIENTO CREMA",
@@ -464,14 +568,7 @@ async function main() {
       EntityStatus.active,
       "TRATAMIENTO CREMA",
     ],
-    [
-      "family",
-      "SERUM",
-      "Aceite / Sérum",
-      "Aceite / Sérum",
-      EntityStatus.active,
-      "SERUM",
-    ],
+    ["family", "SERUM", "Aceite / Sérum", "Aceite / Sérum", EntityStatus.active, "SERUM"],
     ["line", "ARGAN", "Argán", "Argán", EntityStatus.active, "ARGAN"],
     [
       "line",
@@ -497,50 +594,15 @@ async function main() {
       EntityStatus.active,
       "JAZMIN Y MIEL",
     ],
-    [
-      "line",
-      "LIFTING",
-      null,
-      "Lifting Oro",
-      EntityStatus.pending_homologation,
-      "LIFTING",
-    ],
+    ["line", "LIFTING", null, "Lifting Oro", EntityStatus.pending_homologation, "LIFTING"],
     ["variant", "ACAI", "Açaí", "Açaí", EntityStatus.active, "ACAI"],
-    [
-      "variant",
-      "AÇAÍ",
-      null,
-      "Açaí",
-      EntityStatus.pending_homologation,
-      "AÇAÍ",
-    ],
-    [
-      "variant",
-      "ALOE PALTA",
-      "Aloe y Palta",
-      "Aloe y Palta",
-      EntityStatus.active,
-      "ALOE PALTA",
-    ],
-    [
-      "variant",
-      "ORQUIDEA",
-      null,
-      null,
-      EntityStatus.pending_homologation,
-      "ORQUIDEA",
-    ],
+    ["variant", "AÇAÍ", null, "Açaí", EntityStatus.pending_homologation, "AÇAÍ"],
+    ["variant", "ALOE PALTA", "Aloe y Palta", "Aloe y Palta", EntityStatus.active, "ALOE PALTA"],
+    ["variant", "ORQUIDEA", null, null, EntityStatus.pending_homologation, "ORQUIDEA"],
     ["presentation", "500", "500ML", "500ML", EntityStatus.active, "500"],
     ["presentation", "1LT", "1L", "1L", EntityStatus.active, "1LT"],
     ["presentation", "120 ML", "120ml", "120ml", EntityStatus.active, "120 ML"],
-    [
-      "presentation",
-      "GRANEL KG",
-      "granel",
-      "granel",
-      EntityStatus.active,
-      "GRANEL KG",
-    ],
+    ["presentation", "GRANEL KG", "granel", "granel", EntityStatus.active, "GRANEL KG"],
     [
       "product_base",
       "ORO CREMA",
@@ -551,11 +613,19 @@ async function main() {
     ],
     [
       "product_base",
-      "ORO LIQ",
+      "ORO LIQUIDO",
       "PB-PTL-OR",
       "Protector Térmico Oro Líquido",
       EntityStatus.active,
       "ORO LIQUIDO",
+    ],
+    [
+      "product_base",
+      "REJUVELAC",
+      "PB-AMP-RJ",
+      "Ampolla Rejuvelac",
+      EntityStatus.active,
+      "REJUVELAC",
     ],
     [
       "product_base",
@@ -565,22 +635,8 @@ async function main() {
       EntityStatus.pending_homologation,
       "LEVANTA MUERTOS",
     ],
-    [
-      "product_base",
-      "BANO ORO",
-      "PB-BCR-OR",
-      "Baño de Crema Oro",
-      EntityStatus.active,
-      "BANO ORO",
-    ],
-    [
-      "product_base",
-      "SH OR",
-      null,
-      "Shampoo Oro",
-      EntityStatus.pending_homologation,
-      "SH OR",
-    ],
+    ["product_base", "BANO ORO", "PB-BCR-OR", "Baño de Crema Oro", EntityStatus.active, "BANO ORO"],
+    ["product_base", "SH OR", null, "Shampoo Oro", EntityStatus.pending_homologation, "SH OR"],
     [
       "product_base",
       "SERUM ALMENDRA",
@@ -605,22 +661,8 @@ async function main() {
       EntityStatus.active,
       "PERFUME JAZMIN",
     ],
-    [
-      "sku",
-      "SH CH 500",
-      "SKU-SHA-CH-500",
-      "SKU-SHA-CH-500",
-      EntityStatus.active,
-      "SH CH 500",
-    ],
-    [
-      "sku",
-      "BAL OR 500",
-      "SKU-BAL-OR-500",
-      "SKU-BAL-OR-500",
-      EntityStatus.active,
-      "BAL OR 500",
-    ],
+    ["sku", "SH CH 500", "SKU-SHA-CH-500", "SKU-SHA-CH-500", EntityStatus.active, "SH CH 500"],
+    ["sku", "BAL OR 500", "SKU-BAL-OR-500", "SKU-BAL-OR-500", EntityStatus.active, "BAL OR 500"],
     [
       "sku",
       "PP MATIZ 250",
@@ -647,34 +689,20 @@ async function main() {
     ],
   ] as const;
 
-  const canonicalIdResolver = (
-    entityType: string,
-    canonicalCode: string | null,
-  ) => {
+  const canonicalIdResolver = (entityType: string, canonicalCode: string | null) => {
     if (!canonicalCode) return null;
-    if (entityType === "product_base")
-      return pbByCode.get(canonicalCode) ?? null;
-    if (entityType === "family")
-      return familyByNormalized.get(canonicalCode.toUpperCase()) ?? null;
-    if (entityType === "line")
-      return lineByNormalized.get(canonicalCode.toUpperCase()) ?? null;
+    if (entityType === "product_base") return pbByCode.get(canonicalCode) ?? null;
+    if (entityType === "family") return familyByNormalized.get(canonicalCode.toUpperCase()) ?? null;
+    if (entityType === "line") return lineByNormalized.get(canonicalCode.toUpperCase()) ?? null;
     if (entityType === "variant")
       return variantByNormalized.get(canonicalCode.toUpperCase()) ?? null;
     if (entityType === "presentation")
       return presentationByNormalized.get(canonicalCode.toUpperCase()) ?? null;
-    if (entityType === "sku")
-      return skuByNormalized.get(canonicalCode.toUpperCase()) ?? null;
+    if (entityType === "sku") return skuByNormalized.get(canonicalCode.toUpperCase()) ?? null;
     return null;
   };
 
-  for (const [
-    entityType,
-    alias,
-    canonicalCode,
-    canonicalName,
-    status,
-    originalValue,
-  ] of aliases) {
+  for (const [entityType, alias, canonicalCode, canonicalName, status, originalValue] of aliases) {
     await prisma.entityAlias.upsert({
       where: { id: `${entityType}:${alias}` },
       update: {
@@ -754,24 +782,12 @@ async function main() {
     });
   }
 
-  const skuByCode = new Map(
-    (await prisma.sKU.findMany()).map((x) => [x.code, x.id]),
-  );
-  const customerByCode = new Map(
-    (await prisma.customer.findMany()).map((x) => [x.code, x.id]),
-  );
-  const supplierByCode = new Map(
-    (await prisma.supplier.findMany()).map((x) => [x.code, x.id]),
-  );
-  const priceListByCode = new Map(
-    (await prisma.priceList.findMany()).map((x) => [x.code, x.id]),
-  );
-  const cashByName = new Map(
-    (await prisma.cashAccount.findMany()).map((x) => [x.name, x.id]),
-  );
-  const warehouseByName = new Map(
-    (await prisma.warehouse.findMany()).map((x) => [x.name, x.id]),
-  );
+  const skuByCode = new Map((await prisma.sKU.findMany()).map((x) => [x.code, x.id]));
+  const customerByCode = new Map((await prisma.customer.findMany()).map((x) => [x.code, x.id]));
+  const supplierByCode = new Map((await prisma.supplier.findMany()).map((x) => [x.code, x.id]));
+  const priceListByCode = new Map((await prisma.priceList.findMany()).map((x) => [x.code, x.id]));
+  const cashByName = new Map((await prisma.cashAccount.findMany()).map((x) => [x.name, x.id]));
+  const warehouseByName = new Map((await prisma.warehouse.findMany()).map((x) => [x.name, x.id]));
 
   for (const [code, listCode, skuCode, price] of [
     ["PLI-MAY-1", "PL-MAY", "SKU-SHA-CH-500", "3500"],
@@ -857,9 +873,7 @@ async function main() {
       create: { code, name },
     });
   }
-  const itemByCode = new Map(
-    (await prisma.item.findMany()).map((x) => [x.code, x.id]),
-  );
+  const itemByCode = new Map((await prisma.item.findMany()).map((x) => [x.code, x.id]));
 
   const packagingSpecBySku = [
     ["SKU-SHA-CH-500", "envase", "ITM-ENV-500", "1"],
@@ -882,6 +896,12 @@ async function main() {
     ["SKU-BCR-OR-1000", "etiqueta", "ITM-ETQ-ORO", "1"],
     ["SKU-BCR-OR-1000", "caja", "ITM-CAJA-IND", "1"],
     ["SKU-BCR-OR-1000", "pack_master", "ITM-PACK-MASTER", "0.0833"],
+    ["SKU-SHA-OR-500", "envase", "ITM-ENV-500", "1"],
+    ["SKU-SHA-OR-500", "tapa", "ITM-TAP-500", "1"],
+    ["SKU-SHA-OR-500", "etiqueta", "ITM-ETQ-ORO", "1"],
+    ["SKU-TRC-OR-250", "envase", "ITM-ENV-250", "1"],
+    ["SKU-TRC-OR-250", "tapa", "ITM-TAP-250", "1"],
+    ["SKU-TRC-OR-250", "etiqueta", "ITM-ETQ-ORO", "1"],
     ["SKU-BCR-VC-1000", "envase", "ITM-ENV-1000", "1"],
     ["SKU-BCR-VC-1000", "tapa", "ITM-TAP-1000", "1"],
     ["SKU-BCR-VC-1000", "etiqueta", "ITM-ETQ-GEN", "1"],
@@ -1348,6 +1368,119 @@ async function main() {
     },
   });
 
+  await prisma.treasuryMovement.upsert({
+    where: { id: "TM-001" },
+    update: {
+      cashAccountId: cashByName.get("Banco Corriente")!,
+      type: "collection",
+      amount: "50000",
+      date: new Date("2026-04-10T13:00:00Z"),
+      reference: "REC-2026-0001",
+    },
+    create: {
+      id: "TM-001",
+      cashAccountId: cashByName.get("Banco Corriente")!,
+      type: "collection",
+      amount: "50000",
+      date: new Date("2026-04-10T13:00:00Z"),
+      reference: "REC-2026-0001",
+    },
+  });
+
+  await prisma.treasuryMovement.upsert({
+    where: { id: "TM-002" },
+    update: {
+      cashAccountId: cashByName.get("Caja ARS")!,
+      type: "payment",
+      amount: "-400",
+      date: new Date("2026-04-11T14:00:00Z"),
+      reference: "PAG-2026-0001",
+    },
+    create: {
+      id: "TM-002",
+      cashAccountId: cashByName.get("Caja ARS")!,
+      type: "payment",
+      amount: "-400",
+      date: new Date("2026-04-11T14:00:00Z"),
+      reference: "PAG-2026-0001",
+    },
+  });
+
+  await prisma.bankReconciliation.upsert({
+    where: {
+      cashAccountId_period: {
+        cashAccountId: cashByName.get("Banco Corriente")!,
+        period: "2026-04",
+      },
+    },
+    update: { status: "matched" },
+    create: {
+      cashAccountId: cashByName.get("Banco Corriente")!,
+      period: "2026-04",
+      status: "matched",
+    },
+  });
+
+  await prisma.costSnapshot.upsert({
+    where: { id: "COST-2026-04-01" },
+    update: {
+      key: "demo_e2e_costs_2026_04",
+      date: new Date("2026-04-12T00:00:00Z"),
+      payload: {
+        sku: "SKU-BAL-OR-500",
+        unitCost: 24.75,
+        materials: 18.4,
+        packaging: 4.1,
+        laborOverhead: 2.25,
+      },
+    },
+    create: {
+      id: "COST-2026-04-01",
+      key: "demo_e2e_costs_2026_04",
+      date: new Date("2026-04-12T00:00:00Z"),
+      payload: {
+        sku: "SKU-BAL-OR-500",
+        unitCost: 24.75,
+        materials: 18.4,
+        packaging: 4.1,
+        laborOverhead: 2.25,
+      },
+    },
+  });
+
+  await prisma.marginSnapshot.upsert({
+    where: { id: "MARG-2026-04-01" },
+    update: {
+      key: "demo_e2e_margins_2026_04",
+      date: new Date("2026-04-12T00:00:00Z"),
+      payload: {
+        sku: "SKU-BAL-OR-500",
+        channel: "mayorista",
+        avgSalePrice: 37,
+        unitCost: 24.75,
+        grossMarginPct: 33.11,
+      },
+    },
+    create: {
+      id: "MARG-2026-04-01",
+      key: "demo_e2e_margins_2026_04",
+      date: new Date("2026-04-12T00:00:00Z"),
+      payload: {
+        sku: "SKU-BAL-OR-500",
+        channel: "mayorista",
+        avgSalePrice: 37,
+        unitCost: 24.75,
+        grossMarginPct: 33.11,
+      },
+    },
+  });
+
+  await prisma.monthlyClose.upsert({
+    where: { month: "2026-04" },
+    update: { status: "open", closedAt: null },
+    create: { month: "2026-04", status: "open", closedAt: null },
+  });
+
   await prisma.importJob.upsert({
     where: { id: "IMP-001" },
     update: {
@@ -1403,6 +1536,8 @@ async function main() {
       },
     },
   });
+
+  await runSeedChecks();
 }
 
 main()

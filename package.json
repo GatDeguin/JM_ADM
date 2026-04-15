@@ -12,7 +12,8 @@
     "test": "pnpm -r test",
     "test:e2e": "pnpm --filter web test:e2e:smoke",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "prisma db seed",
+    "db:seed": "prisma db seed && pnpm db:seed:check",
+    "db:seed:check": "tsx scripts/seed-check.ts",
     "db:reset": "prisma migrate reset --force",
     "import:demo": "tsx scripts/import-demo.ts",
     "format": "prettier --write \".github/workflows/*.yml\" \"*.{json,md,yml,yaml,cjs}\" \"apps/api/{package.json,tsconfig.json}\" \"apps/web/{package.json,tsconfig.json,playwright.config.ts}\" \"apps/web/tests/**/*.{ts,tsx}\"",
@@ -20,6 +21,9 @@
     "test:e2e:smoke": "pnpm --filter web test:e2e:smoke",
     "test:e2e:real": "pnpm --filter web test:e2e:real",
     "test:e2e:all": "pnpm --filter web test:e2e:all"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "devDependencies": {
     "prisma": "^5.22.0",
