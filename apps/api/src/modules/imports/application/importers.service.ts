@@ -52,7 +52,11 @@ export class ImportersService {
     return (supportedImportTypes as readonly string[]).includes(type);
   }
 
-  process(type: SupportedImportType, rows: Record<string, unknown>[]): { records: ImportedRecord[]; summary: ImportSummary; warnings: string[] } {
+  process(
+    type: SupportedImportType,
+    rows: Record<string, unknown>[],
+    mapping: Record<string, string> = {},
+  ): { records: ImportedRecord[]; summary: ImportSummary; warnings: string[] } {
     const definition = importerDefinitions.find((item) => item.type === type);
     if (!definition) {
       return {
@@ -66,17 +70,17 @@ export class ImportersService {
     const warnings: string[] = [];
 
     const records = rows.map((originalRow, index) => {
-      const normalized = this.normalizeRow(originalRow, definition.aliases);
-      const key = definition.keyBuilder(normalized);
+      const canonicalValue = this.normalizeRow(originalRow, definition.aliases, mapping);
+      const key = definition.keyBuilder(canonicalValue);
       const rowWarnings: string[] = [];
 
       for (const requiredField of definition.requiredFields) {
-        if (!normalized[requiredField]) {
+        if (!canonicalValue[requiredField]) {
           rowWarnings.push(`Fila ${index + 1}: falta ${requiredField}`);
         }
       }
 
-      rowWarnings.push(...collectImportBusinessWarnings(type, normalized, index));
+      rowWarnings.push(...collectImportBusinessWarnings(type, canonicalValue, index));
 
       const duplicate = seenKeys.has(key);
       if (!duplicate) {
@@ -86,19 +90,23 @@ export class ImportersService {
       }
 
       const pendingHomologation = isPendingHomologation(
-        normalized.pending_homologation ?? normalized.pendingHomologation ?? normalized.homologacion,
+        canonicalValue.pending_homologation ?? canonicalValue.pendingHomologation ?? canonicalValue.homologacion,
       );
 
       if (pendingHomologation) {
-        normalized.status = "pending_homologation";
+        canonicalValue.status = "pending_homologation";
       }
+
+      const suggestions = this.buildSuggestions(canonicalValue, { duplicate, pendingHomologation, requiredFields: definition.requiredFields });
 
       warnings.push(...rowWarnings);
 
       return {
         key,
-        normalized,
+        originalValue: originalRow,
+        canonicalValue,
         warnings: rowWarnings,
+        suggestions,
         duplicate,
         valid: rowWarnings.length === 0,
         pendingHomologation,
@@ -117,14 +125,40 @@ export class ImportersService {
     return { records, summary, warnings };
   }
 
-  private normalizeRow(row: Record<string, unknown>, aliases: Record<string, string> = {}) {
+  private normalizeRow(row: Record<string, unknown>, aliases: Record<string, string> = {}, mapping: Record<string, string> = {}) {
     const normalized: Record<string, unknown> = {};
+    const normalizedMapping = Object.fromEntries(
+      Object.entries(mapping).map(([rawSource, target]) => [normalizeText(rawSource), normalizeText(target).replace(/\s+/g, "_")]),
+    );
 
     for (const [rawKey, value] of Object.entries(row)) {
-      const key = aliases[normalizeText(rawKey)] ?? normalizeText(rawKey).replace(/\s+/g, "_");
+      const sourceKey = normalizeText(rawKey).replace(/\s+/g, "_");
+      const key = normalizedMapping[sourceKey] ?? aliases[sourceKey] ?? sourceKey;
       normalized[key] = typeof value === "string" ? normalizeText(value) : value;
     }
 
     return normalized;
+  }
+
+  private buildSuggestions(
+    canonicalValue: Record<string, unknown>,
+    options: { duplicate: boolean; pendingHomologation: boolean; requiredFields: string[] },
+  ) {
+    const suggestions: string[] = [];
+
+    if (options.pendingHomologation) {
+      suggestions.push("Revisar homologación: crear alias o vincular con maestro existente");
+    }
+
+    if (options.duplicate) {
+      suggestions.push("Duplicado detectado: sugerido merge con registro previo por llave canónica");
+    }
+
+    const missingRequired = options.requiredFields.filter((field) => !canonicalValue[field]);
+    if (missingRequired.length > 0) {
+      suggestions.push(`Completar campos requeridos: ${missingRequired.join(", ")}`);
+    }
+
+    return suggestions;
   }
 }

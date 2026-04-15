@@ -6,6 +6,7 @@ import { ImportersService } from "./application/importers.service";
 import { ImportQueueService } from "./infrastructure/import-queue.service";
 import { ImportProcessorService } from "./application/import-processor.service";
 import { ImportEventsService } from "./infrastructure/import-events.service";
+import { ImportFileParserService } from "./application/import-file-parser.service";
 import { AuditModule } from "../audit/audit.module";
 
 @Module({
@@ -18,6 +19,7 @@ import { AuditModule } from "../audit/audit.module";
     ImportQueueService,
     ImportProcessorService,
     ImportEventsService,
+    ImportFileParserService,
   ],
 })
 export class ImportsModule {}

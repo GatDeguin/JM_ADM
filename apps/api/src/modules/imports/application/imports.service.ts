@@ -2,13 +2,13 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import {
   assertImportRowsPresent,
   assertMappingHasFields,
-  assertNoPendingHomologation,
   assertRequiredText,
   assertSupportedImportType,
 } from "../../../common/domain-rules/shared-domain-rules";
 import { ImportsRepository } from "../infrastructure/imports.repository";
 import { ImportersService } from "./importers.service";
 import { ImportQueueService } from "../infrastructure/import-queue.service";
+import { ImportFileParserService, ImportUploadPayload } from "./import-file-parser.service";
 
 @Injectable()
 export class ImportsService {
@@ -16,6 +16,7 @@ export class ImportsService {
     private readonly importsRepository: ImportsRepository,
     private readonly importersService: ImportersService,
     private readonly importQueueService: ImportQueueService,
+    private readonly importFileParserService: ImportFileParserService,
   ) {}
 
   async createJob(type: string, sourceName: string) {
@@ -32,10 +33,11 @@ export class ImportsService {
     return job;
   }
 
-  async uploadFile(id: string, sourceName: string, rows: Record<string, unknown>[]) {
+  async uploadFile(id: string, sourceName: string, payload: ImportUploadPayload) {
     await this.ensureJob(id);
 
     assertRequiredText(sourceName, "el nombre de archivo");
+    const rows = await this.importFileParserService.parse(payload);
     assertImportRowsPresent(rows);
 
     const updated = await this.importsRepository.updateJob(id, {
@@ -78,11 +80,15 @@ export class ImportsService {
     assertSupportedImportType(this.importersService.isSupported(job.type), job.type);
 
     const rows = Array.isArray(job.originals) ? (job.originals as Record<string, unknown>[]) : [];
-    const result = this.importersService.process(job.type, rows);
+    const mapping = (job.mapping ?? {}) as Record<string, string>;
+    const result = this.importersService.process(job.type, rows, mapping);
 
     const updated = await this.importsRepository.updateJob(id, {
       status: "ready_to_import",
-      summary: result.summary,
+      summary: {
+        ...result.summary,
+        rowResults: result.records,
+      },
       warnings: result.warnings,
     });
 
@@ -92,7 +98,7 @@ export class ImportsService {
       origin: "imports.prevalidate",
       after: result.summary,
     });
-    return { job: updated, warnings: result.warnings, summary: result.summary };
+    return { job: updated, warnings: result.warnings, summary: result.summary, rows: result.records };
   }
 
   async preview(id: string) {
@@ -101,7 +107,8 @@ export class ImportsService {
     assertSupportedImportType(this.importersService.isSupported(job.type), job.type);
 
     const rows = Array.isArray(job.originals) ? (job.originals as Record<string, unknown>[]) : [];
-    const result = this.importersService.process(job.type, rows);
+    const mapping = (job.mapping ?? {}) as Record<string, string>;
+    const result = this.importersService.process(job.type, rows, mapping);
     return {
       id: job.id,
       status: job.status,
@@ -113,9 +120,7 @@ export class ImportsService {
   }
 
   async confirm(id: string) {
-    const job = await this.ensureJob(id);
-    const pendingHomologation = Number(job.summary?.pendingHomologation ?? 0);
-    assertNoPendingHomologation(pendingHomologation);
+    await this.ensureJob(id);
 
     await this.importsRepository.updateJob(id, { status: "ready_to_import" });
     const queueResult = await this.importQueueService.enqueueImport(id);
