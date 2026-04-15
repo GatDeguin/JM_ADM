@@ -25,7 +25,9 @@
     "test:e2e:critical": "pnpm --filter web test:e2e:critical",
     "bootstrap:check": "tsx scripts/bootstrap-check.ts",
     "bootstrap:full": "pnpm db:migrate:deploy && pnpm db:seed && pnpm import:demo && pnpm bootstrap:check",
-    "test:dod": "tsx scripts/dod-matrix.ts"
+    "test:dod": "tsx scripts/dod-matrix.ts",
+    "openapi:generate": "pnpm -s tsx --tsconfig apps/api/tsconfig.json scripts/generate-openapi.ts",
+    "openapi:check": "pnpm openapi:generate && git diff --exit-code -- apps/api/openapi/openapi.v1.json apps/api/openapi/openapi.latest.json"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

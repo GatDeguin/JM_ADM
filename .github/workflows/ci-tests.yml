@@ -114,6 +114,14 @@ jobs:
       - name: Create report directories
         run: mkdir -p artifacts
 
+      - name: API route contract drift check
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/jmadm_ci
+        run: pnpm --filter api test -- --run src/config/route-contract-drift.spec.ts
+
+      - name: OpenAPI versioned artifact check
+        run: pnpm openapi:check
+
       - name: Web unit tests (vitest report)
         run: pnpm --filter web test -- --reporter=default --reporter=junit --outputFile=../../artifacts/web-junit.xml
 
