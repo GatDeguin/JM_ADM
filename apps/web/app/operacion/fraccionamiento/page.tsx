@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { FractionationPage } from "@/components/production/FractionationPage";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Operacion · Fraccionamiento"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="operacion-fraccionamiento"
-    />
-  );
+  return <FractionationPage />;
 }
