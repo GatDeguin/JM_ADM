@@ -7,24 +7,24 @@ import { createExpenseSchema, CreateExpenseDto, expenseActionSchema, ExpenseActi
 export class ExpensesController {
   constructor(private readonly service: ExpensesService) {}
 
-  @Get("expenses")
+  @Get("")
   list() { return this.service.list(); }
 
-  @Get("expenses/:id")
+  @Get(":id")
   get(@Param("id") id: string) { return this.service.get(id); }
 
-  @Post("expenses")
+  @Post("")
   @UsePipes(new ZodValidationPipe(createExpenseSchema))
   create(@Body() body: CreateExpenseDto) { return this.service.create(body); }
 
-  @Patch("expenses/:id")
+  @Patch(":id")
   @UsePipes(new ZodValidationPipe(updateExpenseSchema))
   update(@Param("id") id: string, @Body() body: UpdateExpenseDto) { return this.service.update(id, body); }
 
-  @Delete("expenses/:id")
+  @Delete(":id")
   remove(@Param("id") id: string) { return this.service.remove(id); }
 
-  @Post("expenses/:id/action")
+  @Post(":id/action")
   @UsePipes(new ZodValidationPipe(expenseActionSchema))
   runAction(@Param("id") id: string, @Body() payload: ExpenseActionDto) { return this.service.runAction(id, payload); }
 }
