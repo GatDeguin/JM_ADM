@@ -9,7 +9,9 @@ import { KPIStatCard } from "@/components/ui/KPIStatCard";
 import { DataTable } from "@/components/ui/DataTable";
 import { SmartSelector, type ContextualEntityType, type SmartSelectorOption } from "@/components/ui/SmartSelector";
 import { MergeComparePanel } from "@/components/ui/MergeComparePanel";
+import { Skeletons } from "@/components/ui/Skeletons";
 import { useToasts } from "@/components/ui/Toasts";
+import { useWarmupState } from "@/components/ui/useWarmupState";
 
 const formSchema = z.object({
   name: z.string().min(2, "Nombre requerido"),
@@ -110,7 +112,7 @@ const contextualEntityByDomain: Partial<Record<string, ContextualEntityType>> = 
 
 export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps) {
   const [records, setRecords] = useState<DomainRecord[]>([]);
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [selected, setSelected] = useState<string>("");
@@ -120,6 +122,9 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [highlights, setHighlights] = useState<Record<string, HighlightKind>>({});
   const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadingPhase = useWarmupState(loading, { warmupMs: 170 });
+  const showLoadingSkeleton = loadingPhase === "loading";
+  const isBusy = loadingPhase !== "idle";
 
   const form = useForm<FormValues>({
     defaultValues: { name: "", code: "", status: "draft" }
@@ -133,6 +138,11 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
     },
     []
   );
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 520);
+    return () => clearTimeout(timer);
+  }, []);
 
   const options: SmartSelectorOption[] = useMemo(() => records.map((r) => ({ id: r.id, label: r.name, meta: `${r.code} · ${r.status}` })), [records]);
 
@@ -212,101 +222,115 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
   return (
     <Layout title={title} transitionPreset="elevate-in">
       <PageHeader title={title} subtitle={subtitle} />
-      <section className="grid gap-3 md:grid-cols-3" aria-label="Resumen del dominio">
-        <KPIStatCard label="Registros" value={records.length} />
-        <KPIStatCard label="Activos" value={records.filter((r) => r.status === "active").length} />
-        <KPIStatCard label="Dominio" value={domain} />
-      </section>
-
-      <div className="grid gap-4 lg:grid-cols-[1.1fr_2fr]">
-        <SmartSelector
-          label={`Selector de ${domain}`}
-          options={options}
-          value={selected}
-          loading={loading}
-          error={error}
-          onChange={setSelected}
-          contextualConfig={contextualEntityType ? { entityType: contextualEntityType, originFlow: domain } : undefined}
-          onCreateOption={async (input) => {
-            const created: DomainRecord = {
-              id: `${domain}-${Date.now()}`,
-              name: input.label,
-              code: `AUTO-${records.length + 1}`,
-              status: "draft",
-              updatedAt: new Date().toISOString().slice(0, 10)
-            };
-            setRecords((prev) => [created, ...prev]);
-            markRow(created.id, "new");
-            setSuccess("Alta rápida creada correctamente.");
-            pushToast({ title: "Alta rápida creada", description: created.name, tone: "success" });
-            return { id: created.id, label: created.name, meta: created.code };
-          }}
-        />
-
-        <form className="card-base" onSubmit={onSubmit}>
-          <h3 className="mb-3 text-base font-semibold">Crear / Editar</h3>
-          {currentRules.warnings.length ? (
-            <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-700">
-              {currentRules.warnings.map((warning) => (
-                <p key={warning}>⚠ {warning}</p>
-              ))}
+      {showLoadingSkeleton ? (
+        <section aria-label="Cargando resumen y edición del dominio" className="space-y-4">
+          <Skeletons variant="dashboard" rows={3} />
+          <div className="grid gap-4 lg:grid-cols-[1.1fr_2fr]">
+            <div className="rounded-xl border border-zinc-200/80 p-3 dark:border-zinc-800/80">
+              <Skeletons variant="avatar" rows={3} density="compact" />
             </div>
-          ) : null}
-          <div className="grid gap-3 md:grid-cols-2">
-            <label htmlFor="domain-name">
-              <span className="mb-1 block text-sm font-medium">Nombre</span>
-              <input
-                id="domain-name"
-                className={`input-base focus-premium w-full ${form.formState.errors.name ? "border-red-300" : ""}`}
-                {...form.register("name")}
-              />
-              {form.formState.errors.name ? <p className="mt-1 text-sm text-red-600 animate-inline-status">{form.formState.errors.name.message}</p> : null}
-            </label>
-            <label htmlFor="domain-code">
-              <span className="mb-1 block text-sm font-medium">Código</span>
-              <input
-                id="domain-code"
-                className={`input-base focus-premium w-full ${form.formState.errors.code ? "border-red-300" : ""}`}
-                {...form.register("code")}
-              />
-              {form.formState.errors.code ? <p className="mt-1 text-sm text-red-600 animate-inline-status">{form.formState.errors.code.message}</p> : null}
-            </label>
-            <label htmlFor="domain-status">
-              <span className="mb-1 block text-sm font-medium">Estado</span>
-              <select
-                id="domain-status"
-                className={`input-base focus-premium w-full ${form.formState.errors.status ? "border-red-300" : ""}`}
-                {...form.register("status")}
-              >
-                <option value="draft">Borrador</option>
-                <option value="active">Activo</option>
-                <option value="blocked">Bloqueado</option>
-              </select>
-              {form.formState.errors.status ? <p className="mt-1 text-sm text-red-600 animate-inline-status">{form.formState.errors.status.message}</p> : null}
-            </label>
+            <Skeletons variant="form" density="normal" />
           </div>
-          {currentWarning ? <p className="mt-2 text-sm text-amber-700 animate-inline-status">⛔ {currentWarning}</p> : null}
-          <button className="btn-primary mt-3 inline-flex items-center gap-2 focus-premium" type="submit" disabled={saveBlocked}>
-            {saveState === "saving" ? (
-              <>
-                <svg className="h-4 w-4 animate-spin text-white dark:text-zinc-900" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle cx="12" cy="12" r="9" className="opacity-30" stroke="currentColor" strokeWidth="3" />
-                  <path d="M12 3a9 9 0 0 1 9 9" className="opacity-100" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                </svg>
-                Guardando...
-              </>
-            ) : saveState === "success" ? (
-              <span className="animate-inline-status">✓ Guardado</span>
-            ) : (
-              "Guardar"
-            )}
-          </button>
-        </form>
-      </div>
+        </section>
+      ) : (
+        <>
+          <section className="grid gap-3 md:grid-cols-3" aria-label="Resumen del dominio">
+            <KPIStatCard label="Registros" value={records.length} />
+            <KPIStatCard label="Activos" value={records.filter((r) => r.status === "active").length} />
+            <KPIStatCard label="Dominio" value={domain} />
+          </section>
+
+          <div className="grid gap-4 lg:grid-cols-[1.1fr_2fr]">
+            <SmartSelector
+              label={`Selector de ${domain}`}
+              options={options}
+              value={selected}
+              loading={isBusy}
+              error={error}
+              onChange={setSelected}
+              contextualConfig={contextualEntityType ? { entityType: contextualEntityType, originFlow: domain } : undefined}
+              onCreateOption={async (input) => {
+                const created: DomainRecord = {
+                  id: `${domain}-${Date.now()}`,
+                  name: input.label,
+                  code: `AUTO-${records.length + 1}`,
+                  status: "draft",
+                  updatedAt: new Date().toISOString().slice(0, 10)
+                };
+                setRecords((prev) => [created, ...prev]);
+                markRow(created.id, "new");
+                setSuccess("Alta rápida creada correctamente.");
+                pushToast({ title: "Alta rápida creada", description: created.name, tone: "success" });
+                return { id: created.id, label: created.name, meta: created.code };
+              }}
+            />
+
+            <form className="card-base" onSubmit={onSubmit}>
+              <h3 className="mb-3 text-base font-semibold">Crear / Editar</h3>
+              {currentRules.warnings.length ? (
+                <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-700">
+                  {currentRules.warnings.map((warning) => (
+                    <p key={warning}>⚠ {warning}</p>
+                  ))}
+                </div>
+              ) : null}
+              <div className="grid gap-3 md:grid-cols-2">
+                <label htmlFor="domain-name">
+                  <span className="mb-1 block text-sm font-medium">Nombre</span>
+                  <input
+                    id="domain-name"
+                    className={`input-base focus-premium w-full ${form.formState.errors.name ? "border-red-300" : ""}`}
+                    {...form.register("name")}
+                  />
+                  {form.formState.errors.name ? <p className="mt-1 text-sm text-red-600 animate-inline-status">{form.formState.errors.name.message}</p> : null}
+                </label>
+                <label htmlFor="domain-code">
+                  <span className="mb-1 block text-sm font-medium">Código</span>
+                  <input
+                    id="domain-code"
+                    className={`input-base focus-premium w-full ${form.formState.errors.code ? "border-red-300" : ""}`}
+                    {...form.register("code")}
+                  />
+                  {form.formState.errors.code ? <p className="mt-1 text-sm text-red-600 animate-inline-status">{form.formState.errors.code.message}</p> : null}
+                </label>
+                <label htmlFor="domain-status">
+                  <span className="mb-1 block text-sm font-medium">Estado</span>
+                  <select
+                    id="domain-status"
+                    className={`input-base focus-premium w-full ${form.formState.errors.status ? "border-red-300" : ""}`}
+                    {...form.register("status")}
+                  >
+                    <option value="draft">Borrador</option>
+                    <option value="active">Activo</option>
+                    <option value="blocked">Bloqueado</option>
+                  </select>
+                  {form.formState.errors.status ? <p className="mt-1 text-sm text-red-600 animate-inline-status">{form.formState.errors.status.message}</p> : null}
+                </label>
+              </div>
+              {currentWarning ? <p className="mt-2 text-sm text-amber-700 animate-inline-status">⛔ {currentWarning}</p> : null}
+              <button className="btn-primary mt-3 inline-flex items-center gap-2 focus-premium" type="submit" disabled={saveBlocked}>
+                {saveState === "saving" ? (
+                  <>
+                    <svg className="h-4 w-4 animate-spin text-white dark:text-zinc-900" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <circle cx="12" cy="12" r="9" className="opacity-30" stroke="currentColor" strokeWidth="3" />
+                      <path d="M12 3a9 9 0 0 1 9 9" className="opacity-100" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                    </svg>
+                    Guardando...
+                  </>
+                ) : saveState === "success" ? (
+                  <span className="animate-inline-status">✓ Guardado</span>
+                ) : (
+                  "Guardar"
+                )}
+              </button>
+            </form>
+          </div>
+        </>
+      )}
 
       <DataTable
         title={`Tabla ${domain}`}
-        loading={loading}
+        loading={isBusy}
         error={error}
         emptyMessage={`No hay registros cargados en ${domain} todavía.`}
         successMessage={success}

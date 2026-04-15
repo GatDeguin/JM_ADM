@@ -3,6 +3,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeletons } from "@/components/ui/Skeletons";
+import { useWarmupState } from "@/components/ui/useWarmupState";
 
 export type DataTableColumn<T extends Record<string, unknown>> = {
   key: keyof T;
@@ -49,6 +50,10 @@ export function DataTable<T extends Record<string, unknown>>({
   const hasRows = rows.length > 0;
   const showNoResults = hasFilter && filtered.length === 0 && hasRows;
   const showNoData = !hasRows;
+  const loadingPhase = useWarmupState(Boolean(loading));
+  const showSkeleton = loadingPhase === "loading";
+  const isBusy = loadingPhase !== "idle";
+  const tableColumns = columns.length + (onEdit || onDelete ? 1 : 0);
 
   return (
     <section className="card-base space-y-4">
@@ -80,23 +85,26 @@ export function DataTable<T extends Record<string, unknown>>({
       ) : null}
       <div className="relative min-h-52">
         <div
-          className={`transition-opacity duration-300 ease-out ${loading ? "opacity-100" : "pointer-events-none absolute inset-0 opacity-0"}`}
-          aria-hidden={!loading}
+          className={`transition-opacity duration-300 ease-out ${showSkeleton ? "opacity-100" : "pointer-events-none absolute inset-0 opacity-0"}`}
+          aria-hidden={!showSkeleton}
         >
-          <Skeletons variant="table" rows={4} density="normal" />
+          <Skeletons variant="table" rows={4} columns={tableColumns} density="normal" />
         </div>
-        <div className={`transition-opacity duration-300 ease-out ${loading ? "opacity-0" : "opacity-100"}`} aria-busy={loading}>
-          {!loading && error ? (
+        <div className={`transition-opacity duration-300 ease-out ${showSkeleton ? "opacity-0" : "opacity-100"}`} aria-busy={isBusy}>
+          {loadingPhase === "warming-up" && rows.length > 0 ? (
+            <p className="mb-2 text-xs text-zinc-500 dark:text-zinc-400">Actualizando datos…</p>
+          ) : null}
+          {!isBusy && error ? (
             <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/70 dark:bg-red-950/50 dark:text-red-200">Error: {error}</p>
           ) : null}
-          {!loading && !error && showNoData ? (
+          {!isBusy && !error && showNoData ? (
             <EmptyState
               title="Todavía no hay registros"
               subtitle={emptyMessage}
               primaryAction={onCreate ? { label: "Crear registro", onClick: onCreate } : undefined}
             />
           ) : null}
-          {!loading && !error && showNoResults ? (
+          {!isBusy && !error && showNoResults ? (
             <EmptyState
               title="No hay coincidencias"
               subtitle="No encontramos resultados para el filtro aplicado."
@@ -105,7 +113,7 @@ export function DataTable<T extends Record<string, unknown>>({
             />
           ) : null}
 
-          {!loading && !error && filtered.length > 0 ? (
+          {!error && filtered.length > 0 ? (
             <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800" tabIndex={0} aria-label="Tabla de resultados">
               <table className="min-w-full border-collapse text-sm">
                 <thead>
