@@ -2,21 +2,34 @@
 
 import { useEffect, useState } from "react";
 
-const STORAGE_KEY = "jm-adm.brand-intro.seen.v1";
+type BrandIntroMode = "always" | "once-per-session" | "once-ever";
+
+const STORAGE_VERSION = "v2";
+const STORAGE_KEY = `jm-adm.brand-intro.seen.${STORAGE_VERSION}`;
 
 function getReducedMotionPreference() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-export function BrandIntro() {
+function getStorage(mode: BrandIntroMode) {
+  if (mode === "once-ever") return window.localStorage;
+  if (mode === "once-per-session") return window.sessionStorage;
+  return null;
+}
+
+export function BrandIntro({ mode = "once-per-session" }: { mode?: BrandIntroMode }) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    const alreadySeen = window.localStorage.getItem(STORAGE_KEY) === "true";
+    // "Ingreso" se define como el inicio de una sesión de pestaña (new tab)
+    // o una recarga completa del documento. En ambos casos este efecto se evalúa nuevamente.
+    const storage = getStorage(mode);
+    const alreadySeen = storage?.getItem(STORAGE_KEY) === "true";
+
     if (alreadySeen) return;
 
     if (getReducedMotionPreference()) {
-      window.localStorage.setItem(STORAGE_KEY, "true");
+      storage?.setItem(STORAGE_KEY, "true");
       return;
     }
 
@@ -24,13 +37,13 @@ export function BrandIntro() {
 
     const hideTimer = window.setTimeout(() => {
       setIsVisible(false);
-      window.localStorage.setItem(STORAGE_KEY, "true");
+      storage?.setItem(STORAGE_KEY, "true");
     }, 1800);
 
     return () => {
       window.clearTimeout(hideTimer);
     };
-  }, []);
+  }, [mode]);
 
   if (!isVisible) return null;
 
@@ -48,3 +61,5 @@ export function BrandIntro() {
     </div>
   );
 }
+
+export type { BrandIntroMode };
