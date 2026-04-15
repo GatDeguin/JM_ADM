@@ -42,6 +42,12 @@ export class QualityController {
     return this.service.update(id, body);
   }
 
+  @Post("qc-records/:id/quality-decision")
+  @UsePipes(new ZodValidationPipe(updateQCRecordSchema.required({ decision: true })))
+  qualityDecision(@Param("id") id: string, @Body() body: Required<Pick<UpdateQCRecordDto, "decision">> & Pick<UpdateQCRecordDto, "notes">) {
+    return this.service.update(id, body);
+  }
+
   @Delete("qc-records/:id")
   remove(@Param("id") id: string) {
     return this.service.remove(id);

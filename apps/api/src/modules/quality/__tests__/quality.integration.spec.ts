@@ -1,6 +1,7 @@
 import { ConflictException, NotFoundException } from "@nestjs/common";
 import { describe, expect, it, vi } from "vitest";
 import { QualityService } from "../application/quality.service";
+import { QualityController } from "../presentation/quality.controller";
 
 describe("quality integration", () => {
   it("falla si no encuentra familia para checklist", async () => {
@@ -48,5 +49,15 @@ describe("quality integration", () => {
     await expect(
       service.create({ batchId: "b-1", decision: "approved", checklistItems: [{ checklistItem: "viscosidad", passed: false }] }),
     ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it("expone endpoint integral de quality decision", async () => {
+    const service = { update: vi.fn(async () => ({ id: "qc-1", decision: "approved" })) } as unknown as QualityService;
+    const controller = new QualityController(service);
+
+    const result = await controller.qualityDecision("qc-1", { decision: "approved", notes: "Cumple parámetros críticos" });
+
+    expect(result.decision).toBe("approved");
+    expect(service.update).toHaveBeenCalledWith("qc-1", { decision: "approved", notes: "Cumple parámetros críticos" });
   });
 });

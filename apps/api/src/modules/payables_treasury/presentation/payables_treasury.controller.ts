@@ -28,11 +28,23 @@ export class PayablesTreasuryController {
   @UsePipes(new ZodValidationPipe(applyPaymentSchema))
   runAction(@Body() payload: ApplyPaymentDto) { return this.service.runAction(payload); }
 
+  @Post("payments/register")
+  @UsePipes(new ZodValidationPipe(applyPaymentSchema))
+  registerPayment(@Body() payload: ApplyPaymentDto) { return this.service.runAction(payload); }
+
   @Post("treasury/transfers")
   @UsePipes(new ZodValidationPipe(transferFundsSchema))
   transferFunds(@Body() payload: TransferFundsDto) { return this.service.transferFunds(payload); }
 
+  @Post("treasury/transfers/register")
+  @UsePipes(new ZodValidationPipe(transferFundsSchema))
+  registerTransferFunds(@Body() payload: TransferFundsDto) { return this.service.transferFunds(payload); }
+
   @Post("bank-reconciliation")
   @UsePipes(new ZodValidationPipe(reconcileBankSchema))
   reconcileBank(@Body() payload: ReconcileBankDto) { return this.service.reconcileBank(payload); }
+
+  @Post("bank-reconciliations/register")
+  @UsePipes(new ZodValidationPipe(reconcileBankSchema))
+  registerBankReconciliation(@Body() payload: ReconcileBankDto) { return this.service.reconcileBank(payload); }
 }

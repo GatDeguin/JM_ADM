@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { PayablesTreasuryRepository } from "../infrastructure/payables_treasury.repository";
+import { PayablesTreasuryController } from "../presentation/payables_treasury.controller";
+import { PayablesTreasuryService } from "../application/payables_treasury.service";
 
 describe("payables treasury transactional integrity", () => {
   it("ejecuta todas las operaciones dentro de una transacción", async () => {
@@ -46,5 +48,23 @@ describe("payables treasury transactional integrity", () => {
 
     await expect(repository.runAction({ code: "P-1", cashAccountId: "cash-1", amount: 30, allocations: [{ payableId: "ap-1", amount: 30 }] })).rejects.toThrow("allocation error");
     expect(tx.accountsPayable.update).not.toHaveBeenCalled();
+  });
+
+  it("expone aliases transaccionales explícitos para pagos/transferencias/conciliación", async () => {
+    const service = {
+      runAction: vi.fn(async () => ({ paymentId: "pay-1", payables: [] })),
+      transferFunds: vi.fn(async () => ({ event: "finance.treasury.transfer.registered" })),
+      reconcileBank: vi.fn(async () => ({ event: "finance.bank.reconciliation.registered" })),
+    } as unknown as PayablesTreasuryService;
+
+    const controller = new PayablesTreasuryController(service);
+
+    await controller.registerPayment({ code: "PAY-1", cashAccountId: "cash-1", amount: 100, allocations: [{ payableId: "ap-1", amount: 100 }] });
+    await controller.registerTransferFunds({ fromCashAccountId: "cash-1", toCashAccountId: "cash-2", amount: 100 });
+    await controller.registerBankReconciliation({ cashAccountId: "cash-1", period: "2026-04", status: "balanced" });
+
+    expect(service.runAction).toHaveBeenCalledTimes(1);
+    expect(service.transferFunds).toHaveBeenCalledTimes(1);
+    expect(service.reconcileBank).toHaveBeenCalledTimes(1);
   });
 });
