@@ -23,8 +23,10 @@ export type ImportSummary = {
 
 export type ImportedRecord = {
   key: string;
-  normalized: Record<string, unknown>;
+  originalValue: Record<string, unknown>;
+  canonicalValue: Record<string, unknown>;
   warnings: string[];
+  suggestions: string[];
   duplicate: boolean;
   valid: boolean;
   pendingHomologation: boolean;

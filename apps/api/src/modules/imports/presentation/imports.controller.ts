@@ -10,7 +10,10 @@ const createJobSchema = z.object({
 
 const uploadFileSchema = z.object({
   sourceName: z.string().min(2),
-  rows: z.array(z.record(z.unknown())),
+  rows: z.array(z.record(z.unknown())).optional(),
+  fileName: z.string().optional(),
+  mimeType: z.string().optional(),
+  contentBase64: z.string().optional(),
 });
 
 const defineMappingSchema = z.object({
@@ -30,7 +33,12 @@ export class ImportsController {
   @Post("jobs/:id/file")
   @UsePipes(new ZodValidationPipe(uploadFileSchema))
   uploadFile(@Param("id") id: string, @Body() body: z.infer<typeof uploadFileSchema>) {
-    return this.importsService.uploadFile(id, body.sourceName, body.rows);
+    return this.importsService.uploadFile(id, body.sourceName, {
+      rows: body.rows,
+      fileName: body.fileName,
+      mimeType: body.mimeType,
+      contentBase64: body.contentBase64,
+    });
   }
 
   @Post("jobs/:id/mapping")

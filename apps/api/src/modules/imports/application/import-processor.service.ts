@@ -24,21 +24,22 @@ export class ImportProcessorService {
     }
 
     const rows = Array.isArray(job.originals) ? (job.originals as Record<string, unknown>[]) : [];
-    const processed = this.importersService.process(job.type, rows);
+    const mapping = (job.mapping ?? {}) as Record<string, string>;
+    const processed = this.importersService.process(job.type, rows, mapping);
 
     for (const record of processed.records.filter((item) => item.valid && !item.duplicate)) {
       if (job.type === "customers") {
         await this.importsRepository.upsertCustomer(
-          String(record.normalized.code ?? record.key),
-          String(record.normalized.name ?? record.key),
+          String(record.canonicalValue.code ?? record.key),
+          String(record.canonicalValue.name ?? record.key),
           record.pendingHomologation ? "pending_homologation" : "active",
         );
       }
 
       if (job.type === "suppliers") {
         await this.importsRepository.upsertSupplier(
-          String(record.normalized.code ?? record.key),
-          String(record.normalized.name ?? record.key),
+          String(record.canonicalValue.code ?? record.key),
+          String(record.canonicalValue.name ?? record.key),
           record.pendingHomologation ? "pending_homologation" : "active",
         );
       }

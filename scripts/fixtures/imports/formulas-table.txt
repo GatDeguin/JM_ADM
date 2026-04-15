@@ -1,0 +1,4 @@
+| codigo | nombre | homologacion |
+| F-100  | Formula Base | no |
+| F-101  | Formula Lista | si |
+|        | Sin Código | no |
