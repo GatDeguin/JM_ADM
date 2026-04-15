@@ -122,20 +122,28 @@ export class ImportsService {
   async confirm(id: string) {
     await this.ensureJob(id);
 
-    await this.importsRepository.updateJob(id, { status: "ready_to_import" });
-    const queueResult = await this.importQueueService.enqueueImport(id);
-    await this.importsRepository.appendAudit({
-      entityId: id,
-      action: "import.confirmed",
-      origin: "imports.confirm",
-      after: queueResult,
-    });
+    try {
+      await this.importsRepository.updateJob(id, { status: "ready_to_import" });
+      const queueResult = await this.importQueueService.enqueueImport(id);
+      await this.importsRepository.appendAudit({
+        entityId: id,
+        action: "import.confirmed",
+        origin: "imports.confirm",
+        after: queueResult,
+      });
 
-    return {
-      event: "import.finished",
-      jobId: id,
-      queued: queueResult.queued,
-    };
+      return {
+        event: "import.started",
+        jobId: id,
+        queued: queueResult.queued,
+      };
+    } catch (error) {
+      await this.importsRepository.updateJob(id, {
+        status: "failed",
+        warnings: [`Error al ejecutar importación: ${String(error)}`],
+      });
+      throw error;
+    }
   }
 
   private async ensureJob(id: string) {

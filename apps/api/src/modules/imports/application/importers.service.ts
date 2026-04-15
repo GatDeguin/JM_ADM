@@ -157,6 +157,7 @@ export class ImportersService {
     const missingRequired = options.requiredFields.filter((field) => !canonicalValue[field]);
     if (missingRequired.length > 0) {
       suggestions.push(`Completar campos requeridos: ${missingRequired.join(", ")}`);
+      suggestions.push("Si el valor existe en otro maestro, registrar alias y reintentar");
     }
 
     return suggestions;
