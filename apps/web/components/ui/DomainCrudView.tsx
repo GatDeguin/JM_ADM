@@ -308,20 +308,26 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
                 </label>
               </div>
               {currentWarning ? <p className="mt-2 text-sm text-amber-700 animate-inline-status">⛔ {currentWarning}</p> : null}
-              <button className="btn-primary mt-3 inline-flex items-center gap-2 focus-premium" type="submit" disabled={saveBlocked}>
-                {saveState === "saving" ? (
-                  <>
+              <button
+                className={`btn-primary mt-3 inline-flex items-center justify-center focus-premium ${saveState === "success" ? "btn-save-success-ring" : ""}`}
+                type="submit"
+                disabled={saveBlocked}
+                aria-live="polite"
+              >
+                <span className="save-label-stack" aria-hidden="true">
+                  <span className={`save-label ${saveState === "idle" ? "save-label-visible" : "save-label-hidden"}`}>Guardar</span>
+                  <span className={`save-label ${saveState === "saving" ? "save-label-visible" : "save-label-hidden"}`}>
                     <svg className="h-4 w-4 animate-spin text-white dark:text-zinc-900" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                       <circle cx="12" cy="12" r="9" className="opacity-30" stroke="currentColor" strokeWidth="3" />
                       <path d="M12 3a9 9 0 0 1 9 9" className="opacity-100" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
                     </svg>
                     Guardando...
-                  </>
-                ) : saveState === "success" ? (
-                  <span className="animate-inline-status">✓ Guardado</span>
-                ) : (
-                  "Guardar"
-                )}
+                  </span>
+                  <span className={`save-label ${saveState === "success" ? "save-label-visible" : "save-label-hidden"}`}>✓ Guardado</span>
+                </span>
+                <span className="sr-only">
+                  {saveState === "saving" ? "Guardando" : saveState === "success" ? "Guardado" : "Guardar"}
+                </span>
               </button>
             </form>
           </div>
