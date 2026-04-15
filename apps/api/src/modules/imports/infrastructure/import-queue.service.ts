@@ -15,15 +15,21 @@ export class ImportQueueService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     try {
-      this.connection = new IORedis(process.env.REDIS_URL ?? "redis://127.0.0.1:6379", { maxRetriesPerRequest: null });
+      this.connection = new IORedis(process.env.REDIS_URL ?? "redis://127.0.0.1:6379", {
+        maxRetriesPerRequest: null,
+      });
       this.queue = new Queue("imports", { connection: this.connection });
-      this.worker = new Worker(
-        "imports",
-        async (job: Job<{ jobId: string }>) => {
-          await this.importProcessorService.execute(job.data.jobId);
-        },
-        { connection: this.connection },
-      );
+
+      if ((process.env.IMPORT_WORKER_ENABLED ?? "true") === "true") {
+        this.worker = new Worker(
+          "imports",
+          async (job: Job<{ jobId: string }>) => {
+            await this.importProcessorService.execute(job.data.jobId);
+          },
+          { connection: this.connection },
+        );
+      }
+
       this.enabled = true;
     } catch (error) {
       this.logger.warn(`BullMQ deshabilitado, fallback sin cola: ${String(error)}`);

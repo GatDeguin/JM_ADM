@@ -20,7 +20,8 @@
     "format:check": "prettier --check \".github/workflows/*.yml\" \"*.{json,md,yml,yaml,cjs}\" \"apps/api/{package.json,tsconfig.json}\" \"apps/web/{package.json,tsconfig.json,playwright.config.ts}\" \"apps/web/tests/**/*.{ts,tsx}\"",
     "test:e2e:smoke": "pnpm --filter web test:e2e:smoke",
     "test:e2e:real": "pnpm --filter web test:e2e:real",
-    "test:e2e:all": "pnpm --filter web test:e2e:all"
+    "test:e2e:all": "pnpm --filter web test:e2e:all",
+    "db:migrate:deploy": "prisma migrate deploy"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
