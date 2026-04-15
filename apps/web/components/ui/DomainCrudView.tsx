@@ -9,6 +9,7 @@ import { KPIStatCard } from "@/components/ui/KPIStatCard";
 import { DataTable } from "@/components/ui/DataTable";
 import { SmartSelector, type ContextualEntityType, type SmartSelectorOption } from "@/components/ui/SmartSelector";
 import { MergeComparePanel } from "@/components/ui/MergeComparePanel";
+import { useToasts } from "@/components/ui/Toasts";
 
 const formSchema = z.object({
   name: z.string().min(2, "Nombre requerido"),
@@ -109,6 +110,7 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
   const [error] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [selected, setSelected] = useState<string>("");
+  const { pushToast } = useToasts();
   const [leftId, setLeftId] = useState<string>("");
   const [rightId, setRightId] = useState<string>("");
 
@@ -148,6 +150,7 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
     setRecords((prev) => [newRecord, ...prev]);
     setSelected(newRecord.id);
     setSuccess("Registro guardado correctamente.");
+    pushToast({ title: "Registro guardado", description: parsed.data.name, tone: "success" });
     form.reset({ name: "", code: "", status: "draft" });
   });
 
@@ -157,11 +160,11 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
   return (
     <Layout title={title}>
       <PageHeader title={title} subtitle={subtitle} />
-      <div className="grid gap-3 md:grid-cols-3">
+      <section className="grid gap-3 md:grid-cols-3" aria-label="Resumen del dominio">
         <KPIStatCard label="Registros" value={records.length} />
         <KPIStatCard label="Activos" value={records.filter((r) => r.status === "active").length} />
         <KPIStatCard label="Dominio" value={domain} />
-      </div>
+      </section>
 
       <div className="grid gap-4 lg:grid-cols-[1.1fr_2fr]">
         <SmartSelector
@@ -182,6 +185,7 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
             };
             setRecords((prev) => [created, ...prev]);
             setSuccess("Alta rápida creada correctamente.");
+            pushToast({ title: "Alta rápida creada", description: created.name, tone: "success" });
             return { id: created.id, label: created.name, meta: created.code };
           }}
         />
@@ -196,17 +200,17 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
             </div>
           ) : null}
           <div className="grid gap-3 md:grid-cols-2">
-            <label>
+            <label htmlFor="domain-name">
               <span className="mb-1 block text-sm font-medium">Nombre</span>
-              <input aria-label="Nombre" className="input-base w-full" {...form.register("name")} />
+              <input id="domain-name" className="input-base w-full" {...form.register("name")} />
             </label>
-            <label>
+            <label htmlFor="domain-code">
               <span className="mb-1 block text-sm font-medium">Código</span>
-              <input aria-label="Código" className="input-base w-full" {...form.register("code")} />
+              <input id="domain-code" className="input-base w-full" {...form.register("code")} />
             </label>
-            <label>
+            <label htmlFor="domain-status">
               <span className="mb-1 block text-sm font-medium">Estado</span>
-              <select aria-label="Estado" className="input-base w-full" {...form.register("status")}>
+              <select id="domain-status" className="input-base w-full" {...form.register("status")}>
                 <option value="draft">Borrador</option>
                 <option value="active">Activo</option>
                 <option value="blocked">Bloqueado</option>
@@ -240,10 +244,12 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
           form.reset({ name: row.name, code: row.code, status: row.status });
           setSelected(row.id);
           setSuccess("Registro cargado para edición.");
+          pushToast({ title: "Edición lista", description: row.name, tone: "info" });
         }}
         onDelete={(row) => {
           setRecords((prev) => prev.filter((r) => r.id !== row.id));
           setSuccess("Registro eliminado correctamente.");
+          pushToast({ title: "Registro eliminado", description: row.name, tone: "info" });
         }}
       />
 
@@ -263,6 +269,7 @@ export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps)
           setRecords((prev) => prev.filter((r) => r.id !== remove));
           setSelected(keep);
           setSuccess("Registros fusionados correctamente.");
+          pushToast({ title: "Registros fusionados", tone: "success" });
         }}
       />
     </Layout>
