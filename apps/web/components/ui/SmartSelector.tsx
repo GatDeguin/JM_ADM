@@ -70,7 +70,7 @@ export function SmartSelector({ label, options, value, loading, error, emptyMess
         {label}
       </label>
       <input id={inputId} className="input-base mb-3 w-full" placeholder="Buscar opción" value={query} onChange={(e) => setQuery(e.target.value)} />
-      {loading ? <Skeletons rows={3} /> : null}
+      {loading ? <Skeletons variant="avatar" rows={3} density="compact" /> : null}
       {error || contextualError ? (
         <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-200">{error ?? contextualError}</p>
       ) : null}

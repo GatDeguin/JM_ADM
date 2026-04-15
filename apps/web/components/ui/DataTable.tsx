@@ -72,7 +72,7 @@ export function DataTable<T extends Record<string, unknown>>({
           ✅ {successMessage}
         </p>
       ) : null}
-      {loading ? <Skeletons rows={4} /> : null}
+      {loading ? <Skeletons variant="table" rows={4} density="normal" /> : null}
       {!loading && error ? (
         <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/70 dark:bg-red-950/50 dark:text-red-200">Error: {error}</p>
       ) : null}
