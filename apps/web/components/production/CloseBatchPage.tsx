@@ -42,7 +42,7 @@ export function CloseBatchPage({ batchId }: { batchId: string }) {
 
     try {
       setLoading(true);
-      await apiRequest(`/production/${batchId}/close-batch`, {
+      await apiRequest(`/fractionation/${batchId}/close-batch`, {
         method: "POST",
         body: JSON.stringify({
           responsible: parsed.data.responsible,

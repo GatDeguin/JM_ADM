@@ -54,7 +54,7 @@ export function FractionationPage() {
 
     try {
       setLoading(true);
-      await apiRequest(`/production/${parsed.data.batchId}/fractionate`, {
+      await apiRequest(`/fractionation/${parsed.data.batchId}/fractionate`, {
         method: "POST",
         body: JSON.stringify({ skuId: parsed.data.skuId, qty: parsed.data.qty, childLots: [{ lotCode: parsed.data.childLotCode, qty: parsed.data.childQty }] })
       });

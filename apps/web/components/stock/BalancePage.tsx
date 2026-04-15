@@ -17,7 +17,7 @@ export function BalancePage() {
     const load = async () => {
       setLoading(true);
       try {
-        const payload = await apiRequest<Array<Record<string, unknown>>>("/inventory/balances");
+        const payload = await apiRequest<Array<Record<string, unknown>>>("/stock/balances");
         setRows(payload.map((r, index) => ({ id: String(r.id ?? `${r.itemId ?? "item"}-${index}`), itemId: String(r.itemId ?? "-"), warehouseId: String(r.warehouseId ?? "-"), locationId: String(r.locationId ?? "-"), availableQty: Number(r.availableQty ?? r.qty ?? 0) })));
       } catch (e) {
         setError(e instanceof Error ? e.message : "No se pudo cargar balances");

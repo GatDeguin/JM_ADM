@@ -56,7 +56,7 @@ export function NewSalePage() {
       setLoading(true);
       const total = parsed.data.qty * parsed.data.unitPrice;
 
-      const created = await apiRequest<SalesResponse>("/sales/sales-orders", {
+      const created = await apiRequest<SalesResponse>("/commercial/sales/sales-orders", {
         method: "POST",
         body: JSON.stringify({
           code: parsed.data.code,

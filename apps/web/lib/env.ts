@@ -18,4 +18,8 @@ if (!parsedWebEnv.success) {
 }
 
 export const WEB_ENV = parsedWebEnv.data;
-export const API_BASE_URL = WEB_ENV.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
+const normalizedApiUrl = WEB_ENV.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
+
+export const API_BASE_URL = normalizedApiUrl.endsWith("/api/v1")
+  ? normalizedApiUrl
+  : `${normalizedApiUrl}/api/v1`;

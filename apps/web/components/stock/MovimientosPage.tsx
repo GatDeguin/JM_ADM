@@ -29,7 +29,7 @@ export function MovimientosPage() {
   const loadRows = async () => {
     setLoading(true);
     try {
-      const payload = await apiRequest<Array<Record<string, unknown>>>("/inventory/inventory-adjustments");
+      const payload = await apiRequest<Array<Record<string, unknown>>>("/stock/inventory-adjustments");
       setRows(payload.map((r) => ({ id: String(r.id ?? ""), itemId: String(r.itemId ?? "-"), warehouseId: String(r.warehouseId ?? "-"), locationId: String(r.locationId ?? "-"), qty: Number(r.qty ?? 0), reason: String(r.reason ?? "-") })));
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo cargar movimientos");
@@ -45,7 +45,7 @@ export function MovimientosPage() {
     const parsed = schema.safeParse(values);
     if (!parsed.success) { parsed.error.issues.forEach((i) => form.setError(i.path[0] as keyof Values, { message: i.message })); return; }
     try {
-      const created = await apiRequest<{ id: string }>("/inventory/inventory-adjustments", { method: "POST", body: JSON.stringify(parsed.data) });
+      const created = await apiRequest<{ id: string }>("/stock/inventory-adjustments", { method: "POST", body: JSON.stringify(parsed.data) });
       await logOriginAudit({ entity: "inventory-adjustment", entityId: created.id, action: "create", origin: "stock/movimientos" });
       setSuccess("Movimiento registrado.");
       form.reset({ itemId: "", warehouseId: "", locationId: "", qty: 1, reason: "" });

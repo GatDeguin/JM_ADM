@@ -43,7 +43,7 @@ export async function logOriginAudit(params: {
   origin: string;
 }) {
   try {
-    await apiRequest("/audit", {
+    await apiRequest("/system/audit", {
       method: "POST",
       body: JSON.stringify(params),
     });
