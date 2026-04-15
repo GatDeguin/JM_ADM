@@ -8,6 +8,7 @@ import { Sidebar } from "./ui/Sidebar";
 import { BottomTabs } from "./ui/BottomTabs";
 import { Topbar } from "./ui/Topbar";
 import { BrandIntro } from "./ui/BrandIntro";
+import { RouteProgress } from "./ui/RouteProgress";
 
 export function Layout({ title, children }: { title: string; children: React.ReactNode }) {
   const pathname = usePathname();
@@ -30,6 +31,7 @@ export function Layout({ title, children }: { title: string; children: React.Rea
   return (
     <>
       <BrandIntro mode="once-per-session" />
+      <RouteProgress />
       <AppShell>
         <Sidebar />
         <main id="main-content" className="flex-1">
