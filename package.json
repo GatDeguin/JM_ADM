@@ -21,7 +21,8 @@
     "test:e2e:smoke": "pnpm --filter web test:e2e:smoke",
     "test:e2e:real": "pnpm --filter web test:e2e:real",
     "test:e2e:all": "pnpm --filter web test:e2e:all",
-    "db:migrate:deploy": "prisma migrate deploy"
+    "db:migrate:deploy": "prisma migrate deploy",
+    "test:e2e:critical": "pnpm --filter web test:e2e:critical"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

@@ -1,4 +1,8 @@
 export const workflowData = {
+  catalog: {
+    contextualProductName: "Producto Base Contextual QA",
+    contextualProductCode: "PB-CTX-QA-01",
+  },
   formula: { name: "Formula QA 2026", code: "F-QA-2026" },
   sku: {
     productName: "Producto Contextual QA",

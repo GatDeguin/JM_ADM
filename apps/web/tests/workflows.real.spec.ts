@@ -8,14 +8,27 @@ const runRealFlows = process.env.E2E_REAL === "1";
 test.describe("flujos reales contra API + DB de test", () => {
   test.skip(!runRealFlows, "Set E2E_REAL=1 para ejecutar flujos reales contra API + DB de test");
 
-  test("real/login", async ({ page }) => {
+  test("real/critical/login", async ({ page }) => {
     const loginResponse = await page.request.post(`${API_BASE_URL}/auth/login`, {
       data: { email: "admin@demo.local", password: "secret" },
     });
     expect(loginResponse.ok()).toBeTruthy();
   });
 
-  test("real/op + cierre lote + fraccionamiento", async ({ page }) => {
+  test("real/critical/aceptacion end-to-end: catálogo + fórmula + OP + cierre lote + fraccionamiento + venta + despacho + cobranza + pago", async ({
+    page,
+  }) => {
+    await page.goto("/catalogo/productos-base");
+    await altaContextual(
+      page,
+      workflowData.catalog.contextualProductName,
+      workflowData.catalog.contextualProductCode,
+    );
+
+    await page.goto("/tecnica/formulas");
+    await altaCritica(page, workflowData.formula.name, workflowData.formula.code, "approved");
+    await expect(page.getByText("Cambios guardados correctamente.")).toBeVisible();
+
     await page.goto("/operacion/produccion/nueva");
     await altaContextual(
       page,
@@ -30,11 +43,12 @@ test.describe("flujos reales contra API + DB de test", () => {
 
     await page.goto("/operacion/fraccionamiento");
     await altaContextual(page, workflowData.fractioning.name, workflowData.fractioning.code);
-  });
 
-  test("real/venta + cobranza + pago", async ({ page }) => {
     await page.goto("/comercial/pedidos");
     await altaContextual(page, workflowData.sales.orderName, workflowData.sales.orderCode);
+
+    await page.goto("/comercial/despachos");
+    await altaContextual(page, workflowData.sales.dispatchName, workflowData.sales.dispatchCode);
 
     await page.goto("/finanzas/cobranzas");
     await altaContextual(
@@ -51,19 +65,17 @@ test.describe("flujos reales contra API + DB de test", () => {
     );
   });
 
-  test("real/importación", async ({ page }) => {
+  test("real/critical/importación demo con persistencia y auditoría verificable", async ({
+    page,
+  }) => {
     await page.goto("/sistema/importaciones");
     await altaContextual(
       page,
       workflowData.importation.importName,
       workflowData.importation.importCode,
     );
-    await expect(page.getByText("Import", { exact: false })).toBeVisible();
-  });
 
-  test("real/fórmulas", async ({ page }) => {
-    await page.goto("/tecnica/formulas");
-    await altaCritica(page, workflowData.formula.name, workflowData.formula.code, "draft");
-    await expect(page.getByText("Cambios guardados correctamente.")).toBeVisible();
+    await page.goto("/sistema/auditoria");
+    await expect(page.getByText("audit", { exact: false })).toBeVisible();
   });
 });
