@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useRef, useState } from "react";
 
 type SidebarItem = {
   label: string;
@@ -88,7 +88,7 @@ export function Sidebar() {
       <nav ref={navRef} className="relative space-y-1" aria-label="Navegación principal">
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute left-0 right-0 rounded-lg bg-zinc-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.24),0_7px_18px_rgba(0,0,0,0.22)] transition-[top,height,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] dark:bg-zinc-100 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_24px_rgba(0,0,0,0.35)]"
+          className="pointer-events-none absolute left-0 right-0 rounded-lg bg-zinc-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.24),0_7px_18px_rgba(0,0,0,0.22)] transition-[top,height,opacity] duration-[var(--motion-base)] ease-[var(--ease-premium)] dark:bg-zinc-100 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_24px_rgba(0,0,0,0.35)] motion-reduce:transition-none"
           style={{
             top: `${pill.top}px`,
             height: `${pill.height}px`,
@@ -96,8 +96,11 @@ export function Sidebar() {
           }}
         />
 
-        {items.map((item) => {
+        {items.map((item, index) => {
           const active = pathname.startsWith(item.href);
+          const staggerStyle = {
+            "--sidebar-stagger-delay": `${index * 42}ms`
+          } as CSSProperties;
           return (
             <Link
               key={item.href}
@@ -106,13 +109,21 @@ export function Sidebar() {
                 itemRefs.current[item.href] = el;
               }}
               aria-current={active ? "page" : undefined}
-              className={`relative z-10 flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-[color,background-color,transform,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-state ${
+              className={`group relative z-10 flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-[color,background-color,transform,box-shadow] duration-[var(--motion-base)] ease-[var(--ease-premium)] motion-state motion-reduce:transform-none motion-reduce:transition-none animate-sidebar-item-enter ${
                 active
                   ? "text-white dark:text-zinc-900"
-                  : "text-zinc-700 hover:-translate-y-px hover:bg-zinc-100/65 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_5px_14px_rgba(0,0,0,0.08)] dark:text-zinc-200 dark:hover:bg-zinc-800/60 dark:hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_6px_16px_rgba(0,0,0,0.28)]"
+                  : "text-zinc-700 hover:translate-x-[1px] hover:-translate-y-[1px] hover:bg-zinc-100/65 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_5px_14px_rgba(0,0,0,0.08)] dark:text-zinc-200 dark:hover:bg-zinc-800/60 dark:hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_6px_16px_rgba(0,0,0,0.28)]"
               }`}
+              style={staggerStyle}
             >
-              <SidebarIcon icon={item.icon} />
+              <span
+                key={active ? pathname : item.href}
+                className={`inline-flex items-center justify-center ${
+                  active ? "animate-sidebar-icon-active" : ""
+                }`}
+              >
+                <SidebarIcon icon={item.icon} />
+              </span>
               <span>{item.label}</span>
             </Link>
           );

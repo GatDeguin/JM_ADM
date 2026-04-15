@@ -227,6 +227,19 @@ body {
     animation: row-highlight-updated 1.6s var(--ease-premium);
   }
 
+  .animate-sidebar-item-enter {
+    animation-name: sidebar-item-enter;
+    animation-duration: var(--motion-base);
+    animation-timing-function: var(--ease-premium);
+    animation-fill-mode: both;
+    animation-delay: var(--sidebar-stagger-delay, 0ms);
+  }
+
+  .animate-sidebar-icon-active {
+    animation: sidebar-icon-active var(--motion-fast) var(--ease-premium);
+    transform-origin: center;
+  }
+
   .save-label-stack {
     position: relative;
     display: inline-grid;
@@ -392,10 +405,40 @@ body {
   }
 }
 
+@keyframes sidebar-item-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sidebar-icon-active {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  35% {
+    transform: rotate(-5deg) scale(1.06);
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .motion-route-enter,
   .motion-route-exit {
     animation: none !important;
+  }
+
+  .animate-sidebar-item-enter,
+  .animate-sidebar-icon-active {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
   }
 
   .save-label,
