@@ -2,6 +2,8 @@ import { z } from "zod";
 
 const apiEnvSchema = z.object({
   PORT: z.coerce.number().int().positive().default(3001),
+  APP_ROLE: z.enum(["api", "worker"]).default("api"),
+  IMPORT_WORKER_ENABLED: z.enum(["true", "false"]).default("true"),
   DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().min(1),
   JWT_SECRET: z.string().min(1),

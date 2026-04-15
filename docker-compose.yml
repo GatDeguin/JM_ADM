@@ -1,18 +1,181 @@
 services:
   postgres:
     image: postgres:16
+    restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
       POSTGRES_DB: jmadm
-    ports: ["5432:5432"]
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d jmadm"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
   redis:
     image: redis:7
-    ports: ["6379:6379"]
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
   minio:
-    image: minio/minio
+    image: minio/minio:latest
+    restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: minio
       MINIO_ROOT_PASSWORD: minio123
-    ports: ["9000:9000", "9001:9001"]
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  bootstrap:
+    image: node:20-bookworm
+    working_dir: /workspace
+    profiles: ["bootstrap"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/jmadm
+      REDIS_URL: redis://redis:6379
+      NEXT_PUBLIC_API_URL: http://api:3001
+      STORAGE_ENDPOINT: http://minio:9000
+      STORAGE_PUBLIC_BASE_URL: http://localhost:9000/attachments
+    volumes:
+      - ./:/workspace
+    command: >-
+      sh -lc "corepack enable && pnpm install --frozen-lockfile &&
+      pnpm db:migrate:deploy && pnpm db:seed"
+
+  api:
+    image: node:20-bookworm
+    working_dir: /workspace
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      bootstrap:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    environment:
+      PORT: 3001
+      APP_ROLE: api
+      IMPORT_WORKER_ENABLED: "false"
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/jmadm
+      REDIS_URL: redis://redis:6379
+      NEXT_PUBLIC_API_URL: http://api:3001
+      STORAGE_ENDPOINT: http://minio:9000
+      STORAGE_PUBLIC_BASE_URL: http://localhost:9000/attachments
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./:/workspace
+    command: sh -lc "corepack enable && pnpm install --frozen-lockfile && pnpm --filter api dev"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "require(''net'').connect(3001,''127.0.0.1'').on(''connect'',()=>process.exit(0)).on(''error'',()=>process.exit(1))"',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  worker:
+    image: node:20-bookworm
+    working_dir: /workspace
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      bootstrap:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    environment:
+      PORT: 3002
+      APP_ROLE: worker
+      IMPORT_WORKER_ENABLED: "true"
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/jmadm
+      REDIS_URL: redis://redis:6379
+      NEXT_PUBLIC_API_URL: http://api:3001
+      STORAGE_ENDPOINT: http://minio:9000
+      STORAGE_PUBLIC_BASE_URL: http://localhost:9000/attachments
+    volumes:
+      - ./:/workspace
+    command: sh -lc "corepack enable && pnpm install --frozen-lockfile && pnpm --filter api dev"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "require(''net'').connect(6379,''redis'').on(''connect'',()=>process.exit(0)).on(''error'',()=>process.exit(1))"',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  web:
+    image: node:20-bookworm
+    working_dir: /workspace
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      PORT: 3000
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./:/workspace
+    command: sh -lc "corepack enable && pnpm install --frozen-lockfile && pnpm --filter web dev"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "require(''net'').connect(3000,''127.0.0.1'').on(''connect'',()=>process.exit(0)).on(''error'',()=>process.exit(1))"',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:

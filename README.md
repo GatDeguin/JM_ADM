@@ -242,7 +242,7 @@ Variables típicas:
 - `STORAGE_FORCE_PATH_STYLE`
 - `STORAGE_PUBLIC_BASE_URL`
 
-> Para local con Docker Compose, los defaults de `.env.example` ya están alineados con los servicios del compose.
+> Para local con Docker Compose, los defaults de `.env.example` apuntan a `localhost` (host). Dentro de los contenedores, `docker-compose.yml` sobreescribe hosts a `postgres`, `redis` y `minio`.
 
 ---
 
@@ -251,8 +251,17 @@ Variables típicas:
 ### Opción 1 — Docker Compose (recomendada)
 
 ```bash
-docker compose up --build
+cp .env.example .env
+docker compose --profile bootstrap up --build bootstrap
+docker compose up --build api worker web
 ```
+
+Flujo recomendado para demo:
+
+1. `bootstrap` espera PostgreSQL/Redis/MinIO, ejecuta migraciones (`prisma migrate deploy`) y seed inicial.
+2. `api` levanta NestJS sin worker BullMQ embebido.
+3. `worker` levanta NestJS en modo worker (`APP_ROLE=worker`) para procesar la cola de importaciones.
+4. `web` se inicia cuando la API está healthy.
 
 ### Opción 2 — Desarrollo local
 
@@ -265,6 +274,10 @@ pnpm dev
 
 - Web: `http://localhost:3000`
 - API: `http://localhost:3001`
+- PostgreSQL: `localhost:5432`
+- Redis: `localhost:6379`
+- MinIO API: `http://localhost:9000`
+- MinIO Console: `http://localhost:9001`
 
 ---
 
@@ -281,6 +294,7 @@ Desde raíz del monorepo:
 - `pnpm test`
 - `pnpm test:e2e`
 - `pnpm db:migrate`
+- `pnpm db:migrate:deploy`
 - `pnpm db:seed`
 - `pnpm db:reset`
 - `pnpm import:demo`
