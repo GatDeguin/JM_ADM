@@ -70,7 +70,7 @@ services:
       - ./:/workspace
     command: >-
       sh -lc "corepack enable && pnpm install --frozen-lockfile &&
-      pnpm db:migrate:deploy && pnpm db:seed"
+      pnpm bootstrap:full"
 
   api:
     image: node:20-bookworm

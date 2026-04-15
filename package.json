@@ -22,7 +22,9 @@
     "test:e2e:real": "pnpm --filter web test:e2e:real",
     "test:e2e:all": "pnpm --filter web test:e2e:all",
     "db:migrate:deploy": "prisma migrate deploy",
-    "test:e2e:critical": "pnpm --filter web test:e2e:critical"
+    "test:e2e:critical": "pnpm --filter web test:e2e:critical",
+    "bootstrap:check": "tsx scripts/bootstrap-check.ts",
+    "bootstrap:full": "pnpm db:migrate:deploy && pnpm db:seed && pnpm import:demo && pnpm bootstrap:check"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
