@@ -1,6 +1,6 @@
 import type { AuditEvent } from "@/components/ui/AuditTimeline";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+import { API_BASE_URL } from "@/lib/env";
 
 type ApiAuditLog = {
   id: string;
@@ -15,7 +15,7 @@ type ApiAuditLog = {
 };
 
 async function request(path: string) {
-  const response = await fetch(`${API_URL}${path}`, { cache: "no-store" });
+  const response = await fetch(`${API_BASE_URL}${path}`, { cache: "no-store" });
   if (!response.ok) {
     throw new Error(`Error consultando auditoría (${response.status})`);
   }
@@ -41,7 +41,9 @@ function toAuditEvent(log: ApiAuditLog): AuditEvent {
 }
 
 export async function fetchEntityTimeline(entity: string, entityId: string) {
-  const rows = await request(`/audit/audit-logs/timeline/${encodeURIComponent(entity)}/${encodeURIComponent(entityId)}?limit=50`);
+  const rows = await request(
+    `/audit/audit-logs/timeline/${encodeURIComponent(entity)}/${encodeURIComponent(entityId)}?limit=50`,
+  );
   return rows.map(toAuditEvent);
 }
 

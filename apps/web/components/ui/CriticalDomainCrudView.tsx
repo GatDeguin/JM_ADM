@@ -3,12 +3,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
+import { API_BASE_URL } from "@/lib/env";
 import { Layout } from "@/components/layout";
 import { DataTable } from "@/components/ui/DataTable";
 import { KPIStatCard } from "@/components/ui/KPIStatCard";
 import { MergeComparePanel } from "@/components/ui/MergeComparePanel";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { SmartSelector, type ContextualEntityType, type SmartSelectorOption } from "@/components/ui/SmartSelector";
+import {
+  SmartSelector,
+  type ContextualEntityType,
+  type SmartSelectorOption,
+} from "@/components/ui/SmartSelector";
 import { z } from "zod";
 
 type CriticalDomain = "producto-base" | "sku" | "formula" | "lote" | "pedido" | "cliente";
@@ -39,12 +44,10 @@ type DomainConfig = {
 const formSchema = z.object({
   name: z.string().min(2, "Nombre requerido"),
   code: z.string().min(2, "Código requerido"),
-  status: z.string().min(2, "Estado requerido")
+  status: z.string().min(2, "Estado requerido"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 const criticalConfig: Record<CriticalDomain, DomainConfig> = {
   "producto-base": {
@@ -58,15 +61,15 @@ const criticalConfig: Record<CriticalDomain, DomainConfig> = {
       code: String(row.code ?? "-"),
       status: String(row.status ?? "draft"),
       updatedAt: String(row.updatedAt ?? row.createdAt ?? "-"),
-      raw: row
+      raw: row,
     }),
     createPayload: (input) => ({ code: input.code, name: input.name }),
     editPayload: (input) => ({ name: input.name, status: input.status }),
     businessFilters: [
       { key: "status", label: "Activos", value: "active" },
-      { key: "status", label: "Borradores", value: "draft" }
+      { key: "status", label: "Borradores", value: "draft" },
     ],
-    statusOptions: ["draft", "active", "inactive", "pending_homologation", "archived"]
+    statusOptions: ["draft", "active", "inactive", "pending_homologation", "archived"],
   },
   sku: {
     title: "Catálogo · SKU",
@@ -78,15 +81,15 @@ const criticalConfig: Record<CriticalDomain, DomainConfig> = {
       code: String(row.code ?? "-"),
       status: String(row.status ?? "active"),
       updatedAt: String(row.updatedAt ?? row.createdAt ?? "-"),
-      raw: row
+      raw: row,
     }),
     createPayload: (input) => ({ code: input.code, name: input.name }),
     editPayload: (input) => ({ name: input.name, status: input.status }),
     businessFilters: [
       { key: "status", label: "Publicados", value: "active" },
-      { key: "status", label: "Pendientes", value: "draft" }
+      { key: "status", label: "Pendientes", value: "draft" },
     ],
-    statusOptions: ["draft", "active", "inactive", "pending_homologation", "archived"]
+    statusOptions: ["draft", "active", "inactive", "pending_homologation", "archived"],
   },
   formula: {
     title: "Técnica · Fórmula",
@@ -100,15 +103,15 @@ const criticalConfig: Record<CriticalDomain, DomainConfig> = {
       code: String(row.code ?? "-"),
       status: String(row.status ?? "draft"),
       updatedAt: String(row.updatedAt ?? row.createdAt ?? "-"),
-      raw: row
+      raw: row,
     }),
     createPayload: (input) => ({ code: input.code, name: input.name }),
     editPayload: (input) => ({ name: input.name, status: input.status }),
     businessFilters: [
       { key: "status", label: "Aprobadas", value: "approved" },
-      { key: "status", label: "Borrador", value: "draft" }
+      { key: "status", label: "Borrador", value: "draft" },
     ],
-    statusOptions: ["draft", "approved", "obsolete"]
+    statusOptions: ["draft", "approved", "obsolete"],
   },
   lote: {
     title: "Stock · Lote",
@@ -121,15 +124,20 @@ const criticalConfig: Record<CriticalDomain, DomainConfig> = {
       code: String(row.code ?? "-"),
       status: String(row.status ?? "planned"),
       updatedAt: String(row.updatedAt ?? row.createdAt ?? "-"),
-      raw: row
+      raw: row,
     }),
-    createPayload: (input) => ({ code: input.code, productBaseId: input.name, formulaVersionId: input.status, plannedQty: 1 }),
+    createPayload: (input) => ({
+      code: input.code,
+      productBaseId: input.name,
+      formulaVersionId: input.status,
+      plannedQty: 1,
+    }),
     editPayload: (input) => ({ name: input.name, status: input.status }),
     businessFilters: [
       { key: "status", label: "Planificados", value: "planned" },
-      { key: "status", label: "Liberados", value: "released" }
+      { key: "status", label: "Liberados", value: "released" },
     ],
-    statusOptions: ["planned", "in_process", "closed", "released"]
+    statusOptions: ["planned", "in_process", "closed", "released"],
   },
   pedido: {
     title: "Comercial · Pedido",
@@ -142,21 +150,21 @@ const criticalConfig: Record<CriticalDomain, DomainConfig> = {
       code: String(row.code ?? "-"),
       status: String(row.status ?? "confirmed"),
       updatedAt: String(row.updatedAt ?? row.createdAt ?? "-"),
-      raw: row
+      raw: row,
     }),
     createPayload: (input) => ({
       code: input.code,
       customerId: input.name,
       priceListId: "PL-001",
       total: 1,
-      items: [{ skuId: input.status, qty: 1 }]
+      items: [{ skuId: input.status, qty: 1 }],
     }),
     editPayload: (input) => ({ name: input.name, status: input.status }),
     businessFilters: [
       { key: "status", label: "Confirmados", value: "confirmed" },
-      { key: "status", label: "Borrador", value: "draft" }
+      { key: "status", label: "Borrador", value: "draft" },
     ],
-    statusOptions: ["draft", "confirmed", "cancelled"]
+    statusOptions: ["draft", "confirmed", "cancelled"],
   },
   cliente: {
     title: "Comercial · Cliente",
@@ -171,22 +179,22 @@ const criticalConfig: Record<CriticalDomain, DomainConfig> = {
       code: String(row.code ?? "-"),
       status: String(row.status ?? "draft"),
       updatedAt: String(row.updatedAt ?? row.createdAt ?? "-"),
-      raw: row
+      raw: row,
     }),
     createPayload: (input) => ({ code: input.code, name: input.name }),
     editPayload: (input) => ({ name: input.name, status: input.status }),
     businessFilters: [
       { key: "status", label: "Homologación", value: "pending_homologation" },
-      { key: "status", label: "Activos", value: "active" }
+      { key: "status", label: "Activos", value: "active" },
     ],
-    statusOptions: ["draft", "active", "inactive", "pending_homologation", "archived"]
-  }
+    statusOptions: ["draft", "active", "inactive", "pending_homologation", "archived"],
+  },
 };
 
 async function request(path: string, init?: RequestInit) {
-  const response = await fetch(`${API_URL}${path}`, {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
-    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) }
+    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
   });
   if (!response.ok) {
     const message = await response.text();
@@ -208,7 +216,9 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const form = useForm<FormValues>({ defaultValues: { name: "", code: "", status: config.statusOptions[0] ?? "draft" } });
+  const form = useForm<FormValues>({
+    defaultValues: { name: "", code: "", status: config.statusOptions[0] ?? "draft" },
+  });
 
   const load = async () => {
     setLoading(true);
@@ -235,14 +245,17 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
   const filteredRecords = useMemo(() => {
     if (activeFilter === "all") return records;
     const [key, value] = activeFilter.split(":");
-    return records.filter((record) => String(record.raw[key] ?? record[key as keyof DomainRecord] ?? "") === value);
+    return records.filter(
+      (record) => String(record.raw[key] ?? record[key as keyof DomainRecord] ?? "") === value,
+    );
   }, [activeFilter, records]);
 
   const options: SmartSelectorOption[] = useMemo(
     () => records.map((r) => ({ id: r.id, label: r.name, meta: `${r.code} · ${r.status}` })),
-    [records]
+    [records],
   );
-  const contextualEntityType: ContextualEntityType | undefined = domain === "sku" ? "sku" : domain === "cliente" ? "cliente" : undefined;
+  const contextualEntityType: ContextualEntityType | undefined =
+    domain === "sku" ? "sku" : domain === "cliente" ? "cliente" : undefined;
 
   const submit = form.handleSubmit(async (input) => {
     const parsed = formSchema.safeParse(input);
@@ -253,7 +266,10 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
 
     try {
       if (config.createPath) {
-        await request(config.createPath, { method: "POST", body: JSON.stringify(config.createPayload(parsed.data)) });
+        await request(config.createPath, {
+          method: "POST",
+          body: JSON.stringify(config.createPayload(parsed.data)),
+        });
       }
       setSheetOpen(false);
       form.reset({ name: "", code: "", status: config.statusOptions[0] ?? "draft" });
@@ -266,32 +282,64 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
 
   const selectedRecord = records.find((r) => r.id === selected) ?? null;
   const detailPath =
-    domain === "producto-base" ? `/catalogo/productos-base/${selected}` : domain === "sku" ? `/catalogo/skus/${selected}` : undefined;
-  const transactionalCreatePath = domain === "pedido" ? "/comercial/pedidos/nuevo?step=cabecera" : undefined;
+    domain === "producto-base"
+      ? `/catalogo/productos-base/${selected}`
+      : domain === "sku"
+        ? `/catalogo/skus/${selected}`
+        : undefined;
+  const transactionalCreatePath =
+    domain === "pedido" ? "/comercial/pedidos/nuevo?step=cabecera" : undefined;
 
   return (
     <Layout title={config.title} transitionPreset="elevate-in">
       <PageHeader title={config.title} subtitle={config.subtitle} />
       {detailPath || transactionalCreatePath ? (
         <div className="card-base mb-4 flex flex-wrap items-center gap-3 text-sm">
-          {transactionalCreatePath ? <Link href={transactionalCreatePath} className="font-medium text-indigo-700">Alta transaccional (wizard)</Link> : null}
-          {detailPath && selected ? <Link href={detailPath} className="font-medium text-indigo-700">Ver ficha detallada</Link> : null}
+          {transactionalCreatePath ? (
+            <Link href={transactionalCreatePath} className="font-medium text-indigo-700">
+              Alta transaccional (wizard)
+            </Link>
+          ) : null}
+          {detailPath && selected ? (
+            <Link href={detailPath} className="font-medium text-indigo-700">
+              Ver ficha detallada
+            </Link>
+          ) : null}
         </div>
       ) : null}
 
       <div className="mb-4 grid gap-3 md:grid-cols-3">
         <KPIStatCard label="Registros" value={records.length} />
-        <KPIStatCard label="Activos" value={records.filter((r) => r.status.includes("active") || r.status.includes("approved") || r.status.includes("confirmed")).length} />
+        <KPIStatCard
+          label="Activos"
+          value={
+            records.filter(
+              (r) =>
+                r.status.includes("active") ||
+                r.status.includes("approved") ||
+                r.status.includes("confirmed"),
+            ).length
+          }
+        />
         <KPIStatCard label="Dominio" value={domain} />
       </div>
 
       <section className="mb-4 rounded-xl border bg-white p-4">
         <div className="mb-3 flex flex-wrap gap-2">
-          <button className={`btn-secondary ${activeFilter === "all" ? "bg-zinc-900 text-white" : ""}`} onClick={() => setActiveFilter("all")}>Todos</button>
+          <button
+            className={`btn-secondary ${activeFilter === "all" ? "bg-zinc-900 text-white" : ""}`}
+            onClick={() => setActiveFilter("all")}
+          >
+            Todos
+          </button>
           {config.businessFilters.map((filter) => {
             const key = `${filter.key}:${filter.value}`;
             return (
-              <button key={key} className={`btn-secondary ${activeFilter === key ? "bg-zinc-900 text-white" : ""}`} onClick={() => setActiveFilter(key)}>
+              <button
+                key={key}
+                className={`btn-secondary ${activeFilter === key ? "bg-zinc-900 text-white" : ""}`}
+                onClick={() => setActiveFilter(key)}
+              >
                 {filter.label}
               </button>
             );
@@ -309,7 +357,11 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
             loading={loading}
             error={error}
             onChange={setSelected}
-            contextualConfig={contextualEntityType ? { entityType: contextualEntityType, originFlow: `${domain}-nested-flow` } : undefined}
+            contextualConfig={
+              contextualEntityType
+                ? { entityType: contextualEntityType, originFlow: `${domain}-nested-flow` }
+                : undefined
+            }
           />
           <DataTable
             title={`Tabla ${config.title}`}
@@ -319,7 +371,7 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
               { key: "name", header: "Nombre" },
               { key: "code", header: "Código" },
               { key: "status", header: "Estado" },
-              { key: "updatedAt", header: "Actualizado" }
+              { key: "updatedAt", header: "Actualizado" },
             ]}
             rows={filteredRecords}
             rowId={(r) => r.id}
@@ -360,8 +412,22 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
       <section className="card-base">
         <h3 className="mb-3 font-semibold">Acciones contextuales</h3>
         <div className="flex flex-wrap gap-2">
-          <button className="btn-secondary" onClick={() => setSheetOpen(true)}>Crear</button>
-          <button className="btn-secondary" onClick={() => selectedRecord && form.reset({ name: selectedRecord.name, code: selectedRecord.code, status: selectedRecord.status })}>Editar</button>
+          <button className="btn-secondary" onClick={() => setSheetOpen(true)}>
+            Crear
+          </button>
+          <button
+            className="btn-secondary"
+            onClick={() =>
+              selectedRecord &&
+              form.reset({
+                name: selectedRecord.name,
+                code: selectedRecord.code,
+                status: selectedRecord.status,
+              })
+            }
+          >
+            Editar
+          </button>
           <button
             className="btn-secondary"
             onClick={async () => {
@@ -371,7 +437,9 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
                 setSuccess("Acción ejecutada correctamente.");
                 await load();
               } catch (actionError) {
-                setError(actionError instanceof Error ? actionError.message : "No se pudo homologar");
+                setError(
+                  actionError instanceof Error ? actionError.message : "No se pudo homologar",
+                );
               }
             }}
           >
@@ -382,11 +450,16 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
             onClick={async () => {
               if (!selectedRecord || !config.editPath) return;
               try {
-                await request(config.editPath(selectedRecord.id), { method: "PATCH", body: JSON.stringify(config.editPayload(form.getValues())) });
+                await request(config.editPath(selectedRecord.id), {
+                  method: "PATCH",
+                  body: JSON.stringify(config.editPayload(form.getValues())),
+                });
                 setSuccess("Edición guardada correctamente.");
                 await load();
               } catch (actionError) {
-                setError(actionError instanceof Error ? actionError.message : "No se pudo actualizar");
+                setError(
+                  actionError instanceof Error ? actionError.message : "No se pudo actualizar",
+                );
               }
             }}
           >
@@ -398,7 +471,13 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
       {sheetOpen ? (
         <div className="fixed inset-0 z-50 bg-black/35">
           <div className="absolute inset-0 md:inset-auto md:right-0 md:top-0 md:h-full md:w-[560px]">
-            <form className="h-full overflow-y-auto bg-white p-4" onSubmit={submit} role="dialog" aria-modal="true" aria-label="Formulario de creación y edición">
+            <form
+              className="h-full overflow-y-auto bg-white p-4"
+              onSubmit={submit}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Formulario de creación y edición"
+            >
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="font-semibold">Formulario validado (RHF + Zod)</h3>
                 <button type="button" className="btn-secondary" onClick={() => setSheetOpen(false)}>
@@ -408,15 +487,27 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
               <div className="grid gap-3 sm:grid-cols-2">
                 <label>
                   <span className="mb-1 block text-sm">Nombre / Referencia</span>
-                  <input aria-label="Nombre / Referencia" className="input-base w-full" {...form.register("name")} />
+                  <input
+                    aria-label="Nombre / Referencia"
+                    className="input-base w-full"
+                    {...form.register("name")}
+                  />
                 </label>
                 <label>
                   <span className="mb-1 block text-sm">Código</span>
-                  <input aria-label="Código" className="input-base w-full" {...form.register("code")} />
+                  <input
+                    aria-label="Código"
+                    className="input-base w-full"
+                    {...form.register("code")}
+                  />
                 </label>
                 <label className="sm:col-span-2">
                   <span className="mb-1 block text-sm">Estado / Campo negocio</span>
-                  <select aria-label="Estado / Campo negocio" className="input-base w-full" {...form.register("status")}>
+                  <select
+                    aria-label="Estado / Campo negocio"
+                    className="input-base w-full"
+                    {...form.register("status")}
+                  >
                     {config.statusOptions.map((status) => (
                       <option value={status} key={status}>
                         {status}
@@ -425,7 +516,9 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
                   </select>
                 </label>
               </div>
-              {form.formState.errors.name ? <p className="mt-2 text-sm text-red-600">{form.formState.errors.name.message}</p> : null}
+              {form.formState.errors.name ? (
+                <p className="mt-2 text-sm text-red-600">{form.formState.errors.name.message}</p>
+              ) : null}
               {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
               <button className="btn-primary mt-4 w-full" type="submit" disabled={loading}>
                 {loading ? "Guardando..." : "Guardar"}

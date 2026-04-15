@@ -1,10 +1,11 @@
 import { expect, test } from "@playwright/test";
+import { API_BASE_URL } from "../lib/env";
 import { workflowData } from "./fixtures/workflow-data";
 import { altaContextual, altaCritica, mockJson } from "./helpers";
 
 test("smoke/login mockeado", async ({ page }) => {
   await mockJson(page, "**/auth/login", "POST", { token: "demo-token" });
-  const loginResponse = await page.request.post("http://localhost:4000/auth/login", {
+  const loginResponse = await page.request.post(`${API_BASE_URL}/auth/login`, {
     data: { email: "admin@demo.local", password: "secret" },
   });
 
