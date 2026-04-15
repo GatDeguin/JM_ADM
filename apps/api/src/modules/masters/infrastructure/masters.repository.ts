@@ -40,6 +40,14 @@ export class MastersRepository {
   }
 
   async listContextualOptions(entityType: ContextualEntityType): Promise<ContextualOptionDto[]> {
+    if (entityType === "producto") {
+      const rows = await this.prisma.productBase.findMany({ take: 50, orderBy: { id: "desc" }, include: { variant: true } });
+      return rows.map((row: any) => ({ id: row.id, label: row.name, meta: row.code || row.variant?.name }));
+    }
+    if (entityType === "variante") {
+      const rows = await this.prisma.variant.findMany({ take: 50, orderBy: { id: "desc" } });
+      return rows.map((row: any) => ({ id: row.id, label: row.name }));
+    }
     if (entityType === "presentacion") {
       const rows = await this.prisma.presentation.findMany({ take: 50, orderBy: { id: "desc" }, include: { unit: true } });
       return rows.map((row: any) => ({ id: row.id, label: row.name, meta: row.unit?.name ?? "Sin unidad" }));
@@ -64,19 +72,52 @@ export class MastersRepository {
       const rows = await this.prisma.customer.findMany({ take: 50, orderBy: { id: "desc" } });
       return rows.map((row: any) => ({ id: row.id, label: row.name, meta: row.code }));
     }
+    if (entityType === "direccion") {
+      const rows = await this.prisma.customerAddress.findMany({ take: 50, orderBy: { id: "desc" }, include: { customer: true } });
+      return rows.map((row: any) => ({ id: row.id, label: row.label, meta: `${row.customer.name} · ${row.city}` }));
+    }
     if (entityType === "lista") {
       const rows = await this.prisma.priceList.findMany({ take: 50, orderBy: { id: "desc" } });
       return rows.map((row: any) => ({ id: row.id, label: row.name, meta: row.code }));
     }
-    const rows = await this.prisma.cashAccount.findMany({ take: 50, orderBy: { id: "desc" } });
-    return rows.map((row: any) => ({ id: row.id, label: row.name, meta: row.type }));
+    if (entityType === "cuenta") {
+      const rows = await this.prisma.cashAccount.findMany({ take: 50, orderBy: { id: "desc" } });
+      return rows.map((row: any) => ({ id: row.id, label: row.name, meta: row.type }));
+    }
+    if (entityType === "cuenta_cobrar") {
+      const rows = await this.prisma.accountsReceivable.findMany({ take: 50, orderBy: { id: "desc" }, include: { customer: true } });
+      return rows.map((row: any) => ({ id: row.id, label: `CxC ${row.id.slice(-6)}`, meta: `${row.customer.name} · ${row.balance}` }));
+    }
+    if (entityType === "formula_version") {
+      const rows = await this.prisma.formulaVersion.findMany({ take: 50, orderBy: { id: "desc" }, include: { template: true } });
+      return rows.map((row: any) => ({ id: row.id, label: `${row.template.code} v${row.version}`, meta: row.status }));
+    }
+
+    const rows = await this.prisma.accountsPayable.findMany({ take: 50, orderBy: { id: "desc" }, include: { supplier: true } });
+    return rows.map((row: any) => ({ id: row.id, label: `CxP ${row.id.slice(-6)}`, meta: `${row.supplier.name} · ${row.balance}` }));
   }
 
   async createContextualEntity(entityType: ContextualEntityType, data: CreateContextualEntityInput): Promise<ContextualOptionDto> {
     const code = `CTX-${Date.now()}`;
+    const ctx = data.context ?? {};
 
+    if (entityType === "producto") {
+      const created = await this.prisma.productBase.create({ data: { code: `PB-${Date.now()}`, name: data.label } });
+      return { id: created.id, label: created.name, meta: created.code };
+    }
+    if (entityType === "variante") {
+      const created = await this.prisma.variant.create({ data: { name: data.label } });
+      return { id: created.id, label: created.name };
+    }
     if (entityType === "presentacion") {
-      const created = await this.prisma.presentation.create({ data: { name: data.label } });
+      const unitId = String(ctx.unitId ?? "").trim();
+      const unitLabel = String(ctx.unitLabel ?? "").trim();
+      let resolvedUnitId = unitId;
+      if (!resolvedUnitId && unitLabel) {
+        const unit = await this.prisma.unit.create({ data: { code: `UNIT-${Date.now()}`, name: unitLabel } });
+        resolvedUnitId = unit.id;
+      }
+      const created = await this.prisma.presentation.create({ data: { name: data.label, unitId: resolvedUnitId || null } });
       return { id: created.id, label: created.name };
     }
     if (entityType === "unidad") {
@@ -84,17 +125,44 @@ export class MastersRepository {
       return { id: created.id, label: created.name, meta: created.code };
     }
     if (entityType === "sku") {
-      const [productBase, presentation] = await Promise.all([
-        this.prisma.productBase.findFirst({ orderBy: { id: "desc" } }),
-        this.prisma.presentation.findFirst({ orderBy: { id: "desc" } })
-      ]);
-      if (!productBase || !presentation) {
-        throw new Error("Para crear SKU contextual se requiere al menos un producto base y una presentación.");
+      const productBaseId = String(ctx.productBaseId ?? "").trim();
+      const productBaseLabel = String(ctx.productBaseLabel ?? data.label).trim() || `Producto ${code}`;
+      const presentationId = String(ctx.presentationId ?? "").trim();
+      const presentationLabel = String(ctx.presentationLabel ?? "").trim() || "Presentación contextual";
+      const unitId = String(ctx.unitId ?? "").trim();
+      const unitLabel = String(ctx.unitLabel ?? "").trim() || "Unidad contextual";
+
+      const resolvedProductBase = productBaseId
+        ? await this.prisma.productBase.findUnique({ where: { id: productBaseId } })
+        : await this.prisma.productBase.create({ data: { code: `PB-${Date.now()}`, name: productBaseLabel } });
+
+      let resolvedPresentation = presentationId
+        ? await this.prisma.presentation.findUnique({ where: { id: presentationId }, include: { unit: true } })
+        : null;
+
+      if (!resolvedPresentation) {
+        const resolvedUnit = unitId
+          ? await this.prisma.unit.findUnique({ where: { id: unitId } })
+          : await this.prisma.unit.create({ data: { code: `UNIT-${Date.now()}`, name: unitLabel } });
+
+        resolvedPresentation = await this.prisma.presentation.create({
+          data: { name: presentationLabel, unitId: resolvedUnit?.id ?? null },
+          include: { unit: true },
+        });
       }
+
+      if (!resolvedProductBase || !resolvedPresentation) {
+        throw new Error("No se pudo resolver el contexto anidado para crear SKU.");
+      }
+
       const created = await this.prisma.sKU.create({
-        data: { code, productBaseId: productBase.id, presentationId: presentation.id }
+        data: { code, productBaseId: resolvedProductBase.id, presentationId: resolvedPresentation.id },
       });
-      return { id: created.id, label: created.code, meta: `${productBase.name} · ${presentation.name}` };
+      return {
+        id: created.id,
+        label: created.code,
+        meta: `${resolvedProductBase.name} · ${resolvedPresentation.name} · ${resolvedPresentation.unit?.name ?? "Sin unidad"}`,
+      };
     }
     if (entityType === "alias") {
       const created = await this.prisma.entityAlias.create({
@@ -110,20 +178,96 @@ export class MastersRepository {
       const created = await this.prisma.customer.create({ data: { code, name: data.label } });
       return { id: created.id, label: created.name, meta: created.code };
     }
+    if (entityType === "direccion") {
+      const customerId = String(ctx.customerId ?? "").trim();
+      const customer = customerId
+        ? await this.prisma.customer.findUnique({ where: { id: customerId } })
+        : await this.prisma.customer.findFirst({ orderBy: { id: "desc" } });
+      if (!customer) {
+        throw new Error("Para crear dirección contextual se requiere al menos un cliente.");
+      }
+      const created = await this.prisma.customerAddress.create({
+        data: { customerId: customer.id, label: data.label, address: data.meta?.trim() || data.label, city: "N/A" }
+      });
+      return { id: created.id, label: created.label, meta: customer.name };
+    }
     if (entityType === "lista") {
       const created = await this.prisma.priceList.create({ data: { code, name: data.label, startsAt: new Date() } });
       return { id: created.id, label: created.name, meta: created.code };
     }
-    const created = await this.prisma.cashAccount.create({ data: { name: data.label, type: data.meta?.trim() || "cash" } });
-    return { id: created.id, label: created.name, meta: created.type };
+    if (entityType === "cuenta") {
+      const created = await this.prisma.cashAccount.create({ data: { name: data.label, type: data.meta?.trim() || "cash" } });
+      return { id: created.id, label: created.name, meta: created.type };
+    }
+    if (entityType === "cuenta_cobrar") {
+      const customerId = String(ctx.customerId ?? "").trim();
+      const customer = customerId
+        ? await this.prisma.customer.findUnique({ where: { id: customerId } })
+        : await this.prisma.customer.findFirst({ orderBy: { id: "desc" } });
+      const resolvedCustomer = customer ?? await this.prisma.customer.create({ data: { code: `C-${Date.now()}`, name: "Cliente contextual" } });
+
+      const salesOrderId = String(ctx.salesOrderId ?? "").trim();
+      const order = salesOrderId
+        ? await this.prisma.salesOrder.findUnique({ where: { id: salesOrderId } })
+        : await this.prisma.salesOrder.findFirst({ where: { customerId: resolvedCustomer.id }, orderBy: { id: "desc" } });
+      const priceList = await this.prisma.priceList.findFirst({ orderBy: { id: "desc" } })
+        ?? await this.prisma.priceList.create({ data: { code: `PL-${Date.now()}`, name: "Lista contextual", startsAt: new Date() } });
+      const resolvedOrder = order ?? await this.prisma.salesOrder.create({ data: { code: `SO-${Date.now()}`, customerId: resolvedCustomer.id, priceListId: priceList.id, total: 1 } });
+
+      const created = await this.prisma.accountsReceivable.create({
+        data: {
+          customerId: resolvedCustomer.id,
+          salesOrderId: resolvedOrder.id,
+          dueDate: new Date(),
+          amount: 1,
+          balance: 1,
+        },
+      });
+      return { id: created.id, label: `CxC ${created.id.slice(-6)}`, meta: resolvedCustomer.name };
+    }
+    if (entityType === "formula_version") {
+      const template = await this.prisma.formulaTemplate.findFirst({ orderBy: { id: "desc" } });
+      if (!template) {
+        throw new Error("Para crear versión de fórmula contextual se requiere al menos una plantilla.");
+      }
+      const last = await this.prisma.formulaVersion.findFirst({ where: { templateId: template.id }, orderBy: { version: "desc" } });
+      const created = await this.prisma.formulaVersion.create({
+        data: { templateId: template.id, version: (last?.version ?? 0) + 1, status: "draft" },
+        include: { template: true },
+      });
+      return { id: created.id, label: `${created.template.code} v${created.version}`, meta: created.status };
+    }
+
+    const supplierId = String(ctx.supplierId ?? "").trim();
+    const supplier = supplierId
+      ? await this.prisma.supplier.findUnique({ where: { id: supplierId } })
+      : await this.prisma.supplier.findFirst({ orderBy: { id: "desc" } });
+    const resolvedSupplier = supplier ?? await this.prisma.supplier.create({ data: { code: `S-${Date.now()}`, name: "Proveedor contextual" } });
+
+    const created = await this.prisma.accountsPayable.create({
+      data: {
+        supplierId: resolvedSupplier.id,
+        sourceType: data.meta?.trim() || "manual",
+        sourceId: code,
+        dueDate: new Date(),
+        amount: 1,
+        balance: 1,
+      },
+    });
+    return { id: created.id, label: `CxP ${created.id.slice(-6)}`, meta: resolvedSupplier.name };
   }
 
-  createContextualAudit(input: { entityType: ContextualEntityType; entityId: string; originFlow?: string; payload: CreateContextualEntityInput }) {
+  createContextualAudit(input: { entityType: ContextualEntityType; entityId: string; originFlow?: string; payload: CreateContextualEntityInput; created: ContextualOptionDto }) {
     return this.auditTrailService.logCreate({
       entity: `contextual:${input.entityType}`,
       entityId: input.entityId,
       origin: input.originFlow ?? "nested-flow",
-      after: input.payload,
+      before: { originFlow: input.originFlow ?? null },
+      after: {
+        originFlow: input.originFlow ?? null,
+        payload: input.payload,
+        created: input.created,
+      },
     });
   }
 }

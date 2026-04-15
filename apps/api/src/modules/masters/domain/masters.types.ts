@@ -4,14 +4,20 @@ export type UpdateUnitInput = { name?: string; status?: string };
 export type ActionUnitInput = Record<string, never>;
 
 export const contextualEntityTypes = [
+  "producto",
+  "variante",
   "presentacion",
   "unidad",
   "sku",
   "alias",
   "proveedor",
   "cliente",
+  "direccion",
   "lista",
-  "cuenta"
+  "cuenta",
+  "cuenta_cobrar",
+  "cuenta_pagar",
+  "formula_version"
 ] as const;
 
 export type ContextualEntityType = (typeof contextualEntityTypes)[number];
@@ -26,4 +32,5 @@ export type CreateContextualEntityInput = {
   label: string;
   meta?: string;
   originFlow?: string;
+  context?: Record<string, unknown>;
 };

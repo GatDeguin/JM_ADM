@@ -109,7 +109,7 @@ export function NewSalePage() {
             value={form.watch("skuId")}
             onChange={(value) => form.setValue("skuId", value, { shouldValidate: true })}
             options={[]}
-            contextualConfig={{ entityType: "sku", originFlow: "comercial/ventas/pedidos" }}
+            contextualConfig={{ entityType: "sku", originFlow: "comercial/ventas/pedidos", context: { presentationLabel: "Presentación rápida", unitLabel: "Unidad rápida" } }}
           />
         </div>
 

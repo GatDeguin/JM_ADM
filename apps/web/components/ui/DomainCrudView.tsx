@@ -107,7 +107,9 @@ const contextualEntityByDomain: Partial<Record<string, ContextualEntityType>> = 
   "catalogo-alias": "alias",
   "abastecimiento-proveedores": "proveedor",
   "comercial-listas": "lista",
-  "finanzas-tesoreria": "cuenta"
+  "finanzas-tesoreria": "cuenta",
+  "abastecimiento-ordenes-compra": "proveedor",
+  "comercial-clientes": "cliente"
 };
 
 export function DomainCrudView({ title, subtitle, domain }: DomainCrudViewProps) {
