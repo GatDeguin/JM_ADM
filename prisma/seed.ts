@@ -23,6 +23,143 @@ const MODULES = [
   "system",
 ] as const;
 
+const SOURCE_FAMILIES_MIN_TECH_COMMERCIAL = [
+  "Shampoo",
+  "Acondicionador / Bálsamo",
+  "Baño de crema",
+  "Líquidos",
+  "Cremas",
+  "Máscara",
+  "Tratamiento en crema",
+  "Protector térmico / Leave-in",
+  "Crema de peinar",
+  "Ampolla",
+  "Aceite / Sérum",
+  "Perfume capilar",
+  "Coloración",
+] as const;
+
+const SOURCE_LINES_MIN = ["Oro", "Cherry", "Rejuvelac", "Purple Plex"] as const;
+const SOURCE_VARIANTS_MIN = ["Oro", "Cherry", "Rejuvelac", "Purple Plex"] as const;
+
+const SOURCE_PRODUCT_BASES_MANDATORY = [
+  ["PB-BCR-OR", "Baño de Crema Oro", "Baño de crema", "Oro", "Oro"],
+  ["PB-PTL-OR", "Protector Térmico Oro Líquido", "Protector térmico / Leave-in", "Oro", "Oro"],
+  ["PB-AMP-RJ", "Ampolla Rejuvelac", "Ampolla", "Rejuvelac", "Rejuvelac"],
+  ["PB-SHA-OR", "Shampoo Oro", "Shampoo", "Oro", "Oro"],
+  ["PB-TRC-OR", "Tratamiento Oro en Crema", "Tratamiento en crema", "Oro", "Oro"],
+] as const;
+
+const SOURCE_PRESENTATIONS_MIN = ["granel", "1L", "500ML", "250ML", "120ml", "30ML"] as const;
+
+const SOURCE_ALIASES_MANDATORY = [
+  [
+    "product_base",
+    "ORO CREMA",
+    null,
+    "Tratamiento Oro en Crema",
+    EntityStatus.pending_homologation,
+    "ORO CREMA",
+  ],
+  [
+    "product_base",
+    "ORO LIQUIDO",
+    "PB-PTL-OR",
+    "Protector Térmico Oro Líquido",
+    EntityStatus.active,
+    "ORO LIQUIDO",
+  ],
+  ["product_base", "REJUVELAC", "PB-AMP-RJ", "Ampolla Rejuvelac", EntityStatus.active, "REJUVELAC"],
+  ["product_base", "SH OR", null, "Shampoo Oro", EntityStatus.pending_homologation, "SH OR"],
+  ["sku", "SH OR 500", null, "SKU SHAMPOO ORO 500", EntityStatus.pending_homologation, "SH OR 500"],
+  ["variant", "AÇAÍ", null, "Açaí", EntityStatus.pending_homologation, "AÇAÍ"],
+  ["variant", "ORQUIDEA", null, null, EntityStatus.pending_homologation, "ORQUIDEA"],
+] as const;
+
+const SOURCE_ALIASES_AMBIGUOUS_PENDING = [
+  ["line", "LIFTING", null, "Lifting Oro", EntityStatus.pending_homologation, "LIFTING"],
+  ["variant", "AÇAÍ", null, "Açaí", EntityStatus.pending_homologation, "AÇAÍ"],
+  ["variant", "ORQUIDEA", null, null, EntityStatus.pending_homologation, "ORQUIDEA"],
+  [
+    "product_base",
+    "ORO CREMA",
+    null,
+    "Tratamiento Oro en Crema",
+    EntityStatus.pending_homologation,
+    "ORO CREMA",
+  ],
+  [
+    "product_base",
+    "LEVANTA MUERTOS",
+    null,
+    "Ampolla Rejuvelac",
+    EntityStatus.pending_homologation,
+    "LEVANTA MUERTOS",
+  ],
+  ["product_base", "SH OR", null, "Shampoo Oro", EntityStatus.pending_homologation, "SH OR"],
+  ["sku", "SH OR 500", null, "SKU SHAMPOO ORO 500", EntityStatus.pending_homologation, "SH OR 500"],
+  [
+    "sku",
+    "BOTOX ORO 250",
+    null,
+    "SKU BOTOX ORO 250",
+    EntityStatus.pending_homologation,
+    "BOTOX ORO 250",
+  ],
+  [
+    "product_base",
+    "ORO CREMA ",
+    null,
+    "Tratamiento Oro en Crema",
+    EntityStatus.pending_homologation,
+    "ORO CREMA ",
+  ],
+  [
+    "product_base",
+    " ORO CREMA",
+    null,
+    "Tratamiento Oro en Crema",
+    EntityStatus.pending_homologation,
+    " ORO CREMA",
+  ],
+  [
+    "sku",
+    "SH  OR  500",
+    null,
+    "SKU SHAMPOO ORO 500",
+    EntityStatus.pending_homologation,
+    "SH  OR  500",
+  ],
+] as const;
+
+function assertNonEmptyMatrix(scope: string, values: readonly unknown[]) {
+  if (values.length === 0) {
+    throw new Error(`[seed-check] Matriz fuente vacía para ${scope}.`);
+  }
+}
+
+function runSourceMatrixChecks() {
+  assertNonEmptyMatrix(
+    "familias técnicas/comerciales mínimas",
+    SOURCE_FAMILIES_MIN_TECH_COMMERCIAL,
+  );
+  assertNonEmptyMatrix("líneas mínimas", SOURCE_LINES_MIN);
+  assertNonEmptyMatrix("variantes mínimas", SOURCE_VARIANTS_MIN);
+  assertNonEmptyMatrix("catálogo de productos base obligatorios", SOURCE_PRODUCT_BASES_MANDATORY);
+  assertNonEmptyMatrix("presentaciones mínimas", SOURCE_PRESENTATIONS_MIN);
+  assertNonEmptyMatrix("alias/homologaciones mínimas exactas", SOURCE_ALIASES_MANDATORY);
+
+  const hasInvalidAlias = SOURCE_ALIASES_MANDATORY.some(
+    ([entityType, alias, _canonicalCode, _canonicalName, _status, originalValue]) =>
+      !entityType || !alias || !originalValue || alias !== originalValue,
+  );
+  if (hasInvalidAlias) {
+    throw new Error(
+      "[seed-check] Matriz de alias obligatorios inválida: cada alias debe conservar exactamente el originalValue importado.",
+    );
+  }
+}
+
 async function upsertByName<T extends { name: string }>(
   data: T[],
   upsert: (name: string) => Promise<unknown>,
@@ -33,40 +170,20 @@ async function upsertByName<T extends { name: string }>(
 }
 
 async function runSeedChecks() {
-  const mandatoryFamilies = [
-    "Shampoo",
-    "Acondicionador / Bálsamo",
-    "Baño de crema",
-    "Líquidos",
-    "Cremas",
-    "Máscara",
-    "Tratamiento en crema",
-    "Protector térmico / Leave-in",
-    "Crema de peinar",
-    "Ampolla",
-    "Aceite / Sérum",
-    "Perfume capilar",
-    "Coloración",
-  ];
-  const mandatoryVariants = ["Oro", "Cherry", "Rejuvelac", "Purple Plex"];
-  const mandatoryProductBases = ["PB-BCR-OR", "PB-PTL-OR", "PB-AMP-RJ", "PB-SHA-OR", "PB-TRC-OR"];
-  const mandatoryPresentations = ["granel", "1L", "500ML", "250ML", "120ml", "30ML"];
-  const mandatoryAliases = [
-    "ORO CREMA",
-    "ORO LIQUIDO",
-    "REJUVELAC",
-    "SH OR",
-    "SH OR 500",
-    "AÇAÍ",
-    "ORQUIDEA",
-  ];
+  runSourceMatrixChecks();
+
+  const mandatoryFamilies = [...SOURCE_FAMILIES_MIN_TECH_COMMERCIAL];
+  const mandatoryVariants = [...SOURCE_VARIANTS_MIN];
+  const mandatoryProductBases = SOURCE_PRODUCT_BASES_MANDATORY.map(([code]) => code);
+  const mandatoryPresentations = [...SOURCE_PRESENTATIONS_MIN];
+  const mandatoryAliases = SOURCE_ALIASES_MANDATORY.map(([, alias]) => alias);
 
   const [families, variants, productBases, presentations, aliases] = await Promise.all([
     prisma.family.findMany({ select: { name: true } }),
     prisma.variant.findMany({ select: { name: true } }),
     prisma.productBase.findMany({ select: { code: true } }),
     prisma.presentation.findMany({ select: { name: true } }),
-    prisma.entityAlias.findMany({ select: { alias: true, status: true } }),
+    prisma.entityAlias.findMany({ select: { alias: true, status: true, originalValue: true } }),
   ]);
 
   const assertContains = (scope: string, needed: string[], existing: string[]) => {
@@ -105,9 +222,19 @@ async function runSeedChecks() {
   const pendingAmbiguousAliases = aliases.filter(
     (x) => x.status === EntityStatus.pending_homologation,
   );
-  if (pendingAmbiguousAliases.length < 5) {
+  if (pendingAmbiguousAliases.length < SOURCE_ALIASES_AMBIGUOUS_PENDING.length) {
     throw new Error(
-      `[seed-check] Se esperaban al menos 5 alias ambiguos pending_homologation y hay ${pendingAmbiguousAliases.length}`,
+      `[seed-check] Se esperaban al menos ${SOURCE_ALIASES_AMBIGUOUS_PENDING.length} alias ambiguos pending_homologation y hay ${pendingAmbiguousAliases.length}`,
+    );
+  }
+  const pendingWithOriginalMismatch = pendingAmbiguousAliases.filter(
+    (x) => x.alias !== x.originalValue,
+  );
+  if (pendingWithOriginalMismatch.length > 0) {
+    throw new Error(
+      `[seed-check] Hay alias pending_homologation con pérdida de valor original: ${pendingWithOriginalMismatch
+        .map((x) => x.alias)
+        .join(", ")}`,
     );
   }
 
@@ -121,6 +248,12 @@ async function runSeedChecks() {
     payment,
     costSnapshot,
     marginSnapshot,
+    receiptAllocation,
+    paymentAllocation,
+    treasuryCollection,
+    treasuryPayment,
+    childBatchA,
+    childBatchB,
   ] = await Promise.all([
     prisma.productionOrder.findFirst({ where: { code: "OP-2026-0001" } }),
     prisma.batch.findFirst({ where: { code: "LOT-BAL-OR-260401" } }),
@@ -131,6 +264,12 @@ async function runSeedChecks() {
     prisma.payment.findFirst({ where: { code: "PAG-2026-0001" } }),
     prisma.costSnapshot.findFirst({ where: { key: "demo_e2e_costs_2026_04" } }),
     prisma.marginSnapshot.findFirst({ where: { key: "demo_e2e_margins_2026_04" } }),
+    prisma.receiptAllocation.findFirst({ where: { id: "RA-001" } }),
+    prisma.paymentAllocation.findFirst({ where: { id: "PA-001" } }),
+    prisma.treasuryMovement.findFirst({ where: { id: "TM-001", reference: "REC-2026-0001" } }),
+    prisma.treasuryMovement.findFirst({ where: { id: "TM-002", reference: "PAG-2026-0001" } }),
+    prisma.childBatch.findFirst({ where: { id: "CHILD-001", lotCode: "FRAC-BAL-OR-260401-A" } }),
+    prisma.childBatch.findFirst({ where: { id: "CHILD-002", lotCode: "FRAC-BAL-OR-260401-B" } }),
   ]);
 
   if (!productionOrder || !batch || !packagingOrder || !stockMovement) {
@@ -138,6 +277,12 @@ async function runSeedChecks() {
   }
   if (!salesOrder || !receipt || !payment) {
     throw new Error("[seed-check] Flujo comercial/finanzas incompleto.");
+  }
+  if (!receiptAllocation || !paymentAllocation || !treasuryCollection || !treasuryPayment) {
+    throw new Error("[seed-check] Flujo de cobranza/pagos/tesorería incompleto.");
+  }
+  if (!childBatchA || !childBatchB) {
+    throw new Error("[seed-check] Flujo de fraccionamiento incompleto.");
   }
   if (!costSnapshot || !marginSnapshot) {
     throw new Error("[seed-check] Faltan snapshots de costos/reportes.");
@@ -262,20 +407,8 @@ async function main() {
   }
 
   const families = [
-    "Shampoo",
-    "Acondicionador / Bálsamo",
-    "Baño de crema",
-    "Líquidos",
-    "Cremas",
-    "Máscara",
-    "Tratamiento en crema",
-    "Protector térmico / Leave-in",
-    "Crema de peinar",
-    "Ampolla",
-    "Aceite / Sérum",
-    "Perfume capilar",
+    ...SOURCE_FAMILIES_MIN_TECH_COMMERCIAL,
     "Barber",
-    "Coloración",
     "Insumos base",
     "Activos",
     "Fragancias",
@@ -292,8 +425,7 @@ async function main() {
   );
 
   const lines = [
-    "Cherry",
-    "Oro",
+    ...SOURCE_LINES_MIN,
     "Coco",
     "Açaí",
     "Savia",
@@ -304,12 +436,10 @@ async function main() {
     "Romero & Ortiga",
     "Jazmín & Miel",
     "Almendras",
-    "Purple Plex",
     "Biotina",
     "Keratina",
     "Botox",
     "Glow Up",
-    "Rejuvelac",
     "Baño de Seda",
     "Lifting Oro",
     "Vainilla & Coco",
@@ -332,8 +462,7 @@ async function main() {
   );
 
   const variants = [
-    "Cherry",
-    "Oro",
+    ...SOURCE_VARIANTS_MIN,
     "Coco",
     "Açaí",
     "Savia",
@@ -344,12 +473,10 @@ async function main() {
     "Romero y Ortiga",
     "Jazmín y Miel",
     "Almendras",
-    "Purple Plex",
     "Biotina",
     "Keratina",
     "Botox",
     "Glow Up",
-    "Rejuvelac",
     "Baño de Seda",
     "Lifting Oro",
     "Vainilla y Coco",
@@ -378,7 +505,7 @@ async function main() {
   const productBases = [
     ["PB-SHA-CH", "Shampoo Cherry", "Shampoo", "Cherry", "Cherry"],
     ["PB-BAL-OR", "Bálsamo Oro", "Acondicionador / Bálsamo", "Oro", "Oro"],
-    ["PB-BCR-OR", "Baño de Crema Oro", "Baño de crema", "Oro", "Oro"],
+    ...SOURCE_PRODUCT_BASES_MANDATORY,
     [
       "PB-BCR-VC",
       "Baño de Crema Vainilla & Coco",
@@ -388,11 +515,7 @@ async function main() {
     ],
     ["PB-MAS-PP", "Máscara Purple Plex", "Máscara", "Purple Plex", "Purple Plex"],
     ["PB-TRC-BX", "Tratamiento Botox en Crema", "Tratamiento en crema", "Botox", "Botox"],
-    ["PB-PTL-OR", "Protector Térmico Oro Líquido", "Protector térmico / Leave-in", "Oro", "Oro"],
-    ["PB-TRC-OR", "Tratamiento Oro en Crema", "Tratamiento en crema", "Oro", "Oro"],
-    ["PB-SHA-OR", "Shampoo Oro", "Shampoo", "Oro", "Oro"],
     ["PB-CPN-SV", "Crema de Peinar Savia", "Crema de peinar", "Savia", "Savia"],
-    ["PB-AMP-RJ", "Ampolla Rejuvelac", "Ampolla", "Rejuvelac", "Rejuvelac"],
     ["PB-ACE-CV", "Aceite Caviar Puntas", "Aceite / Sérum", "Caviar", "Caviar"],
     ["PB-ACE-AM", "Sérum Almendras", "Aceite / Sérum", "Almendras", "Almendras"],
     ["PB-PFC-GU", "Perfume Capilar Glow Up", "Perfume capilar", "Glow Up", "Glow Up"],
@@ -686,6 +809,30 @@ async function main() {
       "SKU BOTOX ORO 250",
       EntityStatus.pending_homologation,
       "BOTOX ORO 250",
+    ],
+    [
+      "product_base",
+      "ORO CREMA ",
+      null,
+      "Tratamiento Oro en Crema",
+      EntityStatus.pending_homologation,
+      "ORO CREMA ",
+    ],
+    [
+      "product_base",
+      " ORO CREMA",
+      null,
+      "Tratamiento Oro en Crema",
+      EntityStatus.pending_homologation,
+      " ORO CREMA",
+    ],
+    [
+      "sku",
+      "SH  OR  500",
+      null,
+      "SKU SHAMPOO ORO 500",
+      EntityStatus.pending_homologation,
+      "SH  OR  500",
     ],
   ] as const;
 
