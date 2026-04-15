@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
+import Link from "next/link";
 import { Layout } from "@/components/layout";
 import { DataTable } from "@/components/ui/DataTable";
 import { KPIStatCard } from "@/components/ui/KPIStatCard";
@@ -264,10 +265,19 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
   });
 
   const selectedRecord = records.find((r) => r.id === selected) ?? null;
+  const detailPath =
+    domain === "producto-base" ? `/catalogo/productos-base/${selected}` : domain === "sku" ? `/catalogo/skus/${selected}` : undefined;
+  const transactionalCreatePath = domain === "pedido" ? "/comercial/pedidos/nuevo?step=cabecera" : undefined;
 
   return (
     <Layout title={config.title} transitionPreset="elevate-in">
       <PageHeader title={config.title} subtitle={config.subtitle} />
+      {detailPath || transactionalCreatePath ? (
+        <div className="card-base mb-4 flex flex-wrap items-center gap-3 text-sm">
+          {transactionalCreatePath ? <Link href={transactionalCreatePath} className="font-medium text-indigo-700">Alta transaccional (wizard)</Link> : null}
+          {detailPath && selected ? <Link href={detailPath} className="font-medium text-indigo-700">Ver ficha detallada</Link> : null}
+        </div>
+      ) : null}
 
       <div className="mb-4 grid gap-3 md:grid-cols-3">
         <KPIStatCard label="Registros" value={records.length} />
