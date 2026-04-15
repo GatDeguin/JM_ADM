@@ -79,6 +79,23 @@ body {
   .shadow-soft {
     box-shadow: var(--shadow-soft);
   }
+
+
+  .focus-premium {
+    @apply focus-visible:ring-2 focus-visible:ring-sky-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:shadow-[0_0_0_4px_rgba(14,165,233,0.12)] dark:focus-visible:ring-sky-300/70 dark:focus-visible:ring-offset-zinc-950;
+  }
+
+  .animate-inline-status {
+    animation: inline-status-pop var(--motion-base) var(--ease-premium);
+  }
+
+  .animate-row-highlight-new {
+    animation: row-highlight-new 1.6s var(--ease-premium);
+  }
+
+  .animate-row-highlight-updated {
+    animation: row-highlight-updated 1.6s var(--ease-premium);
+  }
 }
 
 
@@ -99,5 +116,35 @@ body {
   }
   100% {
     background-position: -200% 0;
+  }
+}
+
+
+@keyframes inline-status-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes row-highlight-new {
+  0% {
+    box-shadow: inset 0 0 0 999px rgba(16, 185, 129, 0.24);
+  }
+  100% {
+    box-shadow: inset 0 0 0 999px rgba(16, 185, 129, 0);
+  }
+}
+
+@keyframes row-highlight-updated {
+  0% {
+    box-shadow: inset 0 0 0 999px rgba(14, 165, 233, 0.24);
+  }
+  100% {
+    box-shadow: inset 0 0 0 999px rgba(14, 165, 233, 0);
   }
 }

@@ -22,6 +22,7 @@ type DataTableProps<T extends Record<string, unknown>> = {
   onCreate?: () => void;
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
+  getRowClassName?: (row: T) => string | undefined;
 };
 
 export function DataTable<T extends Record<string, unknown>>({
@@ -35,7 +36,8 @@ export function DataTable<T extends Record<string, unknown>>({
   successMessage,
   onCreate,
   onEdit,
-  onDelete
+  onDelete,
+  getRowClassName
 }: DataTableProps<T>) {
   const [query, setQuery] = useState("");
 
@@ -118,7 +120,7 @@ export function DataTable<T extends Record<string, unknown>>({
                 </thead>
                 <tbody>
                   {filtered.map((row) => (
-                    <tr key={rowId(row)} className="border-b border-zinc-200 last:border-b-0 dark:border-zinc-800">
+                    <tr key={rowId(row)} className={`border-b border-zinc-200 last:border-b-0 motion-state dark:border-zinc-800 ${getRowClassName?.(row) ?? ""}`}>
                       {columns.map((col) => {
                         const value = row[col.key];
                         return (
