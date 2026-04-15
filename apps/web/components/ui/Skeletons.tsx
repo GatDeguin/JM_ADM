@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactElement } from "react";
+
 type SkeletonVariant = "line" | "card" | "table" | "avatar";
 type SkeletonDensity = "compact" | "normal" | "comfortable";
 
@@ -123,7 +125,7 @@ function avatarVariant(rows: number, density: SkeletonDensity) {
 export function Skeletons({ rows, variant = "line", density = "normal" }: SkeletonsProps) {
   const effectiveRows = rows ?? (variant === "table" ? 4 : variant === "avatar" ? 5 : 3);
 
-  const skeletonByVariant: Record<SkeletonVariant, JSX.Element> = {
+  const skeletonByVariant: Record<SkeletonVariant, ReactElement> = {
     line: lineVariant(effectiveRows, density),
     card: cardVariant(effectiveRows, density),
     table: tableVariant(effectiveRows, density),
