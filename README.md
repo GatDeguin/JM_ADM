@@ -320,6 +320,24 @@ Incluye:
 - ventas/compras/lotes/movimientos
 - casos `pending_homologation`
 
+### Dataset semilla y trazabilidad (catálogo + operación)
+
+- **Matrices fuente mínimas obligatorias** en `prisma/seed.ts` para:
+  - familias técnicas/comerciales mínimas,
+  - líneas/variantes mínimas,
+  - catálogo base obligatorio (`PB-BCR-OR`, `PB-PTL-OR`, `PB-AMP-RJ`, `PB-SHA-OR`, `PB-TRC-OR`),
+  - presentaciones mínimas (`granel`, `1L`, `500ML`, `250ML`, `120ml`, `30ML`),
+  - alias/homologaciones mínimas exactas con `originalValue` preservado.
+- **Validadores de seed (`runSourceMatrixChecks` + `runSeedChecks`)** que detienen la ejecución si falta un valor obligatorio o si un alias ambiguo pierde el valor importado original.
+- **Ambigüedad controlada con `pending_homologation`**: incluye casos reales de normalización incompleta (tildes, espacios dobles, espacios al inicio/fin) para validar trazabilidad sin mutar el dato fuente.
+- **Cadena transaccional demo completa**:
+  1. producción (`OP-2026-0001`) y lote (`LOT-BAL-OR-260401`),
+  2. fraccionamiento (`OFR-2026-0001`, `CHILD-001`, `CHILD-002`),
+  3. stock (`SMOV-001`, `SBAL-001`),
+  4. venta (`OV-2026-0001`) + cuenta a cobrar (`AR-001`) + cobranza (`REC-2026-0001`, `RA-001`),
+  5. compra (`OC-2026-0001`) + cuenta a pagar (`AP-001`) + pago (`PAG-2026-0001`, `PA-001`),
+  6. tesorería (`TM-001`, `TM-002`) y snapshots (`demo_e2e_costs_2026_04`, `demo_e2e_margins_2026_04`).
+
 ---
 
 ## Usuarios demo
