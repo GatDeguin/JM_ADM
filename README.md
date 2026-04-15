@@ -2,6 +2,25 @@
 
 Plataforma full‑stack **mobile‑first** para operación integral de una empresa de cosmética capilar: catálogo, fórmulas, producción por lote, fraccionamiento, stock trazable, compras, ventas, cobranzas/pagos, tesorería, costos, reportes, auditoría e importaciones.
 
+## Cómo ingresar a la app
+
+Si estás viendo esta documentación publicada en GitHub Pages y querés entrar directamente a la aplicación, abrí la ruta:
+
+- **`/inicio`** (ejemplo: `https://<tu-dominio>/inicio`)
+
+Para entorno local:
+
+- Web: `http://localhost:3000/inicio`
+- API: `http://localhost:4000`
+
+Usuarios demo disponibles:
+
+- `admin@demo.local` / `demo1234`
+- `direccion@demo.local` / `demo1234`
+- `produccion@demo.local` / `demo1234`
+- `comercial@demo.local` / `demo1234`
+- `finanzas@demo.local` / `demo1234`
+
 ## Objetivo de producto
 
 Modelar y ejecutar de punta a punta la cadena:
