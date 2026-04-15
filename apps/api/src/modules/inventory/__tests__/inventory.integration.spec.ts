@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { InventoryService } from "../application/inventory.service";
 import { InventoryController } from "../presentation/inventory.controller";
+import { InventoryRepository } from "../infrastructure/inventory.repository";
+import { DOMAIN_EVENT_NAMES } from "../../../common/events/domain-event-contract";
 
 describe("inventory integration", () => {
   it("propaga la acción de ajuste al repositorio", async () => {
@@ -71,5 +73,27 @@ describe("inventory integration", () => {
 
     expect(result.id).toBe("transfer-1");
     expect(service.createInternalTransfer).toHaveBeenCalledWith(payload);
+  });
+
+  it("emite inventory.stock.adjusted con payload mínimo en ajuste", async () => {
+    const emitted: unknown[] = [];
+    const repository = new InventoryRepository(
+      {
+        $transaction: async (cb: (tx: any) => Promise<unknown>) =>
+          cb({
+            inventoryAdjustment: { create: async () => ({ id: "adj-1", itemId: "item-1", qty: 3 }) },
+            stockMovement: { create: async () => ({ id: "mov-1" }) },
+            auditLog: { create: async () => ({ id: "audit-1" }) },
+          }),
+      } as never,
+      { logCreate: async () => undefined, logUpdate: async () => undefined, logTransactionalAction: async () => undefined } as never,
+      { emit: (event: unknown) => emitted.push(event), on: () => undefined } as never,
+    );
+
+    await repository.create({ itemId: "item-1", qty: 3, reason: "Ajuste positivo" });
+    expect(emitted[0]).toMatchObject({
+      name: DOMAIN_EVENT_NAMES.stockAdjusted,
+      payload: { inventoryAdjustmentId: "adj-1", itemId: "item-1", qty: 3 },
+    });
   });
 });

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { ConflictException } from "@nestjs/common";
 import { CatalogService } from "../application/catalog.service";
 import { integrationFixtures } from "../../../test-data/integration-fixtures";
+import { CatalogRepository } from "../infrastructure/catalog.repository";
+import { DOMAIN_EVENT_NAMES } from "../../../common/events/domain-event-contract";
 
 describe("catalog integration", () => {
   it("crea producto base", async () => {
@@ -40,5 +42,26 @@ describe("catalog integration", () => {
     });
 
     expect(response.status).toBe("active");
+  });
+
+  it("emite catalog.sku.created con payload mínimo al crear SKU", async () => {
+    const emitted: unknown[] = [];
+    const repository = new CatalogRepository(
+      {
+        $transaction: async (cb: (tx: any) => Promise<unknown>) =>
+          cb({
+            sKU: { create: async () => ({ id: "sku-1", code: "SKU-1" }) },
+            auditLog: { create: async () => ({ id: "audit-1" }) },
+          }),
+      } as never,
+      { emit: (event: unknown) => emitted.push(event), on: () => undefined } as never,
+    );
+
+    await repository.createSku({ code: "SKU-1", productBaseId: "pb-1", presentationId: "pr-1" });
+
+    expect(emitted[0]).toMatchObject({
+      name: DOMAIN_EVENT_NAMES.skuCreated,
+      payload: { skuId: "sku-1", code: "SKU-1" },
+    });
   });
 });

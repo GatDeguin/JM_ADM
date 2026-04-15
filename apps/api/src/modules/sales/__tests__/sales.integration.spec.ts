@@ -2,6 +2,8 @@ import { BadRequestException } from "@nestjs/common";
 import { describe, expect, it, vi } from "vitest";
 import { SalesService } from "../application/sales.service";
 import { integrationFixtures } from "../../../test-data/integration-fixtures";
+import { SalesRepository } from "../infrastructure/sales.repository";
+import { DOMAIN_EVENT_NAMES } from "../../../common/events/domain-event-contract";
 
 describe("sales integration", () => {
   const repositoryStub = {
@@ -54,13 +56,33 @@ describe("sales integration", () => {
     );
   });
 
-  it("registra despacho y devolución", () => {
+  it("registra despacho y devolución", async () => {
     const service = new SalesService(repositoryStub as never);
 
-    const dispatch = service.dispatch({ code: "DSP-1", salesOrderId: "so-1", items: [{ skuId: "SKU-1", qty: 2 }] });
-    const returned = service.registerReturn({ code: "DEV-1", salesOrderId: "so-1", reason: "daño" });
+    const dispatch = await service.dispatch({ code: "DSP-1", salesOrderId: "so-1", items: [{ skuId: "SKU-1", qty: 2 }] });
+    const returned = await service.registerReturn({ code: "DEV-1", salesOrderId: "so-1", reason: "daño" });
 
     expect(dispatch.event).toBe("sales.dispatch.created");
     expect(returned.event).toBe("sales.return.created");
+  });
+
+  it("emite sales.dispatch.registered con payload mínimo al despachar", async () => {
+    const emitted: unknown[] = [];
+    const repository = new SalesRepository(
+      {
+        $transaction: async (cb: (tx: any) => Promise<unknown>) =>
+          cb({
+            dispatchOrder: { create: async () => ({ id: "dsp-1", salesOrderId: "so-1" }) },
+            auditLog: { create: async () => ({ id: "audit-1" }) },
+          }),
+      } as never,
+      { emit: (event: unknown) => emitted.push(event), on: () => undefined } as never,
+    );
+
+    await repository.createDispatch({ code: "DSP-1", salesOrderId: "so-1", items: [{ skuId: "SKU-1", qty: 2 }] });
+    expect(emitted[0]).toMatchObject({
+      name: DOMAIN_EVENT_NAMES.dispatchRegistered,
+      payload: { dispatchId: "dsp-1", salesOrderId: "so-1" },
+    });
   });
 });

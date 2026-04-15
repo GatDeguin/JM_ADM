@@ -1,4 +1,6 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
+import { buildDomainEvent, DOMAIN_EVENT_NAMES } from "../../../common/events/domain-event-contract";
+import { DomainEventsService } from "../../../common/events/domain-events.service";
 import { PrismaService } from "../../../infrastructure/prisma/prisma.service";
 import {
   ActionPurchaseOrderInput,
@@ -67,7 +69,10 @@ function normalizeOrder(entity: any): PurchaseOrderDto {
 
 @Injectable()
 export class PurchasingRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly domainEvents: DomainEventsService,
+  ) {}
 
   async listRequests(): Promise<PurchaseRequestDto[]> {
     const rows = await this.prisma.purchaseRequest.findMany({ orderBy: { id: "desc" }, include: purchaseRequestInclude });
@@ -244,6 +249,22 @@ export class PurchasingRepository {
       const poStatus = remainingAfterThisReceipt > 0 ? "received_partial" : "received_total";
       await tx.purchaseOrder.update({ where: { id: order.id }, data: { status: poStatus } });
       await tx.goodsReceipt.update({ where: { id: receipt.id }, data: { status: poStatus } });
+
+      const event = buildDomainEvent(DOMAIN_EVENT_NAMES.goodsReceiptRegistered, {
+        goodsReceiptId: receipt.id,
+        purchaseOrderId: receipt.purchaseOrderId,
+        accountsPayableId: payable.id,
+      });
+      this.domainEvents.emit(event);
+      await tx.auditLog.create({
+        data: {
+          entity: "DomainEvent",
+          entityId: receipt.id,
+          action: "emit",
+          origin: "purchasing.createReceipt",
+          after: event,
+        },
+      });
 
       return {
         id: receipt.id,

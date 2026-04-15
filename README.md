@@ -144,22 +144,30 @@ Dominios normalizados del contrato objetivo:
 - `POST /treasury/transfers/register`
 - `POST /bank-reconciliations/register`
 
-### Eventos de dominio implementados
+### Contrato único de eventos de dominio (v1)
 
-- `formula.approved`
-- `product.sku.created`
-- `purchase.received`
-- `production.order.started`
-- `production.batch.closed`
-- `quality.batch.released`
-- `packaging.order.completed`
-- `stock.adjusted`
-- `sales.order.confirmed`
-- `dispatch.completed`
-- `receipt.recorded`
-- `payment.recorded`
-- `month.closed`
-- `import.finished`
+Todos los eventos se emiten con el siguiente sobre mínimo:
+
+```json
+{
+  "name": "string (obligatorio, exacto)",
+  "occurredAt": "ISO-8601",
+  "payload": {}
+}
+```
+
+Eventos obligatorios actualmente implementados:
+
+| Evento (`event.name` exacto) | Payload mínimo |
+| --- | --- |
+| `catalog.sku.created` | `{ "skuId": "string", "code": "string" }` |
+| `purchasing.goods_receipt.registered` | `{ "goodsReceiptId": "string", "purchaseOrderId": "string", "accountsPayableId": "string" }` |
+| `packaging.order.closed` | `{ "packagingOrderId": "string", "status": "string" }` |
+| `inventory.stock.adjusted` | `{ "inventoryAdjustmentId": "string", "itemId": "string", "qty": "number" }` |
+| `sales.dispatch.registered` | `{ "dispatchId": "string", "salesOrderId": "string" }` |
+| `receivables.receipt.registered` | `{ "receiptId": "string", "cashAccountId": "string", "amount": "number" }` |
+| `payables.payment.registered` | `{ "paymentId": "string", "cashAccountId": "string", "amount": "number" }` |
+| `costing.monthly_close.closed` | `{ "monthlyCloseId": "string", "status": "string", "closedAt": "ISO-8601" }` |
 
 ---
 

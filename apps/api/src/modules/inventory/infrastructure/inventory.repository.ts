@@ -1,4 +1,6 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
+import { buildDomainEvent, DOMAIN_EVENT_NAMES } from "../../../common/events/domain-event-contract";
+import { DomainEventsService } from "../../../common/events/domain-events.service";
 import { throwDomainError } from "../../../common/domain-rules/domain-errors";
 import { PrismaService } from "../../../infrastructure/prisma/prisma.service";
 import {
@@ -23,12 +25,14 @@ const noopAuditTrail = {
   logUpdate: async () => undefined,
   logTransactionalAction: async () => undefined,
 };
+const noopDomainEvents = { emit: () => undefined, on: () => undefined } as unknown as DomainEventsService;
 
 @Injectable()
 export class InventoryRepository {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditTrailService: Pick<AuditTrailService, "logCreate" | "logUpdate" | "logTransactionalAction"> = noopAuditTrail,
+    private readonly domainEvents: DomainEventsService = noopDomainEvents,
   ) {}
 
   list(): Promise<InventoryAdjustmentDto[]> { return this.prisma.inventoryAdjustment.findMany({ orderBy: { id: "desc" } }) as Promise<InventoryAdjustmentDto[]>; }
@@ -53,6 +57,21 @@ export class InventoryRepository {
         },
         tx,
       );
+      const event = buildDomainEvent(DOMAIN_EVENT_NAMES.stockAdjusted, {
+        inventoryAdjustmentId: created.id,
+        itemId: created.itemId,
+        qty: Number(created.qty),
+      });
+      this.domainEvents.emit(event);
+      await tx.auditLog.create({
+        data: {
+          entity: "DomainEvent",
+          entityId: created.id,
+          action: "emit",
+          origin: "inventory.create",
+          after: event,
+        },
+      });
       return created;
     });
   }
