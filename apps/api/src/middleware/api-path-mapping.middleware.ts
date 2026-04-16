@@ -3,6 +3,7 @@ import {
   mapLegacyPath,
   mapNormalizedPathToLegacy,
 } from "../config/api-routes";
+import { recordLegacyPathAccess } from "./legacy-path-telemetry";
 
 function getPathAndSearch(req: any): { path: string; search: string } {
   const candidateUrl = (req.originalUrl ?? req.url ?? req.path ?? "/") as string;
@@ -15,7 +16,13 @@ export function apiPathMappingMiddleware(req: any, res: any, next: () => void) {
   const prefixedRoot = `/${API_GLOBAL_PREFIX}`;
 
   if (!originalPath.startsWith(prefixedRoot)) {
-    const normalized = mapLegacyPath(originalPath) ?? originalPath;
+    const mappedPath = mapLegacyPath(originalPath);
+    const normalized = mappedPath ?? originalPath;
+
+    if (mappedPath) {
+      recordLegacyPathAccess(originalPath, `${prefixedRoot}${mappedPath}`);
+    }
+
     return res.redirect(308, `${prefixedRoot}${normalized}${search}`);
   }
 
@@ -26,6 +33,7 @@ export function apiPathMappingMiddleware(req: any, res: any, next: () => void) {
     res.setHeader("Deprecation", "true");
     res.setHeader("Sunset", "Wed, 31 Dec 2026 23:59:59 GMT");
     res.setHeader("Link", `<${prefixedRoot}${mappedInternalPath}>; rel=\"successor-version\"`);
+    recordLegacyPathAccess(internalPath, `${prefixedRoot}${mappedInternalPath}`);
     return res.redirect(308, `${prefixedRoot}${mappedInternalPath}${search}`);
   }
 
