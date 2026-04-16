@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { PayablesTreasuryRepository } from "../infrastructure/payables_treasury.repository";
 import { PayablesTreasuryController } from "../presentation/payables_treasury.controller";
-import { PayablesTreasuryService } from "../application/payables_treasury.service";
+import type { PayablesTreasuryService } from "../application/payables_treasury.service";
 import { DOMAIN_EVENT_NAMES } from "../../../common/events/domain-event-contract";
 
 describe("payables treasury transactional integrity", () => {
