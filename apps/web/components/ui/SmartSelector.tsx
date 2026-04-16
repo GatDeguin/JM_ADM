@@ -117,12 +117,13 @@ export function SmartSelector({
     const query = params.toString();
     router.replace(query ? `${pathname}?${query}` : pathname);
   }, [contextualConfig, onChange, pathname, router]);
-  const sourceOptions = contextualConfig
-    ? [
-        ...contextualOptions,
-        ...options.filter((option) => !contextualOptions.some((ctx) => ctx.id === option.id)),
-      ]
-    : options;
+  const sourceOptions = useMemo(() => {
+    if (!contextualConfig) return options;
+    return [
+      ...contextualOptions,
+      ...options.filter((option) => !contextualOptions.some((ctx) => ctx.id === option.id)),
+    ];
+  }, [contextualConfig, contextualOptions, options]);
 
   const filtered = useMemo(
     () => sourceOptions.filter((o) => o.label.toLowerCase().includes(query.toLowerCase())),
