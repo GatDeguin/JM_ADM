@@ -51,3 +51,8 @@ Falla de cualquiera de estos criterios críticos bloquea merge:
 - `DOD-005` (cobranza)
 - `DOD-006` (pago)
 - `DOD-007` (auditoría)
+
+## Política de lint en CI (workspace web)
+
+- El script `pnpm --filter web lint` se ejecuta con `eslint --max-warnings=0`.
+- En consecuencia, cualquier warning de ESLint en `apps/web` (incluyendo `react-hooks/exhaustive-deps`) falla la pipeline de CI.
