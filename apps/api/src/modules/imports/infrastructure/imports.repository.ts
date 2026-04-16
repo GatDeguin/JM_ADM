@@ -105,7 +105,7 @@ export class ImportsRepository {
         case "opening_stock":
           return this.applyOpeningStock(tx, input);
         default:
-          return { entity: "Unknown", state: "skipped", warnings: ["Tipo no soportado por applicator"] };
+          return { entity: "Unknown", state: "skipped" as const, warnings: ["Tipo no soportado por applicator"] };
       }
     });
   }
@@ -318,10 +318,12 @@ export class ImportsRepository {
       update: { name: warehouseName },
     });
 
-    const existing = await tx.stockBalance.findUnique({ where: { itemId_warehouseId_locationId: { itemId: item.id, warehouseId: warehouse.id, locationId: null } } });
+    const existing = await tx.stockBalance.findFirst({
+      where: { itemId: item.id, warehouseId: warehouse.id, locationId: null },
+    });
     if (existing) {
       await tx.stockBalance.update({
-        where: { itemId_warehouseId_locationId: { itemId: item.id, warehouseId: warehouse.id, locationId: null } },
+        where: { id: existing.id },
         data: { qty },
       });
       return { entity: "StockBalance", state: "updated", warnings: [] };

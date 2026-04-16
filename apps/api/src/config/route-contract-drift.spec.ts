@@ -7,8 +7,8 @@ import { PrismaService } from "../infrastructure/prisma/prisma.service";
 
 process.env.DATABASE_URL ??= "postgresql://postgres:postgres@localhost:5432/jmadm_test";
 
-(PrismaService.prototype as { onModuleInit: () => Promise<void> }).onModuleInit = async () => {};
-(PrismaService.prototype as { enableShutdownHooks: () => Promise<void> }).enableShutdownHooks = async () => {};
+(PrismaService.prototype as unknown as { onModuleInit: () => Promise<void> }).onModuleInit = async () => {};
+(PrismaService.prototype as unknown as { enableShutdownHooks: () => Promise<void> }).enableShutdownHooks = async () => {};
 
 type EndpointKey = `${"GET" | "POST" | "PATCH" | "PUT" | "DELETE"} ${string}`;
 

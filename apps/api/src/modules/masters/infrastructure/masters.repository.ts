@@ -34,7 +34,7 @@ export class MastersRepository {
   async runAction(id: string, payload: ActionUnitInput): Promise<UnitDto> {
     void payload;
     const previous = await this.prisma.unit.findUniqueOrThrow({ where: { id } });
-    const updated = await this.prisma.unit.update({ where: { id }, data: { status: "inactive" } }) as Promise<UnitDto>;
+    const updated = await this.prisma.unit.update({ where: { id }, data: { status: "inactive" } }) as UnitDto;
     await this.auditTrailService.logHomologation({ entity: "Unit", entityId: id, origin: "masters.runAction", before: previous, after: updated });
     return updated;
   }

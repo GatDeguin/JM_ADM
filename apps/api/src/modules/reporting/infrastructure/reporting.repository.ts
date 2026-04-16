@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "../../../infrastructure/prisma/prisma.service";
 
 type ReportFilters = {
@@ -173,11 +174,15 @@ export class ReportingRepository {
   }
 
   createCostSnapshot(period: string, payload: Record<string, unknown>) {
-    return this.prisma.costSnapshot.create({ data: { key: period, payload, date: new Date(`${period}-01T00:00:00.000Z`) } });
+    return this.prisma.costSnapshot.create({
+      data: { key: period, payload: payload as Prisma.InputJsonValue, date: new Date(`${period}-01T00:00:00.000Z`) },
+    });
   }
 
   createMarginSnapshot(period: string, payload: Record<string, unknown>) {
-    return this.prisma.marginSnapshot.create({ data: { key: period, payload, date: new Date(`${period}-01T00:00:00.000Z`) } });
+    return this.prisma.marginSnapshot.create({
+      data: { key: period, payload: payload as Prisma.InputJsonValue, date: new Date(`${period}-01T00:00:00.000Z`) },
+    });
   }
 
   upsertMonthlyClose(period: string) {

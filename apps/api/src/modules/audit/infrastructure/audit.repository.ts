@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "../../../infrastructure/prisma/prisma.service";
 import { ActionAuditLogInput, CreateAuditLogInput, AuditLogDto, UpdateAuditLogInput } from "../domain/audit.types";
 
@@ -18,6 +19,9 @@ export class AuditRepository {
   remove() { throw new Error("AuditLog history is immutable and cannot be physically deleted."); }
 
   runAction(id: string, payload: ActionAuditLogInput): Promise<AuditLogDto> {
-    return this.prisma.auditLog.update({ where: { id }, data: { after: payload.after } }) as Promise<AuditLogDto>;
+    return this.prisma.auditLog.update({
+      where: { id },
+      data: { after: payload.after as Prisma.InputJsonValue },
+    }) as Promise<AuditLogDto>;
   }
 }

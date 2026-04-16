@@ -96,7 +96,7 @@ export class SalesService {
         throw new BadRequestException(`El combo ${item.comboId} no tiene componentes`);
       }
 
-      comboItems.forEach((component: { skuId: string; qty: number | string }) => {
+      comboItems.forEach((component) => {
         exploded.push({ skuId: component.skuId, qty: Number(component.qty) * item.qty });
       });
     }
