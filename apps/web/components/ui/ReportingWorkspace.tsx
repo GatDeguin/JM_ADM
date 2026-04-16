@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Layout } from "@/components/layout";
 import { DataTable } from "@/components/ui/DataTable";
 import { KPIStatCard } from "@/components/ui/KPIStatCard";
@@ -20,6 +20,14 @@ type Props = {
   title: string;
   subtitle: string;
   mode: "reportes" | "margenes" | "calidad" | "costos";
+};
+
+const DEFAULT_FILTERS: Filters = {
+  startDate: "",
+  endDate: "",
+  channel: "",
+  line: "",
+  customerId: "",
 };
 
 async function request(path: string, init?: RequestInit) {
@@ -56,24 +64,18 @@ function downloadCsv(filename: string, rows: Array<Record<string, string | numbe
 }
 
 export function ReportingWorkspace({ title, subtitle, mode }: Props) {
-  const [filters, setFilters] = useState<Filters>({
-    startDate: "",
-    endDate: "",
-    channel: "",
-    line: "",
-    customerId: "",
-  });
+  const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   const [dashboard, setDashboard] = useState<Record<string, any> | null>(null);
   const [dataQualityLists, setDataQualityLists] = useState<Record<string, any> | null>(null);
   const [loading, setLoading] = useState(false);
   const [snapshotMessage, setSnapshotMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async (activeFilters: Filters) => {
     setLoading(true);
     setError(null);
     try {
-      const query = toQuery(filters);
+      const query = toQuery(activeFilters);
       const [dash, lists] = await Promise.all([
         request(`/reporting/dashboard${query}`),
         request("/reporting/data-quality/lists"),
@@ -85,11 +87,11 @@ export function ReportingWorkspace({ title, subtitle, mode }: Props) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    void load();
-  }, []);
+    void load(DEFAULT_FILTERS);
+  }, [load]);
 
   const marginRows = useMemo(
     () =>
@@ -144,7 +146,7 @@ export function ReportingWorkspace({ title, subtitle, mode }: Props) {
           />
         </div>
         <div className="mt-3 flex gap-2">
-          <button className="btn-primary" onClick={() => void load()} disabled={loading}>
+          <button className="btn-primary" onClick={() => void load(filters)} disabled={loading}>
             Aplicar filtros
           </button>
           <button
