@@ -77,7 +77,7 @@ export function ImportJobPage() {
 
   const targetFields = importTypeFields[type];
 
-  const previewRows = prevalidation?.rows ?? [];
+  const previewRows = useMemo(() => prevalidation?.rows ?? [], [prevalidation]);
   const pageSize = 8;
   const totalPages = Math.max(1, Math.ceil(previewRows.length / pageSize));
   const paginatedRows = useMemo(
