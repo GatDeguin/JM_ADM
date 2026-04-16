@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus } from "@nestjs/common";
+import { HttpException, type HttpStatus } from "@nestjs/common";
 
 export type DomainErrorCode =
   | "RULE_PRICING_CODE_REQUIRED"
