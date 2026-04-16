@@ -50,3 +50,14 @@ Se mide por prefijo legacy (`legacyPrefix`) en ventana móvil semanal.
 3. Validar suites de contrato y smoke tests sobre rutas sucesoras antes de cada release.
 4. Registrar excepciones de migración con fecha de cierre y responsable técnico.
 5. Revisar semanalmente el reporte residual y priorizar dominios en rojo.
+
+## Checklist de verificación para migración de vistas CRUD legacy
+
+Usar este checklist en cada PR de migración o hardening de rutas:
+
+- [ ] Ejecutar búsqueda de referencias: `rg -n "DomainCrudView|CriticalDomainCrudView" apps/web`.
+- [ ] Confirmar que no existan imports de `DomainCrudView` o `CriticalDomainCrudView` en rutas productivas bajo `apps/web/app/**`.
+- [ ] Si aparece un uso productivo, migrarlo a componente de dominio en `apps/web/components/<dominio>/`.
+- [ ] Verificar que la ruta migrada preserve patrón UX base (`Layout`, `PageHeader`, `DataTable`) y validación de esquema en formularios.
+- [ ] Actualizar `docs/domain-crud-inventory.md` con fecha absoluta (UTC) y estado final.
+- [ ] Adjuntar evidencia en la descripción del PR (resultado de búsqueda + rutas afectadas).
