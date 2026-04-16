@@ -19,7 +19,7 @@ export function InicioDashboardPage() {
       <div className="space-y-6">
         <section className="flex items-start justify-between">
           <div>
-            <h1 className="text-4xl font-bold text-[#171c39]">¡Bienvenido, Fran! 👋</h1>
+            <h1 className="text-4xl font-bold text-[#171c39]">¡Bienvenido, Jazmin! 👋</h1>
             <p className="mt-1 text-lg text-[#6d738d]">Aquí tienes un resumen de lo que está pasando en tu empresa hoy.</p>
           </div>
           <button className="rounded-xl bg-[#6842dc] px-8 py-3 text-xl font-semibold text-white">＋ Nueva</button>
@@ -106,7 +106,7 @@ export function InicioDashboardPage() {
                       <td className="px-3 py-2">{task}</td>
                       <td className="px-3 py-2">Operación</td>
                       <td className="px-3 py-2">Hoy, 14:00</td>
-                      <td className="px-3 py-2">Fran</td>
+                      <td className="px-3 py-2">Jazmin</td>
                       <td className="px-3 py-2">
                         <span className={`rounded-lg px-2 py-1 ${idx < 2 ? "bg-[#ffeacc] text-[#a26400]" : "bg-[#e7efff] text-[#2856bf]"}`}>
                           {idx < 2 ? "Pendiente" : "Programada"}

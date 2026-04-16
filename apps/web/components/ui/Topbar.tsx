@@ -19,7 +19,7 @@ export function Topbar() {
           <div className="ml-2 flex items-center gap-3 rounded-xl px-2 py-1 hover:bg-[#f3f4fa]">
             <span className="grid h-10 w-10 place-items-center rounded-full bg-[#5e4bd4] font-semibold text-white">FR</span>
             <div className="leading-tight">
-              <p className="text-base font-semibold">Fran</p>
+              <p className="text-base font-semibold">Jazmin</p>
               <p className="text-sm text-[#6a708b]">Administrador</p>
             </div>
           </div>
