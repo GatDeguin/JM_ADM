@@ -27,7 +27,8 @@
     "bootstrap:full": "pnpm db:migrate:deploy && pnpm db:seed && pnpm import:demo && pnpm bootstrap:check",
     "test:dod": "tsx scripts/dod-matrix.ts",
     "openapi:generate": "pnpm -s tsx --tsconfig apps/api/tsconfig.json scripts/generate-openapi.ts",
-    "openapi:check": "pnpm openapi:generate && git diff --exit-code -- apps/api/openapi/openapi.v1.json apps/api/openapi/openapi.latest.json"
+    "openapi:check": "pnpm openapi:generate && git diff --exit-code -- apps/api/openapi/openapi.v1.json apps/api/openapi/openapi.latest.json",
+    "report:legacy:weekly": "tsx scripts/legacy-path-weekly-report.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
