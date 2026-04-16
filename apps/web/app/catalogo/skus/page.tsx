@@ -1,5 +1,5 @@
-import { CriticalDomainCrudView } from "@/components/ui/CriticalDomainCrudView";
+import { SkusPage } from "@/components/catalog/SkusPage";
 
 export default function Page() {
-  return <CriticalDomainCrudView domain="sku" />;
+  return <SkusPage />;
 }

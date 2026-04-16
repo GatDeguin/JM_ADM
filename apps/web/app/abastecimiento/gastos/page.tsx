@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { GastosPage } from "@/components/abastecimiento/GastosPage";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Abastecimiento · Gastos"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="abastecimiento-gastos"
-    />
-  );
+  return <GastosPage />;
 }

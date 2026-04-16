@@ -1,5 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { MovimientosCajaBancoPage } from "@/components/finanzas/MovimientosCajaBancoPage";
 
 export default function Page() {
-  return <DomainCrudView title="Pagos/Tesorería · Movimientos" subtitle="Movimientos entre caja y banco" domain="tesoreria-movimientos-caja-banco" />;
+  return <MovimientosCajaBancoPage />;
 }

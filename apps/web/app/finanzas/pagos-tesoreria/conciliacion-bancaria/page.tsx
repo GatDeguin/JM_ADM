@@ -1,5 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { ConciliacionBancariaPage } from "@/components/finanzas/ConciliacionBancariaPage";
 
 export default function Page() {
-  return <DomainCrudView title="Pagos/Tesorería · Conciliación" subtitle="Conciliación bancaria por período" domain="tesoreria-conciliacion-bancaria" />;
+  return <ConciliacionBancariaPage />;
 }

@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { InicioDashboardPage } from "@/components/inicio/InicioDashboardPage";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Inicio"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="inicio"
-    />
-  );
+  return <InicioDashboardPage />;
 }

@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { BuscarPage } from "@/components/busqueda/BuscarPage";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Buscar"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="buscar"
-    />
-  );
+  return <BuscarPage />;
 }

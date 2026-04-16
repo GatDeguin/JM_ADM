@@ -1,5 +1,5 @@
-import { CriticalDomainCrudView } from "@/components/ui/CriticalDomainCrudView";
+import { ClientesPage } from "@/components/comercial/ClientesPage";
 
 export default function Page() {
-  return <CriticalDomainCrudView domain="cliente" />;
+  return <ClientesPage />;
 }

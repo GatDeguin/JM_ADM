@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { PackagingSpecsPage } from "@/components/catalog/PackagingSpecsPage";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Catalogo · Packaging"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="catalogo-packaging"
-    />
-  );
+  return <PackagingSpecsPage />;
 }

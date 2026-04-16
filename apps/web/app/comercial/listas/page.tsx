@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { ListasPreciosPage } from "@/components/comercial/ListasPreciosPage";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Comercial · Listas"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="comercial-listas"
-    />
-  );
+  return <ListasPreciosPage />;
 }

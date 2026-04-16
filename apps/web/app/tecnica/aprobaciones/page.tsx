@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { AprobacionesPage } from "@/components/tecnica/AprobacionesPage";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Tecnica · Aprobaciones"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="tecnica-aprobaciones"
-    />
-  );
+  return <AprobacionesPage />;
 }

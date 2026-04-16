@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { DespachosPage } from "@/components/comercial/DespachosPage";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Comercial · Despachos"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="comercial-despachos"
-    />
-  );
+  return <DespachosPage />;
 }

@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { SolicitudesPage } from "@/components/abastecimiento/SolicitudesPage";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Abastecimiento · Solicitudes"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="abastecimiento-solicitudes"
-    />
-  );
+  return <SolicitudesPage />;
 }

@@ -1,5 +1,5 @@
-import { CriticalDomainCrudView } from "@/components/ui/CriticalDomainCrudView";
+import { FormulasPage } from "@/components/tecnica/FormulasPage";
 
 export default function Page() {
-  return <CriticalDomainCrudView domain="formula" />;
+  return <FormulasPage />;
 }

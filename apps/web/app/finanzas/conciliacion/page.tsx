@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { ConciliacionPage } from "@/components/finanzas/ConciliacionPage";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Finanzas · Conciliacion"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="finanzas-conciliacion"
-    />
-  );
+  return <ConciliacionPage />;
 }

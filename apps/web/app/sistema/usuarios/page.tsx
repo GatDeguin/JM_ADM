@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { UsuariosPage } from "@/components/sistema/UsuariosPage";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Sistema · Usuarios"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="sistema-usuarios"
-    />
-  );
+  return <UsuariosPage />;
 }
