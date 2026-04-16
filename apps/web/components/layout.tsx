@@ -20,7 +20,7 @@ type LayoutProps = {
 
 const EXIT_DURATION_MS = 210;
 
-export function Layout({ title, children, transitionPreset = "soft-fade" }: LayoutProps) {
+export function Layout({ title: _title, children, transitionPreset = "soft-fade" }: LayoutProps) {
   const pathname = usePathname();
   const [enableMotion, setEnableMotion] = useState(false);
   const [activeContent, setActiveContent] = useState(children);
@@ -75,8 +75,8 @@ export function Layout({ title, children, transitionPreset = "soft-fade" }: Layo
       <AppShell>
         <Sidebar />
         <main id="main-content" className="flex-1">
-          <Topbar title={title} />
-          <div className="mx-auto w-full max-w-7xl space-y-5 p-4 md:space-y-6 md:p-6">
+          <Topbar />
+          <div className="w-full space-y-5 p-4 md:space-y-6 md:p-6">
             <div className="motion-route-stack">
               {enableMotion && outgoingContent ? (
                 <div className={`motion-route-layer motion-route-exit motion-route-${transitionPreset}`} aria-hidden="true">
