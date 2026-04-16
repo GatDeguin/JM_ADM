@@ -6,7 +6,7 @@
     "build": "next build",
     "export": "GITHUB_PAGES=true next build",
     "start": "next start -p 3000",
-    "lint": "eslint . --ext .ts,.tsx",
+    "lint": "eslint . --ext .ts,.tsx --max-warnings=0",
     "test": "vitest run",
     "test:e2e": "playwright test --project=smoke-mocked",
     "format": "prettier --write \"{package.json,tsconfig.json,playwright.config.ts}\" \"tests/**/*.{ts,tsx}\"",
