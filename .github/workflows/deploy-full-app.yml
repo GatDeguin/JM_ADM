@@ -26,8 +26,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: "20"
           cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -60,9 +61,10 @@ jobs:
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/work'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: deploy-${{ github.run_number }}
+          tag_name: deploy-${{ github.run_id }}
           name: JM ADM Deploy ${{ github.run_number }}
           body: |
             Bundle completo de la app generado automáticamente.
             Commit: `${{ github.sha }}`
+            Run ID: `${{ github.run_id }}`
           files: dist/*.tar.gz
