@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "GITHUB_PAGES=false next build",
+    "build": "next build",
     "export": "GITHUB_PAGES=true next build",
     "start": "next start -p 3000",
     "lint": "eslint . --ext .ts,.tsx",
