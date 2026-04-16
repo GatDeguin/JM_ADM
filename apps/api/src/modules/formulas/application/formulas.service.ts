@@ -10,7 +10,7 @@ const noopAuditTrail = {
 };
 
 type FormulaVersionListItem = { id: string; status: string };
-type FormulaComponentDiffItem = { itemId: string; qty: number; unitId: string };
+type FormulaComponentDiffItem = { itemId: string; qty: unknown; unitId: string };
 type FormulaStepDiffItem = { stepNo: number; instruction: string };
 
 type NewVersionInput = {
@@ -182,10 +182,10 @@ export class FormulasService {
     }
 
     const leftComponents = new Map<string, FormulaComponentDiffItem>(
-      left.FormulaComponent.map((component: FormulaComponentDiffItem) => [component.itemId, component]),
+      left.FormulaComponent.map((component) => [component.itemId, component]),
     );
     const rightComponents = new Map<string, FormulaComponentDiffItem>(
-      right.FormulaComponent.map((component: FormulaComponentDiffItem) => [component.itemId, component]),
+      right.FormulaComponent.map((component) => [component.itemId, component]),
     );
     const allItems = Array.from(new Set([...leftComponents.keys(), ...rightComponents.keys()]));
 

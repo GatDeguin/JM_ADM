@@ -85,6 +85,6 @@ describe("ImportProcessorService", () => {
     const result = await service.execute("job-2");
 
     expect(result.status).toBe("failed");
-    expect(result.summary.errors).toBe(1);
+    expect((result.summary as { errors: number }).errors).toBe(1);
   });
 });

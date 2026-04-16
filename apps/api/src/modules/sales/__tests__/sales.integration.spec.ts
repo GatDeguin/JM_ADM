@@ -63,7 +63,7 @@ describe("sales integration", () => {
     const returned = await service.registerReturn({ code: "DEV-1", salesOrderId: "so-1", reason: "daño" });
 
     expect(dispatch.event).toBe("sales.dispatch.created");
-    expect(returned.event).toBe("sales.return.created");
+    expect((returned as unknown as { event: string }).event).toBe("sales.return.created");
   });
 
   it("emite sales.dispatch.registered con payload mínimo al despachar", async () => {

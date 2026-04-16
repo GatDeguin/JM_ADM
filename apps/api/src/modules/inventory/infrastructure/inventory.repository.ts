@@ -121,7 +121,7 @@ export class InventoryRepository {
       by: ["lotId", "itemId"],
       where: { ...(filters.itemId ? { itemId: filters.itemId } : {}), lotId: { not: null } },
       _sum: { qty: true },
-    });
+    } as any);
     const lotIds = lots.map((lot: { lotId: string | null }) => lot.lotId).filter((lotId: string | null): lotId is string => Boolean(lotId));
     const stockLots: Array<{ id: string; lotCode: string }> = lotIds.length > 0 ? await this.prisma.stockLot.findMany({ where: { id: { in: lotIds } } }) : [];
     const lotCodeById = new Map(stockLots.map((lot: { id: string; lotCode: string }) => [lot.id, lot.lotCode]));

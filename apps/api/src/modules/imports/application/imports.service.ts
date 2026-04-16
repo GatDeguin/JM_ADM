@@ -9,6 +9,7 @@ import { ImportsRepository } from "../infrastructure/imports.repository";
 import { ImportersService } from "./importers.service";
 import { ImportQueueService } from "../infrastructure/import-queue.service";
 import { ImportFileParserService, ImportUploadPayload } from "./import-file-parser.service";
+import { SupportedImportType } from "../domain/imports.types";
 
 @Injectable()
 export class ImportsService {
@@ -96,7 +97,7 @@ export class ImportsService {
 
     const rows = Array.isArray(job.originals) ? (job.originals as Record<string, unknown>[]) : [];
     const mapping = (job.mapping ?? {}) as Record<string, string>;
-    const result = this.importersService.process(job.type, rows, mapping);
+    const result = this.importersService.process(job.type as SupportedImportType, rows, mapping);
 
     const updated = await this.importsRepository.updateJob(id, {
       status: "ready_to_import",
@@ -123,7 +124,7 @@ export class ImportsService {
 
     const rows = Array.isArray(job.originals) ? (job.originals as Record<string, unknown>[]) : [];
     const mapping = (job.mapping ?? {}) as Record<string, string>;
-    const result = this.importersService.process(job.type, rows, mapping);
+    const result = this.importersService.process(job.type as SupportedImportType, rows, mapping);
     return {
       id: job.id,
       status: job.status,
