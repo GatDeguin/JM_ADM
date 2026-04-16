@@ -1,5 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { SaldosEstadosPage } from "@/components/finanzas/SaldosEstadosPage";
 
 export default function Page() {
-  return <DomainCrudView title="Finanzas · Saldos/Estado" subtitle="Estado automático open/partial/paid/overdue" domain="finanzas-saldos-estados" />;
+  return <SaldosEstadosPage />;
 }

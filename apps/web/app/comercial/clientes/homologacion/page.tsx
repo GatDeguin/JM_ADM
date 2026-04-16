@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { ClientesHomologacionPage } from "@/components/comercial/ClientesHomologacionPage";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Comercial · Clientes · Homologacion"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="comercial-clientes-homologacion"
-    />
-  );
+  return <ClientesHomologacionPage />;
 }

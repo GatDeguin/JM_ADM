@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { AliasPage } from "@/components/catalog/AliasPage";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Catalogo · Alias"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="catalogo-alias"
-    />
-  );
+  return <AliasPage />;
 }

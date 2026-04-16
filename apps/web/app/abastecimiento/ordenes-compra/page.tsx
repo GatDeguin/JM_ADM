@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { OrdenesCompraPage } from "@/components/abastecimiento/OrdenesCompraPage";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Abastecimiento · Ordenes Compra"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="abastecimiento-ordenes-compra"
-    />
-  );
+  return <OrdenesCompraPage />;
 }

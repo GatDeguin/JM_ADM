@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { FamiliasPage } from "@/components/catalog/FamiliasPage";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Catalogo · Familias"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="catalogo-familias"
-    />
-  );
+  return <FamiliasPage />;
 }

@@ -1,5 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { PagosParcialesPage } from "@/components/finanzas/PagosParcialesPage";
 
 export default function Page() {
-  return <DomainCrudView title="Pagos/Tesorería · Pagos parciales" subtitle="Pagos parciales con control por caja/banco" domain="pagos-parciales" />;
+  return <PagosParcialesPage />;
 }

@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { CuentasCobrarPage } from "@/components/finanzas/CuentasCobrarPage";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Finanzas · Cuentas Cobrar"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="finanzas-cuentas-cobrar"
-    />
-  );
+  return <CuentasCobrarPage />;
 }

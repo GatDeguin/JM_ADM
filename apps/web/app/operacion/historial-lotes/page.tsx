@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { HistorialLotesPage } from "@/components/operacion/HistorialLotesPage";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Operacion · Historial Lotes"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="operacion-historial-lotes"
-    />
-  );
+  return <HistorialLotesPage />;
 }

@@ -1,5 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { VentasCombosComponentesPage } from "@/components/comercial/VentasCombosComponentesPage";
 
 export default function Page() {
-  return <DomainCrudView title="Ventas · Combos" subtitle="Explosión de combos en componentes" domain="ventas-combos-explosion" />;
+  return <VentasCombosComponentesPage />;
 }

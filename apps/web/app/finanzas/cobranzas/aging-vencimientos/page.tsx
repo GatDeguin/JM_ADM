@@ -1,5 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { AgingVencimientosPage } from "@/components/finanzas/AgingVencimientosPage";
 
 export default function Page() {
-  return <DomainCrudView title="Cobranzas · Aging" subtitle="Aging y agenda de vencimientos" domain="cobranzas-aging-vencimientos" />;
+  return <AgingVencimientosPage />;
 }

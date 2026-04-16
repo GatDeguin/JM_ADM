@@ -1,5 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { RecibosParcialesPage } from "@/components/finanzas/RecibosParcialesPage";
 
 export default function Page() {
-  return <DomainCrudView title="Cobranzas · Recibos parciales" subtitle="Gestión de recibos parciales por cliente" domain="cobranzas-recibos-parciales" />;
+  return <RecibosParcialesPage />;
 }

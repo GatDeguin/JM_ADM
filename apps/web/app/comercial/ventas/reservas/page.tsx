@@ -1,5 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { VentasReservasPage } from "@/components/comercial/VentasReservasPage";
 
 export default function Page() {
-  return <DomainCrudView title="Ventas · Reserva" subtitle="Reserva operativa de stock por pedido" domain="ventas-reserva-stock" />;
+  return <VentasReservasPage />;
 }

@@ -1,11 +1,5 @@
-import { DomainCrudView } from "@/components/ui/DomainCrudView";
+import { CalidadPage } from "@/components/operacion/CalidadPage";
 
 export default function Page() {
-  return (
-    <DomainCrudView
-      title="Operacion · Calidad"
-      subtitle="Vista por dominio con filtros, CRUD contextual y homologación"
-      domain="operacion-calidad"
-    />
-  );
+  return <CalidadPage />;
 }
