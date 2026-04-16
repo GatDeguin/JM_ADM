@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
 import { API_BASE_URL } from "@/lib/env";
@@ -220,7 +220,7 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
     defaultValues: { name: "", code: "", status: config.statusOptions[0] ?? "draft" },
   });
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -236,11 +236,11 @@ export function CriticalDomainCrudView({ domain }: { domain: CriticalDomain }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [config.listPath, config.toRecord]);
 
   useEffect(() => {
     void load();
-  }, [domain]);
+  }, [load]);
 
   const filteredRecords = useMemo(() => {
     if (activeFilter === "all") return records;
